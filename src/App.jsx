@@ -8,6 +8,7 @@ import NetworkDemo from "./components/networkdemo/NetworkDemo.jsx"
 import Account from "./components/account/Account";
 import About from "./components/about/About";
 import NetConfig from "./components/networkcreation/Notespage.jsx"
+import CreateCanvas from "./components/mapConfig/CreateCanvas.jsx";
 
 function App() {
 
@@ -48,6 +49,7 @@ function App() {
         <Route path="/networkdemo"  element={<NetworkDemo />} />
         <Route path="/sobre"        element={<About />} />
         <Route path="/notes" element={<NetConfig />} />
+        <Route path="/create" element={<CreateCanvas/>}/>
       </Routes>
     </Router>
   );

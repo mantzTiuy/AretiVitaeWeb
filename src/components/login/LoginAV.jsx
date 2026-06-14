@@ -33,62 +33,66 @@ export default function LoginAV() {
   const camposVazios = !name || !email || !dia || !mes || !ano || !password || !confirm;
   const camposVaziosLogin = !loginEmail || !loginPassword;
 
-  async function handleCadastro() {
-    if (camposVazios) {
-      setErro('Preencha todos os campos');
-      return;
-    }
-
-    try {
-      // calcula a idade a partir da data de nascimento
-      const hoje = new Date();
-      const nascimento = new Date(ano, mes - 1, dia); // mes - 1 porque Date usa índice zero
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-      const aindaNaoFezAniversario =
-        hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
-
-      if (aindaNaoFezAniversario) idade--;
-
-      const {data} = await axios.post('http://localhost:8081/apiAv/Register', {
-        username: name,
-        email,
-        idade,
-        senha: password,
-      });
-      const { senha: _/*ignored*/, ...another } = data;//Filtra a senha do resto, deixa a senha apenas para o backend
-
-      localStorage.setItem("user", JSON.stringify(another));//Guarda em json para que qualquer informação seja acesível
-
-      navigate('/home');
-    } catch (error) {
-      setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
-    }
+ async function handleCadastro() {
+  if (camposVazios) {
+    setErro('Preencha todos os campos');
+    return;
   }
 
-  async function handleLogin() {
-    if (camposVaziosLogin) {
-      setErro('Preencha todos os campos');
-      return;
-    }
+  try {
+    const hoje = new Date();
+    const nascimento = new Date(ano, mes - 1, dia);
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
 
-    try {
-    const { data } = await axios.post('http://localhost:8081/apiAv/Login', { // Declaro como uma variável para que possa retornar um objeto
+    const aindaNaoFezAniversario =
+      hoje.getMonth() < nascimento.getMonth() ||
+      (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+
+    if (aindaNaoFezAniversario) idade--;
+
+    const { data } = await axios.post('http://localhost:8081/apiAv/Register', {
+      username: name,
+      email,
+      idade,
+      senha: password,
+    });
+
+    const { senha: _/*ignored*/, ...another } = data;
+
+    const anotherStr = JSON.stringify(another);
+    localStorage.setItem("user", anotherStr);
+    window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));//Dispara antes de carregar a próxima tela, como um evento
+
+    navigate('/home');
+  } catch (error) {
+    setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
+  }
+}
+
+async function handleLogin() {
+  if (camposVaziosLogin) {
+    setErro('Preencha todos os campos');
+    return;
+  }
+
+  try {
+    const { data } = await axios.post('http://localhost:8081/apiAv/Login', {
       email: loginEmail,
       senha: loginPassword,
     });
 
-      localStorage.setItem("user", JSON.stringify(data)); // Guarada a parte "username" do objeto no localStorage
-      //Guarda em json para qualquer informação ser acessível
+    const { senha: _/*ignored*/, ...another } = data; // filtra a senha também no login
 
+    const anotherStr = JSON.stringify(another);
+    localStorage.setItem("user", anotherStr);
+    window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
 
-      navigate('/home');
-    } catch (error) {
-      console.log(error);
-      setErro('Email ou senha incorretos');
-    }
+    navigate('/home');
+  } catch (error) {
+    console.log(error);
+    setErro('Email ou senha incorretos');
   }
+}
 
 
   

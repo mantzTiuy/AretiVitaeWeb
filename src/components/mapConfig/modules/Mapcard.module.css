@@ -1,0 +1,74 @@
+.card {
+  flex-shrink: 0;
+  width: 170px;
+  background: rgb(100, 122, 200);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+}
+
+/* ── THUMBNAIL ── */
+.thumb {
+  width: 100%;
+  height: 96px;
+  background: hsl(var(--hue, 220), 45%, 30%);
+  position: relative;
+  overflow: hidden;
+}
+
+.thumbGrid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  padding: 10px;
+}
+
+.thumbBlock {
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.thumbBlock:nth-child(1) { background: rgba(255, 255, 255, 0.12); }
+.thumbBlock:nth-child(4) { background: rgba(255, 255, 255, 0.06); grid-column: span 2; }
+
+.thumbOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.18) 100%);
+}
+
+/* ── INFO ── */
+.info {
+  padding: 9px 12px 11px;
+}
+
+.name {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+  letter-spacing: 0.03em;
+}
+
+.date {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,355 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600&display=swap');
+
+:root {
+  --bg:           rgb(120, 145, 220);
+  --bg-deep:      rgb(75, 94, 153);
+  --card-bg:      rgb(120, 145, 220);
+  --card-inner:   rgb(100, 122, 200);
+  --border:       rgba(255, 255, 255, 0.25);
+  --input-bg:     #ffffff;
+  --white:        #ffffff;
+  --btn-dark:     rgb(45, 63, 120);
+  --radius:       16px;
+  --radius-sm:    12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── ROOT ── */
+.root {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg-deep);
+  font-family: 'Josefin Sans', sans-serif;
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ── DISPLAY ── */
+.display {
+  width: 100%;
+  height: 26.4vh;
+  min-height: 154px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.display::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+}
+
+/* ── BODY ── */
+.bodyWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 44px 53px;
+  background: var(--bg-deep);
+}
+
+.body {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── PAGE HEADER ── */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  padding: 28px 0 22px;
+  position: relative;
+}
+
+.pageHeader::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent 70%);
+}
+
+.pageHeaderText h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.pageHeaderText p {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 5px;
+  text-transform: uppercase;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ── FORM CARD ── */
+.formCard {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: clamp(1.32rem, 3.3vh, 2.2rem) clamp(1.4rem, 3.3vw, 2.4rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.9rem, 1.8vh, 1.5rem);
+  margin-top: 22px;
+  transition: filter 0.2s;
+}
+
+/* ── SECTION TITLE ── */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: 90%;
+  margin-bottom: 2px;
+}
+
+.sectionTitle p {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.65rem, 1.1vh, 0.85rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.sectionLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* ── FIELD ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5.5px;
+  width: 90%;
+}
+
+.field label {
+  font-size: 8.8px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 500;
+  font-family: 'Montserrat', sans-serif;
+  transition: color 0.2s;
+}
+
+.field:focus-within label { color: #fff; }
+
+/* ── INPUT / TEXTAREA ── */
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 0 1.1rem 0 2.86rem;
+  font-size: clamp(0.77rem, 1.43vh, 0.99rem);
+  color: gray;
+  background: var(--input-bg) no-repeat 0.85rem center;
+  border: none;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: box-shadow 0.2s;
+  font-family: 'Josefin Sans', sans-serif;
+  letter-spacing: 0.04em;
+  box-sizing: border-box;
+}
+
+.field input {
+  height: clamp(1.98rem, 4.95vh, 3.3rem);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M3 9h18M9 21V9'/%3E%3C/svg%3E");
+}
+
+.field textarea {
+  min-height: 80px;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  resize: vertical;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Cpath d='M4 6h16M4 12h16M4 18h10'/%3E%3C/svg%3E");
+  background-position: 0.85rem 0.85rem;
+}
+
+.field input:focus,
+.field textarea:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.inputError {
+  outline: 2px solid rgb(232, 64, 64) !important;
+  color: red !important;
+}
+
+.errorMsg {
+  font-size: clamp(0.7rem, 1.2vh, 0.9rem);
+  color: rgb(255, 80, 80);
+  letter-spacing: 0.05em;
+  font-family: 'Montserrat', sans-serif;
+  padding-left: 0.4rem;
+}
+
+.charCount {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Montserrat', sans-serif;
+  text-align: right;
+  width: 90%;
+  margin-top: -10px;
+}
+
+/* ── SIZE BUTTONS ── */
+.sizeButtons {
+  display: flex;
+  gap: 10px;
+  width: 90%;
+}
+
+.sizeBtn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sizeBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.sizeBtnActive {
+  background: var(--btn-dark) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #fff !important;
+}
+
+/* ── BUTTONS ── */
+.save {
+  height: clamp(1.98rem, 4.95vh, 3.3rem);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--btn-dark);
+  color: #fff;
+  font-size: clamp(0.79rem, 1.43vh, 1.05rem);
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.1s ease;
+  width: 100%;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.save:hover  { filter: brightness(1.15); }
+.save:active { transform: scale(0.98); }
+
+.discard {
+  height: clamp(1.98rem, 4.95vh, 3.3rem);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: rgba(100, 130, 210, 0.55);
+  color: #fff;
+  font-size: clamp(0.79rem, 1.43vh, 1.05rem);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  width: 100%;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+}
+
+.discard:hover  { background: rgba(110, 140, 220, 0.75); }
+.discard:active { transform: scale(0.98); }
+
+/* ── CAROUSEL ── */
+.carouselSection { margin-top: 28px; }
+
+.carouselHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 14px;
+}
+
+.carouselHeader p {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.65rem, 1.1vh, 0.85rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.carouselWrap { position: relative; }
+
+.carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar { display: none; }
+
+.arrowBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-60%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(45, 63, 120, 0.85);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 2;
+}
+
+.arrowBtn:hover { background: var(--btn-dark); }
+.arrowLeft      { left: -14px; }
+.arrowRight     { right: -14px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .bodyWrapper { padding: 0 20px 40px; }
+  .sizeButtons { flex-direction: column; }
+  .pageHeaderText h1 { font-size: 18px; }
+}
+
+@media (max-width: 480px) {
+  .bodyWrapper { padding: 0 14px 28px; }
+  .formCard    { padding: 20px 16px; border-radius: 14px; }
+}
