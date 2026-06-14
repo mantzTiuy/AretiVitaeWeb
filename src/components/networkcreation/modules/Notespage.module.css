@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600&family=Rock+Salt&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -29,13 +29,11 @@
 .winWindow {
   display: flex;
   flex-direction: column;
-  border-radius: 10px 10px 8px 8px;
+  border-radius: var(--radius, 14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   overflow: hidden;
   flex: 1;
-  box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.35),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 /* ── Sub-header bar ── */
@@ -44,9 +42,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px clamp(16px, 3vw, 40px);
-  background: rgba(70, 95, 180, 0.6);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgb(45, 63, 120);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   flex-shrink: 0;
   gap: 12px;
 }
@@ -57,24 +54,26 @@
   gap: 10px;
   min-width: 0;
 }
+
 .notesCount {
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(11px, 1.1vw, 13px);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.80);
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
+
 .notesDivider {
   width: 1px;
   height: 14px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.20);
   flex-shrink: 0;
 }
+
 .notesHint {
   font-family: 'Montserrat', sans-serif;
   font-size: clamp(9px, 0.9vw, 11px);
-  font-weight: 400;
   color: rgba(255, 255, 255, 0.38);
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -88,8 +87,8 @@
   gap: 6px;
   height: 32px;
   padding: 0 16px;
-  background: rgba(101, 130, 210, 0.8);
-  border: 1px solid rgba(160, 180, 255, 0.35);
+  background: rgb(35, 50, 100);
+  border: none;
   border-radius: 10px;
   color: #fff;
   font-family: 'Josefin Sans', sans-serif;
@@ -97,22 +96,69 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   cursor: pointer;
-  transition: background 0.2s, transform 0.15s, border-color 0.2s;
+  transition: filter 0.18s, transform 0.12s;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.newBtn span {
-  font-size: 16px;
-  line-height: 1;
-  font-weight: 300;
-}
-.newBtn:hover {
-  background: rgba(120, 150, 235, 0.95);
-  border-color: rgba(180, 200, 255, 0.55);
-}
+.newBtn:hover  { filter: brightness(1.18); }
 .newBtn:active { transform: scale(0.97); }
 
+/* ── Rodapé com botões ── */
+.winFooter {
+  display: flex;
+  gap: 16px;
+  padding: 16px clamp(16px, 3vw, 40px);
+  background: rgb(38, 54, 108);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  flex-shrink: 0;
+}
+
+.save {
+  flex: 1;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(11px, 1.1vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.12s;
+}
+.save:hover  { filter: brightness(1.18); }
+.save:active { transform: scale(0.98); }
+
+.discard {
+  flex: 1;
+  height: 40px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(11px, 1.1vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, transform 0.12s;
+}
+.discard:hover  { color: rgba(255, 255, 255, 0.65); border-color: rgba(255, 255, 255, 0.22); }
+.discard:active { transform: scale(0.98); }
+
+.winFooter {
+  display: flex;
+  gap: 16px;
+  padding: 14px clamp(16px, 3vw, 40px);
+  background: rgb(38, 54, 108);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+.discard:hover  { color: rgba(255, 255, 255, 0.90); border-color: rgba(255, 255, 255, 0.38); }
+.discard:active { transform: scale(0.98); }
+
 @media (max-width: 600px) {
-  .notesHint { display: none; }
+  .notesHint    { display: none; }
   .notesDivider { display: none; }
 }

@@ -5,11 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function LoginAV() {
-  // qual formulário está visível: 'cadastro' ou 'login'
   const [view, setView] = useState('cadastro');
   const navigate = useNavigate();
 
-  // campos do cadastro
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,14 +16,12 @@ export default function LoginAV() {
   const [mes, setMes] = useState('');
   const [ano, setAno] = useState('');
 
-  // campos do login
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
-  // mensagem de erro geral
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // validações
   const passwordMismatch = confirm.length > 0 && password !== confirm;
   const nameTooLong = name.length > 16;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,75 +29,63 @@ export default function LoginAV() {
   const camposVazios = !name || !email || !dia || !mes || !ano || !password || !confirm;
   const camposVaziosLogin = !loginEmail || !loginPassword;
 
- async function handleCadastro() {
-  if (camposVazios) {
-    setErro('Preencha todos os campos');
-    return;
+  async function handleCadastro() {
+    if (camposVazios || loading) return;
+    setLoading(true);
+    try {
+      const hoje = new Date();
+      const nascimento = new Date(ano, mes - 1, dia);
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+      const aindaNaoFezAniversario =
+        hoje.getMonth() < nascimento.getMonth() ||
+        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+
+      if (aindaNaoFezAniversario) idade--;
+
+      const { data } = await axios.post('http://localhost:8081/apiAv/Register', {
+        username: name,
+        email,
+        idade,
+        senha: password,
+      });
+
+      const { senha: _/*ignored*/, ...another } = data;
+      const anotherStr = JSON.stringify(another);
+      localStorage.setItem("user", anotherStr);
+      window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
+      navigate('/home');
+    } catch (error) {
+      setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  try {
-    const hoje = new Date();
-    const nascimento = new Date(ano, mes - 1, dia);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
+  async function handleLogin() {
+    if (camposVaziosLogin || loading) return;
+    setLoading(true);
+    try {
+      const { data } = await axios.post('http://localhost:8081/apiAv/Login', {
+        email: loginEmail,
+        senha: loginPassword,
+      });
 
-    const aindaNaoFezAniversario =
-      hoje.getMonth() < nascimento.getMonth() ||
-      (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
-
-    if (aindaNaoFezAniversario) idade--;
-
-    const { data } = await axios.post('http://localhost:8081/apiAv/Register', {
-      username: name,
-      email,
-      idade,
-      senha: password,
-    });
-
-    const { senha: _/*ignored*/, ...another } = data;
-
-    const anotherStr = JSON.stringify(another);
-    localStorage.setItem("user", anotherStr);
-    window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));//Dispara antes de carregar a próxima tela, como um evento
-
-    navigate('/home');
-  } catch (error) {
-    setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
+      const { senha: _/*ignored*/, ...another } = data;
+      const anotherStr = JSON.stringify(another);
+      localStorage.setItem("user", anotherStr);
+      window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
+      navigate('/home');
+    } catch (error) {
+      console.log(error);
+      setErro('Email ou senha incorretos');
+    } finally {
+      setLoading(false);
+    }
   }
-}
-
-async function handleLogin() {
-  if (camposVaziosLogin) {
-    setErro('Preencha todos os campos');
-    return;
-  }
-
-  try {
-    const { data } = await axios.post('http://localhost:8081/apiAv/Login', {
-      email: loginEmail,
-      senha: loginPassword,
-    });
-
-    const { senha: _/*ignored*/, ...another } = data; // filtra a senha também no login
-
-    const anotherStr = JSON.stringify(another);
-    localStorage.setItem("user", anotherStr);
-    window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
-
-    navigate('/home');
-  } catch (error) {
-    console.log(error);
-    setErro('Email ou senha incorretos');
-  }
-}
-
-
-  
-
-
 
   return (
     <div className={styles.flex_div}>
-
       <div className={styles.left}>
         <LeftAV />
       </div>
@@ -110,7 +94,6 @@ async function handleLogin() {
         <h1 className={styles.brandTitle}>AretiVitae</h1>
 
         <div className={styles.container}>
-
           {view === 'cadastro' ? (
             <>
               <div className={styles.titleRow}>
@@ -143,7 +126,6 @@ async function handleLogin() {
                 )}
               </div>
 
-              {/* seletores de data de nascimento */}
               <div className={styles.selectRow}>
                 <select className={styles.select} value={dia} onChange={e => setDia(e.target.value)}>
                   <option value="">Dia</option>
@@ -193,10 +175,10 @@ async function handleLogin() {
 
               <button
                 className={styles.button}
-                disabled={passwordMismatch || nameTooLong || emailInvalid || camposVazios}
+                disabled={passwordMismatch || nameTooLong || emailInvalid || camposVazios || loading}
                 onClick={handleCadastro}
               >
-                Imergir
+                {loading ? 'Cadastrando...' : 'Imergir'}
               </button>
 
               <p className={styles.switchText}>
@@ -206,7 +188,6 @@ async function handleLogin() {
                 </span>
               </p>
             </>
-
           ) : (
             <>
               <div className={styles.titleRow}>
@@ -234,9 +215,9 @@ async function handleLogin() {
               <button
                 className={styles.button}
                 onClick={handleLogin}
-                disabled={camposVaziosLogin}
+                disabled={camposVaziosLogin || loading}
               >
-                Imergir
+                {loading ? 'Entrando...' : 'Imergir'}
               </button>
 
               <p className={styles.switchText}>
@@ -247,7 +228,6 @@ async function handleLogin() {
               </p>
             </>
           )}
-
         </div>
       </div>
     </div>

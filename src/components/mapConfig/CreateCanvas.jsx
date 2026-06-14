@@ -9,11 +9,7 @@ import MapCarousel from './Mapcarousel';
 export default function CreateCanvas() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-  });
-
+  const [form, setForm] = useState({ name: '', description: '' });
   const [size, setSize] = useState('1×');
 
   const handleChange = (field) => (e) =>
@@ -25,82 +21,84 @@ export default function CreateCanvas() {
 
   const handleSubmit = () => {
     if (emptyName || nameTooLong || descTooLong) return;
-    navigate('/home');
+    navigate('/index');
   };
 
   return (
     <div className={styles.root}>
 
-      <CanvasTopDisplay />
+      <div className={styles.display}>
+        <CanvasTopDisplay />
+      </div>
 
       <div className={styles.bodyWrapper}>
         <div className={styles.body}>
 
-          {/* ── PAGE HEADER ── */}
-          <div className={styles.pageHeader}>
-            <div className={styles.pageHeaderText}>
-              <h1>Novo canvas</h1>
-              <p>Preencha as informações para criar seu canvas</p>
+          {/* ── JANELA: FORMULÁRIO ── */}
+          <div className={styles.window}>
+            <div className={styles.titlebar}>
+              <span className={styles.titlebarLabel}>Novo canvas</span>
+              <div className={styles.dots}>
+                <div className={`${styles.dot} ${styles.dotGray}`} />
+                <div className={`${styles.dot} ${styles.dotYellow}`} />
+                <div className={`${styles.dot} ${styles.dotRed}`} />
+              </div>
+            </div>
+
+            <div className={styles.formBody}>
+
+              <SectionTitle label="Identificação" />
+
+              <div className={styles.field}>
+                <label>Nome do canvas</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={handleChange('name')}
+                  placeholder="Ex.: AretiVitae"
+                  className={emptyName || nameTooLong ? styles.inputError : ''}
+                />
+                {emptyName && <span className={styles.errorMsg}>Nome obrigatório</span>}
+                {!emptyName && nameTooLong && (
+                  <span className={styles.errorMsg}>Máx 32 caracteres ({form.name.length}/32)</span>
+                )}
+              </div>
+
+              <SectionTitle label="Tamanho" />
+
+              <div className={styles.field}>
+                <label>Escala do canvas</label>
+                <SizeSelector value={size} onChange={setSize} />
+              </div>
+
+              <SectionTitle label="Descrição" />
+
+              <div className={styles.field}>
+                <label>Descrição do canvas</label>
+                <textarea
+                  value={form.description}
+                  onChange={handleChange('description')}
+                  placeholder="Seja livre e descreva sua ideia aqui..."
+                  maxLength={240}
+                  className={descTooLong ? styles.inputError : ''}
+                />
+              </div>
+              <p className={styles.charCount}>{form.description.length}/240</p>
+
+              <div className={styles.btnRow}>
+                <button className={styles.save} onClick={handleSubmit}>
+                  Criar canvas
+                </button>
+                <button className={styles.discard} onClick={() => navigate('/home')}>
+                  Cancelar
+                </button>
+              </div>
+
             </div>
           </div>
 
-          {/* ── FORM CARD ── */}
-          <div className={styles.formCard}>
-
-            <SectionTitle label="Identificação" />
-
-            <div className={styles.field}>
-              <label>Nome do canvas</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={handleChange('name')}
-                placeholder="Ex.: Projeto Aurora"
-                className={emptyName || nameTooLong ? styles.inputError : ''}
-              />
-              {emptyName && (
-                <span className={styles.errorMsg}>Nome obrigatório</span>
-              )}
-              {!emptyName && nameTooLong && (
-                <span className={styles.errorMsg}>Máx 32 caracteres ({form.name.length}/32)</span>
-              )}
-            </div>
-
-            <SectionTitle label="Tamanho" />
-
-            <div className={styles.field}>
-              <label>Escala do canvas</label>
-              <SizeSelector value={size} onChange={setSize} />
-            </div>
-
-            <SectionTitle label="Descrição" />
-
-            <div className={styles.field}>
-              <label>Descrição do canvas</label>
-              <textarea
-                value={form.description}
-                onChange={handleChange('description')}
-                placeholder="Descreva o propósito, contexto ou observações do canvas..."
-                maxLength={240}
-                className={descTooLong ? styles.inputError : ''}
-              />
-            </div>
-            <p className={styles.charCount}>
-              {form.description.length}/240
-            </p>
-
-            <button className={styles.save} onClick={handleSubmit}>
-              Criar canvas
-            </button>
-
-            <button className={styles.discard} onClick={() => navigate('/home')}>
-              Cancelar
-            </button>
-
-          </div>
-
-          {/* ── CAROUSEL ── */}
-          <MapCarousel onSelect={(map) => console.log('Abrir mapa:', map.name)} />
+          {/* ── JANELA: MAPAS ── */}
+          <MapCarousel />
 
         </div>
       </div>

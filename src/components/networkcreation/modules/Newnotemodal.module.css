@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(1, 10, 40, 0.65);
+  background: rgba(30, 45, 110, 0.65);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -17,134 +17,147 @@
 
 .modal {
   position: relative;
-  background: rgba(100, 125, 210, 0.88);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 20px;
-  padding: clamp(2rem, 4vh, 3rem) clamp(1.5rem, 4vw, 2.5rem);
+  background: rgb(100, 122, 200);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
   width: min(90vw, 440px);
-  box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.4),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(0.9rem, 1.8vh, 1.4rem);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.40);
   animation: slideUp 0.22s ease;
 }
 
 @keyframes slideUp {
-  from { transform: translateY(16px); opacity: 0; }
+  from { transform: translateY(14px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-.closeBtn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 30px;
-  height: 30px;
+/* ── Titlebar ── */
+.titlebar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 38px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
-.closeBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+
+.titlebarLabel {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: rgba(255, 255, 255, 0.80);
+  text-transform: uppercase;
+}
+
+.dots { display: flex; gap: 6px; }
+.dot  { width: 11px; height: 11px; border-radius: 50%; }
+.dotGray   { background: rgba(255, 255, 255, 0.22); }
+.dotYellow { background: #e5c040; }
+.dotRed    { background: #e05555; cursor: pointer; }
+.dotRed:hover { background: #ff3333; }
+
+/* ── Body ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.9rem, 1.8vh, 1.4rem);
+  padding: clamp(1.4rem, 3vh, 2rem) clamp(1.2rem, 3vw, 2rem);
 }
 
 .sectionTitle {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  width: 90%;
+  gap: 0.75rem;
+  width: 100%;
+  color:white;
 }
-.line {
+.sectionLine {
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.20);
 }
 .sectionText {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
-  font-size: clamp(0.65rem, 1.1vh, 0.85rem);
-  letter-spacing: 0.18em;
+  font-size: clamp(0.6rem, 1vh, 0.78rem);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
+  opacity: 0.70;
   white-space: nowrap;
+  color:white;
 }
 
 .sub {
   margin: 0;
   font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(0.78rem, 1.4vh, 0.95rem);
-  color: rgba(255, 255, 255, 0.6);
+  font-size: clamp(0.78rem, 1.4vh, 0.94rem);
+  color: rgba(255, 255, 255, 0.58);
   text-align: center;
   letter-spacing: 0.04em;
+  width: 100%;
 }
 
 .input {
-  width: 90%;
-  height: clamp(2.2rem, 5.5vh, 3.4rem);
-  background: rgba(40, 60, 150, 0.55);
-  border: 1px solid rgba(160, 180, 255, 0.35);
-  border-radius: 12px;
-  color: #fff;
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(0.85rem, 1.5vh, 1rem);
-  font-weight: 500;
-  padding: 0 1.2rem;
+  width: 100%;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  padding: 0 1rem;
+  font-size: clamp(0.76rem, 1.4vh, 0.96rem);
+  color: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: 'Josefin Sans', sans-serif;
+  letter-spacing: 0.04em;
   box-sizing: border-box;
-  transition: border-color 0.2s, background 0.2s;
 }
+.input::placeholder { color: rgba(255, 255, 255, 0.28); }
 .input:focus {
-  border-color: rgba(160, 180, 255, 0.75);
-  background: rgba(50, 70, 160, 0.65);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.10);
 }
-.input::placeholder { color: rgba(255, 255, 255, 0.3); }
 
 .btnRow {
   display: flex;
   gap: 10px;
-  width: 90%;
+  width: 100%;
 }
 
-.cancelBtn,
+.cancelBtn {
+  flex: 1;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, transform 0.1s;
+}
+.cancelBtn:hover  { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.cancelBtn:active { transform: scale(0.97); }
+
 .confirmBtn {
   flex: 1;
-  height: clamp(2rem, 5vh, 3rem);
-  border-radius: 12px;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  border-radius: 10px;
   border: none;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  font-size: clamp(0.75rem, 1.3vh, 0.9rem);
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.12s, opacity 0.2s;
-}
-.cancelBtn {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.cancelBtn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
-
-.confirmBtn {
-  background: rgb(101, 130, 210);
+  background: rgb(35, 50, 100);
   color: #fff;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.1s, opacity 0.2s;
 }
-.confirmBtn:hover:not(:disabled) { background: rgb(120, 148, 230); }
-.confirmBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.cancelBtn:active,
+.confirmBtn:hover:not(:disabled)  { filter: brightness(1.18); }
 .confirmBtn:active:not(:disabled) { transform: scale(0.97); }
+.confirmBtn:disabled { opacity: 0.38; cursor: not-allowed; }

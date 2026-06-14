@@ -4,6 +4,7 @@ import WinTitleBar   from "./Wintitlebar.jsx";
 import NotesGrid     from "./Notesgrid";
 import NewNoteModal  from "./Newnotemodal.jsx";
 import styles from "./modules/Notespage.module.css";
+import { useNavigate } from "react-router-dom";
 
 function today() {
   return new Date().toLocaleDateString("pt-BR", {
@@ -36,8 +37,9 @@ const INITIAL_NOTES = [
 let nextId = INITIAL_NOTES.length + 1;
 
 export default function NotesPage() {
-  const [notes,      setNotes]      = useState(INITIAL_NOTES);
-  const [showModal,  setShowModal]  = useState(false);
+  const navigate = useNavigate();
+  const [notes,     setNotes]     = useState(INITIAL_NOTES);
+  const [showModal, setShowModal] = useState(false);
 
   const handleAdd = (title) => {
     setNotes((prev) => [
@@ -95,6 +97,11 @@ export default function NotesPage() {
             onUpdate={handleUpdate}
             onAdd={() => setShowModal(true)}
           />
+
+          <div className={styles.winFooter}>
+            <button className={styles.save}>Salvar alterações</button>
+            <button className={styles.discard} onClick={() => navigate('/home')}>Cancelar</button>
+          </div>
 
         </div>
       </div>

@@ -67,7 +67,7 @@ const CARDS = [
 ]
 
 const STAR_COUNT = 2026
-
+//CSS INLINE PARA FUNCIONAMENTO DOS CARDS ALINHADOS COM A ANIMAÇÃO
 const T = {
   cardBg:     'rgba(8, 12, 38, 0.72)',
   cardBorder: 'rgba(155, 185, 255, 0.16)',
@@ -75,11 +75,6 @@ const T = {
   accentB:    '#c4b5fd',
   text:       '#dde8ff',
   textDesc:   '#ffffff',
-  shadow: [
-    '0 0 0 1px rgba(155, 185, 255, 0.09)',
-    '0 28px 60px rgba(0, 0, 24, 0.65)',
-    'inset 0 1px 0 rgba(255, 255, 255, 0.055)',
-  ].join(', '),
 }
 
 function bp() {
@@ -118,8 +113,7 @@ function createCardCTA(label, href) {
     textTransform:        'uppercase',
     cursor:               'pointer',
     whiteSpace:           'nowrap',
-    boxShadow:            '0 0 48px rgba(100,145,255,0.14), inset 0 1px 0 rgba(255,255,255,0.06)',
-    transition:           'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease',
+    transition:           'background 0.3s ease, border-color 0.3s ease, transform 0.2s ease',
   })
 
   const dot = document.createElement('span')
@@ -128,7 +122,6 @@ function createCardCTA(label, href) {
     height:       '6px',
     borderRadius: '50%',
     background:   T.accent,
-    boxShadow:    `0 0 8px ${T.accent}`,
     flexShrink:   '0',
     animation:    'dotPulse 2.4s ease-in-out infinite',
   })
@@ -138,13 +131,11 @@ function createCardCTA(label, href) {
   btn.addEventListener('mouseenter', () => {
     btn.style.background  = 'rgba(22,44,110,0.9)'
     btn.style.borderColor = 'rgba(138,176,255,0.55)'
-    btn.style.boxShadow   = '0 0 70px rgba(100,145,255,0.28), inset 0 1px 0 rgba(255,255,255,0.09)'
     btn.style.transform   = 'translateY(-2px)'
   })
   btn.addEventListener('mouseleave', () => {
     btn.style.background  = 'rgba(8,14,48,0.82)'
     btn.style.borderColor = 'rgba(138,176,255,0.32)'
-    btn.style.boxShadow   = '0 0 48px rgba(100,145,255,0.14), inset 0 1px 0 rgba(255,255,255,0.06)'
     btn.style.transform   = 'translateY(0)'
   })
   btn.addEventListener('mousedown', () => { btn.style.transform = 'translateY(0)' })
@@ -170,7 +161,6 @@ function createCardElement(card) {
     background:           T.cardBg,
     border:               `1px solid ${T.cardBorder}`,
     borderRadius:         '26px',
-    boxShadow:            T.shadow,
     backdropFilter:       'blur(28px) saturate(1.5)',
     WebkitBackdropFilter: 'blur(28px) saturate(1.5)',
     opacity:              '0',
@@ -418,20 +408,17 @@ function createCardElement(card) {
         background:  'rgba(100, 180, 255, 0.18)',
         border:      '1px solid rgba(130, 200, 255, 0.65)',
         color:       '#b8e0ff',
-        boxShadow:   '0 0 32px rgba(100,190,255,0.22), inset 0 1px 0 rgba(255,255,255,0.10)',
       })
 
       const dot = btn.querySelector('span')
       if (dot) {
         dot.style.background = '#7dd4fc'
-        dot.style.boxShadow  = '0 0 8px #7dd4fc'
       }
 
       btn.addEventListener('mouseenter', () => {
         btn.style.background  = 'rgba(100, 180, 255, 0.32)'
         btn.style.borderColor = 'rgba(160, 220, 255, 0.85)'
         btn.style.color       = '#dff2ff'
-        btn.style.boxShadow   = '0 0 56px rgba(100,190,255,0.38), inset 0 1px 0 rgba(255,255,255,0.14)'
         btn.style.transform   = 'translateY(-2px)'
       })
 
@@ -439,7 +426,6 @@ function createCardElement(card) {
         btn.style.background  = 'rgba(100, 180, 255, 0.18)'
         btn.style.borderColor = 'rgba(130, 200, 255, 0.65)'
         btn.style.color       = '#b8e0ff'
-        btn.style.boxShadow   = '0 0 32px rgba(100,190,255,0.22), inset 0 1px 0 rgba(255,255,255,0.10)'
         btn.style.transform   = 'translateY(0)'
       })
     }

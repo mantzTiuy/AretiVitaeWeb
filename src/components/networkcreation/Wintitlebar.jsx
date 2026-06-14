@@ -5,13 +5,9 @@ export default function WinTitleBar({ title, onClose }) {
     <div className={styles.titleBar}>
       <span className={styles.title}>{title}</span>
       <div className={styles.controls}>
-        <span className={styles.btn} />
-        <span className={styles.btn} />
-        <span
-          className={`${styles.btn} ${styles.btnClose}`}
-          onClick={onClose}
-          title="Fechar"
-        />
+        <span className={`${styles.btn} ${styles.dotGray}`} />
+        <span className={`${styles.btn} ${styles.dotYellow}`} />
+        <span className={`${styles.btn} ${styles.dotRed}`} onClick={onClose} title="Fechar" />
       </div>
     </div>
   );

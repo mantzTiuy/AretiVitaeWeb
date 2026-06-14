@@ -1,70 +1,57 @@
 .card {
-  background: rgba(80, 105, 190, 0.52);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgb(100, 122, 200);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
-  padding: 16px 18px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: border-color 0.2s, background 0.2s, transform 0.18s;
-  cursor: default;
+  overflow: hidden;
+  transition: filter 0.18s, transform 0.18s;
 }
-.card:hover {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(90, 115, 205, 0.6);
-  transform: translateY(-2px);
-}
-.cardEditing {
-  border-color: rgba(160, 180, 255, 0.5) !important;
-  transform: none !important;
-}
+.card:hover { filter: brightness(1.05); }
+.cardEditing { filter: none !important; transform: none !important; }
 
-/* ── Header ── */
-.cardHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-.headerLeft {
+/* ── Titlebar do card ── */
+.cardTitlebar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding: 9px 14px;
+}
+
+.cardTitlebarLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
-.cardIcon {
-  font-size: 20px;
-  flex-shrink: 0;
-  line-height: 1;
-}
+
 .cardTitle {
   margin: 0;
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(13px, 1.3vw, 15px);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(11px, 1.1vw, 13px);
   font-weight: 600;
-  color: #fff;
-  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.90);
+  letter-spacing: 0.05em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .cardDate {
-  margin: 3px 0 0;
+  margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.40);
   text-transform: uppercase;
 }
 
-/* ── Action buttons ── */
 .headerActions {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
+
 .editBtn,
 .deleteBtn {
   width: 26px;
@@ -77,27 +64,22 @@
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.65);
 }
-.editBtn {
-  background: rgba(168, 180, 248, 0.18);
-}
-.editBtn:hover {
-  background: rgba(168, 180, 248, 0.4);
-  color: #fff;
-}
-.deleteBtn {
-  background: rgba(255, 100, 100, 0.15);
-  color: rgba(255, 150, 150, 0.8);
-}
-.deleteBtn:hover {
-  background: rgba(255, 100, 100, 0.4);
-  color: #fff;
-}
-.editBtn:active,
-.deleteBtn:active { transform: scale(0.9); }
+.editBtn   { background: rgba(255, 255, 255, 0.10); }
+.editBtn:hover { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.deleteBtn { background: rgba(255, 100, 100, 0.15); color: rgba(255, 160, 160, 0.8); }
+.deleteBtn:hover { background: rgba(255, 100, 100, 0.38); color: #fff; }
+.editBtn:active, .deleteBtn:active { transform: scale(0.90); }
 
-/* ── Preview text ── */
+/* ── Body ── */
+.cardBody {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .cardPreview {
   margin: 0;
   font-family: 'Josefin Sans', sans-serif;
@@ -108,14 +90,8 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
-.emptyHint {
-  color: rgba(255, 255, 255, 0.3);
-  font-style: italic;
-}
-.moreHint {
-  color: rgba(160, 180, 255, 0.7);
-  font-size: 11px;
-}
+.emptyHint { color: rgba(255, 255, 255, 0.28); font-style: italic; }
+.moreHint  { color: rgba(180, 200, 255, 0.60); font-size: 11px; }
 
 /* ── Editor ── */
 .editorArea {
@@ -123,14 +99,15 @@
   flex-direction: column;
   gap: 10px;
 }
+
 .textarea {
   width: 100%;
-  min-height: 160px;
+  min-height: 150px;
   resize: vertical;
-  background: rgba(40, 60, 140, 0.55);
-  border: 1px solid rgba(160, 180, 255, 0.35);
+  background: rgba(35, 50, 100, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 10px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.90);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(12px, 1.2vw, 14px);
   line-height: 1.65;
@@ -138,11 +115,10 @@
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s;
+  letter-spacing: 0.04em;
 }
-.textarea:focus {
-  border-color: rgba(160, 180, 255, 0.7);
-}
-.textarea::placeholder { color: rgba(255, 255, 255, 0.3); }
+.textarea:focus { border-color: rgba(255, 255, 255, 0.42); }
+.textarea::placeholder { color: rgba(255, 255, 255, 0.28); }
 
 .editorFooter {
   display: flex;
@@ -150,10 +126,11 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
 .lineBar {
   flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.12);
+  height: 3px;
+  background: rgba(255, 255, 255, 0.10);
   border-radius: 4px;
   overflow: hidden;
   min-width: 60px;
@@ -167,37 +144,51 @@
   font-family: 'Montserrat', sans-serif;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.38);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
+
+/* ── Save / discard buttons ── */
 .editorBtns {
   display: flex;
   gap: 8px;
+  width: 100%;
+  padding-top: 4px;
 }
-.cancelBtn,
+
+.cancelBtn {
+  flex: 1;
+  height: 2.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
+}
+.cancelBtn:hover  { background: rgba(255, 255, 255, 0.22); }
+.cancelBtn:active { transform: scale(0.97); }
+
 .saveBtn {
-  height: 30px;
-  padding: 0 14px;
+  flex: 2;
+  height: 2.6rem;
   border-radius: 10px;
   border: none;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.12s;
-}
-.cancelBtn {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-.cancelBtn:hover { background: rgba(255, 255, 255, 0.18); color: #fff; }
-.saveBtn {
-  background: rgba(100, 130, 220, 0.8);
+  background: rgb(35, 50, 100);
   color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.1s;
 }
-.saveBtn:hover { background: rgba(120, 150, 240, 0.95); }
-.cancelBtn:active,
+.saveBtn:hover  { filter: brightness(1.25); }
 .saveBtn:active { transform: scale(0.97); }

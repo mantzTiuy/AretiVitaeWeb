@@ -8,9 +8,9 @@ export default function SizeSelector({ value, onChange }) {
       {OPTIONS.map((opt) => (
         <button
           key={opt}
+          type="button"
           className={`${styles.sizeBtn} ${value === opt ? styles.sizeBtnActive : ''}`}
           onClick={() => onChange(opt)}
-          type="button"
         >
           {opt}
         </button>

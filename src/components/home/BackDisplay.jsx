@@ -12,7 +12,7 @@ const starData = Array.from({ length: count }, () => ({
 }))
 
 const models = [
-  { path: '/models/PCICON.glb',          label: 'PC Icon',    tooltip: 'Criar Network',        route: '/index',         position: [ 9.0,  3.5,  0], scale: 0.36, rotationY: 60  * (Math.PI / 180),               floatSpeed: 0.6,  floatAmp: 0.12, floatPhase: Math.random() * Math.PI * 2 },
+  { path: '/models/PCICON.glb',          label: 'PC Icon',    tooltip: 'Criar Network',        route: '/create',         position: [ 9.0,  3.5,  0], scale: 0.36, rotationY: 60  * (Math.PI / 180),               floatSpeed: 0.6,  floatAmp: 0.12, floatPhase: Math.random() * Math.PI * 2 },
   { path: '/models/COMPUTADOR.glb',      label: 'Computador', tooltip: 'Notas',  route: '/notes', position: [ 9.0, -4.0,  0], scale: 0.36, rotationY: Math.PI + (40 * (Math.PI / 180)),    floatSpeed: 0.5,  floatAmp: 0.10, floatPhase: Math.random() * Math.PI * 2 },
   { path: '/models/thetruescruture.glb', label: 'Estrutura',  tooltip: 'Visualizar Módulos',   route: '/NetworkDemo',   position: [ 5.2,  0.0,  0], scale: 0.06, rotationY: -50 * (Math.PI / 180),               floatSpeed: 0.7,  floatAmp: 0.09, floatPhase: Math.random() * Math.PI * 2 },
   { path: '/models/interrogacao.glb',    label: 'Sobre',      tooltip: 'Sobre o projeto',      route: '/sobre',         position: [9.5, 0, 0], scale: 0.08, rotationY: -90 * (Math.PI / 180),               floatSpeed: 0.55, floatAmp: 0.11, floatPhase: Math.random() * Math.PI * 2 },

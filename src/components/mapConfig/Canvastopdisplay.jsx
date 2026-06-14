@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import styles from './modules/createCanvas.module.css';
 
 export default function CanvasTopDisplay() {
@@ -29,16 +30,36 @@ export default function CanvasTopDisplay() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.8;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
 
     // ── LIGHTS ──
     scene.add(new THREE.AmbientLight(0xd0e8ff, 1.2));
 
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    keyLight.position.set(-8, 12, 6);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 50;
+    keyLight.shadow.bias = -0.001;
+    scene.add(keyLight);
+
     const rimLight = new THREE.DirectionalLight(0x8ab4ff, 1.5);
     rimLight.position.set(6, -4, -10);
     scene.add(rimLight);
 
-    // ── STARS (instanced icosahedra, same as reference) ──
+    const fillLight = new THREE.DirectionalLight(0xaac8ff, 1.0);
+    fillLight.position.set(0, -8, 4);
+    scene.add(fillLight);
+
+    const centerGlow = new THREE.PointLight(0xd0e4ff, 2.0, 10);
+    centerGlow.position.set(0, 0, 2);
+    scene.add(centerGlow);
+
+    // ── STARS (instanced icosahedra) ──
     const starCount = 2026;
     const geo = new THREE.IcosahedronGeometry(0.1, 0);
     const mat = new THREE.MeshStandardMaterial({
@@ -72,8 +93,8 @@ export default function CanvasTopDisplay() {
       stars.setMatrixAt(i, dummy.matrix);
     }
 
-    // ── EXTRA CLOSE STARS — populate the "empty" foreground ──
-    const closeCount = 300;
+    // ── EXTRA CLOSE STARS ──
+    const closeCount = 450;
     const geoS = new THREE.IcosahedronGeometry(0.055, 0);
     const matS = new THREE.MeshStandardMaterial({
       color: 0xc8d8ff,
@@ -100,8 +121,8 @@ export default function CanvasTopDisplay() {
       starsClose.setMatrixAt(i, dummyS.matrix);
     }
 
-    // ── NEBULA POINTS — soft coloured haze ──
-    const nebulaCount = 600;
+    // ── NEBULA POINTS ──
+    const nebulaCount = 1200;
     const nebulaPositions = new Float32Array(nebulaCount * 3);
     const nebulaColors    = new Float32Array(nebulaCount * 3);
     for (let i = 0; i < nebulaCount; i++) {
@@ -131,6 +152,41 @@ export default function CanvasTopDisplay() {
     starsGroup.add(starsClose);
     starsGroup.add(nebula);
     scene.add(starsGroup);
+
+    // ── MODEL ──
+    const loader = new GLTFLoader();
+    loader.load(
+      '/models/TouchingHands.glb',
+      (gltf) => {
+        const model = gltf.scene;
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            child.material.roughness = 0.75;
+            child.material.metalness = 0.15;
+            child.material.needsUpdate = true;
+            if (child.material.map) {
+              child.material.map.colorSpace = THREE.SRGBColorSpace;
+            }
+          }
+        });
+
+        model.scale.set(5, 5, -5);
+        scene.add(model);
+
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        model.position.sub(center);
+
+        const maxDim = Math.max(size.x, size.y, size.z);
+        camera.position.set(0, 0, maxDim * 0.5);
+        camera.lookAt(0, 0, 0);
+      },
+      undefined,
+      (error) => console.error('ERRO AO CARREGAR MODELO!:', error)
+    );
 
     // ── RESIZE ──
     const handleResize = () => {
