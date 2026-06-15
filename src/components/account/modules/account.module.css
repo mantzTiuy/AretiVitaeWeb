@@ -457,3 +457,32 @@
   .avatar { width: 64px; height: 64px; font-size: 18px; }
   .formBody { padding: 18px 14px; }
 }
+
+
+/* ── Readonly / Edit toggle ── */
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.18s;
+}
+.editBtn:hover { color: rgba(255, 255, 255, 0.85); }
+
+.inputReadonly {
+  opacity: 0.50;
+  cursor: default;
+  user-select: none;
+}

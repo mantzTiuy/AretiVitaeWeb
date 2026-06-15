@@ -1,27 +1,11 @@
-# ARETI VITAE - 6.0 - CRUD
+# ARETI VITAE - 6.0 - CRUD COMPLETO
 
-AretiVitae
+ O "Areti Vitae: Ilustrador de ideias" é uma plataforma digital e inovadora que visa auxiliar criadores na conceitualização e no desenvolvimento de projetos e ideias por meio de um mapeamento visual intuitivo. Ele se destaca pelo canvas interativo e estética inovadora, buscando evoluir ideias promissoras, especialmente aquelas de menor escala, e incentivando o pensamento criativo juntamente da organização adequada
+O projeto tem como premissa fundamental promover a criação e o desenvolvimento de ideias inovadoras, empregando métodos intuitivos e ferramentas de suporte, além de se garantir de uma estética voltada para o método criativo.
+O ‘Areti Vitae’ é acessível para todos os indivíduos, principalmente aqueles com ideias criativas e inovadoras, sendo restrita ao uso de pessoas acima de 13 anos, e terá funcionalidades aos assinantes da versão "Módulo Lunar", com mais recursos para desenvolvimento e planejamento em maior escala.
+/--------------------------------------------------------------------------------------------------------/
+"Areti Vitae: Idea Illustrator" is an innovative digital platform that aims to assist creators in conceptualizing and developing projects and ideas through intuitive visual mapping. It stands out for its interactive canvas and innovative aesthetics, seeking to evolve promising ideas, especially those on a smaller scale, and encouraging creative thinking along with appropriate organization The project's fundamental premise is to promote the creation and development of innovative ideas, employing intuitive methods and support tools, in addition to ensuring an aesthetic focused on the creative method. The ‘Areti Vitae’ is accessible to all individuals, especially those with creative and innovative ideas, and is restricted to use by people over 13 years of age, and will have features for subscribers of the "Lunar Module" version, with more resources for development and planning on a larger scale.
 
 # Contato:
 aretivitae@gmail.com
 Trabalho de conclusão de curso UNICAMP
-
-
-# Ferramentas:
-
- React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
- React Compiler
-
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
-
- Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

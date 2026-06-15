@@ -33,7 +33,8 @@ export default function Account() {
   const [openLogout, setOpenLogout] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
-  const [sucesso, setSucesso] = useState('');
+  const [sucesso, setSucesso] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
 
   function getUser() {
     const user = localStorage.getItem("user");
@@ -71,7 +72,7 @@ export default function Account() {
 
   const handleChange = (field) => (e) => {
     setErro('');
-    setSucesso('');
+    setSucesso(false);
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
@@ -80,20 +81,16 @@ export default function Account() {
     navigate("/");
   };
 
-  const emptyName        = form.name.trim() === '';
-  const emptyEmail       = form.email.trim() === '';
-  const emptyPassword    = form.currentPassword.trim() === '';
-  const nameTooLong      = form.name.length > 16;
-  const emailRegex       = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const emailInvalid     = !emptyEmail && !emailRegex.test(form.email);
+  const emptyPassword    = passwordTouched && form.currentPassword.trim() === '';
   const passwordMismatch = form.confirmPassword.length > 0 && form.newPassword !== form.confirmPassword;
 
   async function handleSave() {
-    if (emptyName || emptyEmail || emptyPassword || nameTooLong || emailInvalid || passwordMismatch || loading) return;
+    setPasswordTouched(true);
+    if (form.currentPassword.trim() === '' || passwordMismatch || loading) return;
 
     setLoading(true);
     setErro('');
-    setSucesso('');
+    setSucesso(false);
 
     try {
       const id = getUser()?.id;
@@ -115,7 +112,8 @@ export default function Account() {
       localStorage.setItem("user", anotherStr);
       window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
 
-      setSucesso('Alterações salvas com sucesso!');
+      setSucesso(true);
+      setPasswordTouched(false);
       setForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
     } catch (error) {
       setErro(error.response?.data?.message || 'Erro ao salvar alterações');
@@ -156,28 +154,18 @@ export default function Account() {
                   <input
                     type="text"
                     value={form.name}
-                    onChange={handleChange('name')}
                     placeholder="Seu nome"
-                    className={nameTooLong || emptyName ? styles.inputError : ''}
+                    readOnly
                   />
-                  {emptyName && <span className={styles.errorMsg}>Nome obrigatório</span>}
-                  {!emptyName && nameTooLong && (
-                    <span className={styles.errorMsg}>Máx 16 caracteres ({form.name.length}/16)</span>
-                  )}
                 </div>
                 <div className={styles.field}>
                   <label>E-mail</label>
                   <input
                     type="email"
                     value={form.email}
-                    onChange={handleChange('email')}
                     placeholder="seu@email.com"
-                    className={emailInvalid || emptyEmail ? styles.inputError : ''}
+                    readOnly
                   />
-                  {emptyEmail && <span className={styles.errorMsg}>Email obrigatório</span>}
-                  {!emptyEmail && emailInvalid && (
-                    <span className={styles.errorMsg}>Email inválido</span>
-                  )}
                 </div>
                 <button className={styles.logoutBtn} onClick={() => setOpenLogout(true)}>
                   Logout
@@ -196,13 +184,14 @@ export default function Account() {
                     type="password"
                     value={form.currentPassword}
                     onChange={handleChange('currentPassword')}
+                    onBlur={() => setPasswordTouched(true)}
                     placeholder="••••••••"
                     className={emptyPassword ? styles.inputError : ''}
                   />
                   {emptyPassword && <span className={styles.errorMsg}>Senha obrigatória para salvar</span>}
                 </div>
                 <div className={styles.field}>
-                  <label>Nova senha <span style={{fontSize:'0.75rem', opacity:0.6}}>(opcional)</span></label>
+                  <label>Nova senha</label>
                   <input
                     type="password"
                     value={form.newPassword}
@@ -254,13 +243,12 @@ export default function Account() {
           </div>
 
           {erro && <span className={styles.errorMsg}>{erro}</span>}
-          {sucesso && <span className={styles.successMsg}>{sucesso}</span>}
 
           <div className={styles.btnRow}>
             <button
               className={styles.save}
               onClick={handleSave}
-              disabled={loading || emptyName || emptyEmail || emptyPassword || nameTooLong || emailInvalid || passwordMismatch}
+              disabled={loading || passwordMismatch}
             >
               {loading ? 'Salvando...' : 'Salvar alterações'}
             </button>
@@ -314,6 +302,20 @@ export default function Account() {
             >
               Confirmar cancelamento
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SUCESSO */}
+      {sucesso && (
+        <div className={styles.overlay}>
+          <div className={styles.modal}>
+            <span onClick={() => setSucesso(false)} className={styles.modalClose}>✕</span>
+            <SectionTitle label="Alterações salvas" />
+            <p className={styles.modalSubtitle}>Suas informações foram atualizadas com sucesso!</p>
+            <div className={styles.modalBtnRow}>
+              <button className={styles.logoutConfirm} onClick={() => setSucesso(false)}>Ok</button>
+            </div>
           </div>
         </div>
       )}
