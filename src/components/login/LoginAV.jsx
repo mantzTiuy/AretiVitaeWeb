@@ -57,6 +57,9 @@ export default function LoginAV() {
       navigate('/home');
     } catch (error) {
       setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
+      console.log('ERRO COMPLETO:', error);
+  console.log('RESPOSTA:', error.response);
+  setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
     } finally {
       setLoading(false);
     }

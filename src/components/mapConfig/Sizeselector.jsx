@@ -1,6 +1,6 @@
 import styles from './modules/CreateCanvas.module.css';
 
-const OPTIONS = ['1×', '1.5×', '2×'];
+const OPTIONS = ['1×', '1.5×', '2×', '2.8x'];
 
 export default function SizeSelector({ value, onChange }) {
   return (

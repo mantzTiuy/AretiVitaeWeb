@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styles from "./modules/account.module.css";
 import TopDisplay from './Topdisplay';
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Titlebar({ label }) {
   return (
@@ -30,60 +31,98 @@ export default function Account() {
   const navigate = useNavigate();
 
   const [openLogout, setOpenLogout] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
+  const [sucesso, setSucesso] = useState('');
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/");
-  };
-
-  function getUsername() {
+  function getUser() {
     const user = localStorage.getItem("user");
-    return user ? JSON.parse(user).username : null;
+    return user ? JSON.parse(user) : null;
   }
 
-  function getEmail() {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user).email : null;
-  }
-
-  const [email, setEmail]       = useState(() => getEmail());
-  const [username, setUsername] = useState(() => getUsername());
+  const userObj = getUser();
 
   const [form, setForm] = useState({
-    name:            username ?? '',
-    email:           email ?? '',
-    password:        'password',
+    name:            userObj?.username ?? '',
+    email:           userObj?.email ?? '',
+    currentPassword: '',
     newPassword:     '',
     confirmPassword: '',
   });
 
+  const [membership, setMembership] = useState(1);
+  const [open, setOpen]             = useState(false);
   const [modalPassword, setModalPassword] = useState('');
 
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === "user") {
         const parsed = e.newValue ? JSON.parse(e.newValue) : null;
-        setUsername(parsed?.username ?? null);
-        setEmail(parsed?.email ?? null);
+        setForm(prev => ({
+          ...prev,
+          name: parsed?.username ?? '',
+          email: parsed?.email ?? '',
+        }));
       }
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const [membership, setMembership] = useState(1);
-  const [open, setOpen]             = useState(false);
-
-  const handleChange = (field) => (e) =>
+  const handleChange = (field) => (e) => {
+    setErro('');
+    setSucesso('');
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   const emptyName        = form.name.trim() === '';
   const emptyEmail       = form.email.trim() === '';
-  const emptyPassword    = form.password.trim() === '';
+  const emptyPassword    = form.currentPassword.trim() === '';
   const nameTooLong      = form.name.length > 16;
   const emailRegex       = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const emailInvalid     = !emptyEmail && !emailRegex.test(form.email);
   const passwordMismatch = form.confirmPassword.length > 0 && form.newPassword !== form.confirmPassword;
+
+  async function handleSave() {
+    if (emptyName || emptyEmail || emptyPassword || nameTooLong || emailInvalid || passwordMismatch || loading) return;
+
+    setLoading(true);
+    setErro('');
+    setSucesso('');
+
+    try {
+      const id = getUser()?.id;
+
+      const body = {
+        username: form.name,
+        email:    form.email,
+        senha:    form.currentPassword,
+      };
+
+      if (form.newPassword.trim() !== '') {
+        body.senha = form.newPassword;
+      }
+
+      const { data } = await axios.put(`http://localhost:8081/apiAv/Update/${id}`, body);
+
+      const { senha: _, ...another } = data;
+      const anotherStr = JSON.stringify(another);
+      localStorage.setItem("user", anotherStr);
+      window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
+
+      setSucesso('Alterações salvas com sucesso!');
+      setForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
+    } catch (error) {
+      setErro(error.response?.data?.message || 'Erro ao salvar alterações');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className={styles.root}>
@@ -155,14 +194,15 @@ export default function Account() {
                   <label>Senha atual</label>
                   <input
                     type="password"
-                    value={form.password}
-                    onChange={handleChange('password')}
+                    value={form.currentPassword}
+                    onChange={handleChange('currentPassword')}
+                    placeholder="••••••••"
                     className={emptyPassword ? styles.inputError : ''}
                   />
-                  {emptyPassword && <span className={styles.errorMsg}>Senha obrigatória</span>}
+                  {emptyPassword && <span className={styles.errorMsg}>Senha obrigatória para salvar</span>}
                 </div>
                 <div className={styles.field}>
-                  <label>Nova senha</label>
+                  <label>Nova senha <span style={{fontSize:'0.75rem', opacity:0.6}}>(opcional)</span></label>
                   <input
                     type="password"
                     value={form.newPassword}
@@ -213,8 +253,17 @@ export default function Account() {
 
           </div>
 
+          {erro && <span className={styles.errorMsg}>{erro}</span>}
+          {sucesso && <span className={styles.successMsg}>{sucesso}</span>}
+
           <div className={styles.btnRow}>
-            <button className={styles.save}>Salvar alterações</button>
+            <button
+              className={styles.save}
+              onClick={handleSave}
+              disabled={loading || emptyName || emptyEmail || emptyPassword || nameTooLong || emailInvalid || passwordMismatch}
+            >
+              {loading ? 'Salvando...' : 'Salvar alterações'}
+            </button>
             <button className={styles.discard} onClick={() => navigate('/home')}>
               Cancelar
             </button>
@@ -229,16 +278,10 @@ export default function Account() {
           <div className={styles.modal}>
             <span onClick={() => setOpenLogout(false)} className={styles.modalClose}>✕</span>
             <SectionTitle label="Sair da conta" />
-            <p className={styles.modalSubtitle}>
-              Você tem certeza que deseja sair?
-            </p>
+            <p className={styles.modalSubtitle}>Você tem certeza que deseja sair?</p>
             <div className={styles.modalBtnRow}>
-              <button className={styles.logoutConfirm} onClick={handleLogout}>
-                Sim
-              </button>
-              <button className={styles.logoutCancel} onClick={() => setOpenLogout(false)}>
-                Cancelar
-              </button>
+              <button className={styles.logoutConfirm} onClick={handleLogout}>Sim</button>
+              <button className={styles.logoutCancel} onClick={() => setOpenLogout(false)}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -250,9 +293,7 @@ export default function Account() {
           <div className={styles.modal}>
             <span onClick={() => setOpen(false)} className={styles.modalClose}>✕</span>
             <SectionTitle label="Confirmar cancelamento" />
-            <p className={styles.modalSubtitle}>
-              Tem certeza que deseja cancelar sua assinatura?
-            </p>
+            <p className={styles.modalSubtitle}>Tem certeza que deseja cancelar sua assinatura?</p>
             <div className={styles.field} style={{ width: '100%' }}>
               <label>Confirme sua senha</label>
               <input

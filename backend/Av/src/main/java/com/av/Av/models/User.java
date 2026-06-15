@@ -13,6 +13,8 @@ public class User {
     public interface CreateUser{}
     public interface UpdateUser{}
 
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", unique = true)
@@ -27,6 +29,7 @@ public class User {
     @Column(name = "email")
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "senha", nullable = false)
     private String senha;
 
@@ -35,6 +38,12 @@ public class User {
 
     @Column(name = "ativo")
     private int ativo;
+
+    @Column(name = "tipoRegistro")
+    private String tipoRegistro;
+
+    @Column(name = "registro")
+    private String registro;
 
     /*--CONSTRUTORES--*/
 
@@ -110,10 +119,21 @@ public class User {
         this.assinatura = assinatura;
     }
 
+    public String getTipoRegistro() {
+        return tipoRegistro;
+    }
 
-    /*Equals e hashcode são métodos que verificam a existência de atributos
-    iguais e atribuem um hash pra cada um deles
-     */
+    public void setTipoRegistro(String tipoRegistro) {
+        this.tipoRegistro = tipoRegistro;
+    }
+
+    public String getRegistro() {
+        return registro;
+    }
+
+    public void setRegistro(String registro) {
+        this.registro = registro;
+    }
 
     /*Gerado pelo INTELIJ*/
     @Override
@@ -126,9 +146,9 @@ public class User {
     /*Feito na mão*/
     @Override
     public int hashCode() {
-       final int prime = 31;
-       int result = 1;
-       result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
-       return result;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
+        return result;
     }
 }
