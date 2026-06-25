@@ -16,13 +16,16 @@ export default function Topdisplay() {
     const width = mount.clientWidth;
     const height = mount.clientHeight;
 
+    //Cena
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x01172F);
 
+    //Camera
     const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
     camera.position.set(0, 5, 20);
     camera.lookAt(0, 0, 0);
 
+    //Configurações de render
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
@@ -34,9 +37,11 @@ export default function Topdisplay() {
 
     mount.appendChild(renderer.domElement);
 
+    //Luz geral
     const ambientLight = new THREE.AmbientLight(0xd0e8ff, 1.2);
     scene.add(ambientLight);
 
+    //Luz de ponto
     const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
     keyLight.position.set(-8, 12, 6);
     keyLight.castShadow = true;
@@ -47,6 +52,8 @@ export default function Topdisplay() {
     keyLight.shadow.bias = -0.001;
     scene.add(keyLight);
 
+
+    //Luz de raio definido
     const rimLight = new THREE.DirectionalLight(0x8ab4ff, 1.5);
     rimLight.position.set(6, -4, -10);
     scene.add(rimLight);
@@ -59,8 +66,10 @@ export default function Topdisplay() {
     centerGlow.position.set(0, 0, 2);
     scene.add(centerGlow);
 
+    //Criação das estrelas
     const starCount = 2026;
     const geometry = new THREE.IcosahedronGeometry(0.1, 0);
+    //Uma mesh só
     const material = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xffffff,
@@ -73,6 +82,7 @@ export default function Topdisplay() {
     const minDist = 55;
     const maxDist = 70;
 
+    //Calculo posição das 2026 estrelas
     for (let i = 0; i < starCount; i++) {
       let x, y, z, dist;
       do {
@@ -93,6 +103,7 @@ export default function Topdisplay() {
     starsGroup.add(stars);
     scene.add(starsGroup);
 
+    //Loader modelo principal
     const loader = new GLTFLoader();
     loader.load(
       "/models/TouchingHands.glb",

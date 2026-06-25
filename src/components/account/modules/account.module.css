@@ -259,30 +259,29 @@
   width: 100%;
 }
 
-/* ── Logout ── */
+/* ── Logout button ── */
 .logoutBtn {
   width: 100%;
   height: clamp(2rem, 4.8vh, 3.1rem);
   margin-top: 4px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgb(35, 50, 105);
+  border: 1px solid rgba(255, 255, 255, 0.20);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.70);
+  color: rgba(255, 255, 255, 0.80);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(0.78rem, 1.4vh, 1rem);
   font-weight: 600;
   letter-spacing: 0.10em;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.1s;
+  transition: background 0.18s, color 0.18s, transform 0.1s;
 }
 .logoutBtn:hover {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.65);
+  background: rgb(45, 62, 125);
   color: #fff;
 }
 .logoutBtn:active { transform: scale(0.98); }
 
-/* ── Action buttons ── */
+/* ── Botões de ação (salvar / cancelar) ── */
 .btnRow {
   display: flex;
   gap: 16px;
@@ -291,27 +290,28 @@
 .save {
   flex: 1;
   height: 40px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgb(50, 68, 140);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.90);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(11px, 1.1vw, 12px);
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: filter 0.18s, transform 0.12s;
+  transition: background 0.18s, transform 0.12s;
 }
-.save:hover  { filter: brightness(1.18); }
+.save:hover  { background: rgb(62, 82, 158); }
 .save:active { transform: scale(0.98); }
+.save:disabled { opacity: 0.45; cursor: default; }
 
 .discard {
   flex: 1;
   height: 40px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.30);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.62);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(11px, 1.1vw, 12px);
   font-weight: 600;
@@ -319,10 +319,10 @@
   cursor: pointer;
   transition: color 0.18s, border-color 0.18s, transform 0.12s;
 }
-.discard:hover  { color: rgba(255, 255, 255, 0.65); border-color: rgba(255, 255, 255, 0.22); }
+.discard:hover  { color: rgba(255, 255, 255, 0.88); border-color: rgba(255, 255, 255, 0.48); }
 .discard:active { transform: scale(0.98); }
 
-/* ── Cancel membership ── */
+/* ── Pop-up assinatura ── */
 .memberShipCancel {
   width: 100%;
   padding: 10px 16px;
@@ -345,7 +345,7 @@
   color: rgb(255, 200, 200);
 }
 
-/* ── Overlay / Modal ── */
+/* ── Overlay e modal ── */
 .overlay {
   position: fixed;
   inset: 0;
@@ -406,30 +406,26 @@
   flex: 1;
   height: clamp(2rem, 4.8vh, 3.1rem);
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgb(50, 68, 140);
+  color: rgba(255, 255, 255, 0.90);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(0.78rem, 1.4vh, 1rem);
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.1s;
+  transition: background 0.18s, transform 0.1s;
 }
-.logoutConfirm:hover {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.65);
-  color: #fff;
-}
+.logoutConfirm:hover  { background: rgb(62, 82, 158); }
 .logoutConfirm:active { transform: scale(0.98); }
 
 .logoutCancel {
   flex: 1;
   height: clamp(2rem, 4.8vh, 3.1rem);
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.40);
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(0.78rem, 1.4vh, 1rem);
   font-weight: 600;
@@ -438,12 +434,11 @@
   transition: color 0.18s, border-color 0.18s, transform 0.1s;
 }
 .logoutCancel:hover {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.70);
   border-color: rgba(255, 255, 255, 0.28);
 }
 .logoutCancel:active { transform: scale(0.98); }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
   .bodyWrapper { padding: 0 20px 40px; }
   .grid { grid-template-columns: 1fr; }
@@ -458,8 +453,7 @@
   .formBody { padding: 18px 14px; }
 }
 
-
-/* ── Readonly / Edit toggle ── */
+/* Readonly */
 .labelRow {
   display: flex;
   align-items: center;

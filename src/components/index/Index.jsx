@@ -1,130 +1,118 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import * as fabric from "fabric";
 import stylestoolbox from "./modules/toolbox.module.css";
 import stylescanva from "./modules/canva.module.css";
 import Navbar from "./Navbar";
 import Settings from "./Settings";
+import GridCanvas from "./GridCanvas";
+import Axis from "./Axis";
+import BackButton from './BackButton'
 
 export default function Index() {
   const canvasRef         = useRef(null);
-  const gridCanvasRef     = useRef(null);
+  const gridRef           = useRef(null);
   const canvasInstanceRef = useRef(null);
   const sourceBlockRef    = useRef(null);
   const tempLineRef       = useRef(null);
   const isDraggingPort    = useRef(false);
   const activePortsRef    = useRef([]);
+  const checkAlignmentRef = useRef(null);
   const [canvasReady, setCanvasReady] = useState(null);
+
+  const handleAxisReady = useCallback((fn) => {
+    checkAlignmentRef.current = fn;
+  }, []);
+
+  const centerCanvas = () => {
+    const cs = canvasInstanceRef.current;
+    if (!cs) return;
+    cs.setViewportTransform([1, 0, 0, 1,
+      (window.innerWidth  - 5000) / 2,
+      (window.innerHeight - 5000) / 2,
+    ]);
+    cs.requestRenderAll();
+  };
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    const removeRotation = (cls) => {
+      if (!cls) return;
+      if (cls.prototype?.controls?.mtr) {
+        cls.prototype.controls.mtr.visible = false;
+        cls.prototype.controls.mtr.render  = () => {};
+      }
+      if (cls.ownDefaults?.controls?.mtr) {
+        cls.ownDefaults.controls.mtr.visible = false;
+        cls.ownDefaults.controls.mtr.render  = () => {};
+      }
+    };
+    [
+      fabric.FabricObject,
+      fabric.Rect,
+      fabric.Circle,
+      fabric.Textbox,
+      fabric.Text,
+      fabric.Group,
+      fabric.ActiveSelection,
+      fabric.Line,
+      fabric.Image,
+    ].forEach(removeRotation);
+
     const cs = new fabric.Canvas(canvasRef.current, {
       width: window.innerWidth,
       height: window.innerHeight,
-      // sem backgroundColor — fundo pintado no gridCanvasRef
     });
 
-    // ─── Grid ────────────────────────────────────────────────────────────────
-    const GRID_SIZE       = 50;
-    const GRID_COLOR_LINE = "#89bce8";   // linhas principais
-    const GRID_COLOR_DOT  = "#5a9fd4";   // ponto de interseção (opcional)
-
     const drawGrid = () => {
-      const gc = gridCanvasRef.current;
-      if (!gc) return;
-      const ctx  = gc.getContext("2d");
-      const vpt  = cs.viewportTransform;
-      const zoom = cs.getZoom();
-      const w    = gc.width;
-      const h    = gc.height;
-
-      // Pinta o fundo azul aqui (Fabric ficará transparente)
-      ctx.fillStyle = "#cce6fe";
-      ctx.fillRect(0, 0, w, h);
-
-      // Deslocamento do viewport mapeado para o espaço de tela
-      const offsetX = vpt[4] % (GRID_SIZE * zoom);
-      const offsetY = vpt[5] % (GRID_SIZE * zoom);
-
-      ctx.save();
-      ctx.strokeStyle = GRID_COLOR_LINE;
-      ctx.lineWidth   = 1;
-      ctx.globalAlpha = 0.6;
-
-      // Linhas verticais
-      for (let x = offsetX; x < w + GRID_SIZE * zoom; x += GRID_SIZE * zoom) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
-      }
-
-      // Linhas horizontais
-      for (let y = offsetY; y < h + GRID_SIZE * zoom; y += GRID_SIZE * zoom) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
-      }
-
-      // Pontos nas interseções para dar mais profundidade visual
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle   = GRID_COLOR_DOT;
-      for (let x = offsetX; x < w + GRID_SIZE * zoom; x += GRID_SIZE * zoom) {
-        for (let y = offsetY; y < h + GRID_SIZE * zoom; y += GRID_SIZE * zoom) {
-          ctx.beginPath();
-          ctx.arc(x, y, 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      ctx.restore();
+      gridRef.current?.redraw(cs.viewportTransform, cs.getZoom());
     };
 
-    // Redesenha o grid sempre que o Fabric renderizar
     cs.on("after:render", drawGrid);
 
-    // Remove qualquer background inline que o Fabric injeta nos seus canvas filhos
-    // para que o gridCanvasRef (atrás via z-index) fique visível
+    cs.on("object:added", (opt) => {
+      if (opt.target?._blockType !== "text") return;
+      cs.bringObjectToFront(opt.target);
+    });
+
     if (cs.lowerCanvasEl) cs.lowerCanvasEl.style.backgroundColor = "transparent";
     if (cs.upperCanvasEl) cs.upperCanvasEl.style.backgroundColor = "transparent";
 
-    // ─── Resize handler ───────────────────────────────────────────────────────
     const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-
-      // Fabric v6+: dimensões via width/height direto no elemento e no objeto
       cs.width  = w;
       cs.height = h;
       const upperCanvas = cs.upperCanvasEl;
       const lowerCanvas = cs.lowerCanvasEl;
       if (upperCanvas) { upperCanvas.width = w; upperCanvas.height = h; }
       if (lowerCanvas) { lowerCanvas.width = w; lowerCanvas.height = h; }
-
-      const gc = gridCanvasRef.current;
-      if (gc) { gc.width = w; gc.height = h; }
-
+      gridRef.current?.resize();
       drawGrid();
       cs.requestRenderAll();
     };
     window.addEventListener("resize", handleResize);
 
-    // Centraliza o viewport no início
     cs.setViewportTransform([1, 0, 0, 1,
       (window.innerWidth  - 5000) / 2,
       (window.innerHeight - 5000) / 2,
     ]);
     cs.requestRenderAll();
-    drawGrid();
 
     canvasInstanceRef.current = cs;
     setCanvasReady(cs);
 
-    // ─── Ports ────────────────────────────────────────────────────────────────
-    const PORT_RADIUS = 7;
-    const PORT_FILL   = "#93c5fd";
-    const PORT_STROKE = "#fff";
+    const PORT_RADIUS_BASE = 7;
+    const PORT_FILL        = "#93c5fd";
+    const PORT_STROKE      = "#fff";
+
+    const getPortRadius = (block) => {
+      const w = block.getScaledWidth();
+      const h = block.getScaledHeight();
+      const size = Math.max(w, h);
+      const steps = size / 100;
+      return PORT_RADIUS_BASE * Math.pow(1.05, steps);
+    };
 
     const clearPorts = () => {
       activePortsRef.current.forEach((p) => cs.remove(p));
@@ -134,18 +122,18 @@ export default function Index() {
 
     const createPort = (block, side) => {
       const center = block.getCenterPoint();
-      const hw     = (block.width * block.scaleX) / 2;
-      const OFFSET = PORT_RADIUS + 2;
+      const hw     = block.getScaledWidth() / 2;
+      const radius = getPortRadius(block);
+      const OFFSET = radius + 18;
       const x = side === "left" ? center.x - hw - OFFSET : center.x + hw + OFFSET;
-      const y = center.y;
 
       const port = new fabric.Circle({
-        radius:      PORT_RADIUS,
+        radius:      radius,
         fill:        PORT_FILL,
         stroke:      PORT_STROKE,
         strokeWidth: 2,
         left:        x,
-        top:         y,
+        top:         center.y,
         originX:     "center",
         originY:     "center",
         selectable:  false,
@@ -163,44 +151,75 @@ export default function Index() {
 
     const showPorts = (block) => {
       clearPorts();
-      if (!block || block._isPort || block.isLine) return;
-      const portL = createPort(block, "left");
-      const portR = createPort(block, "right");
-      activePortsRef.current = [portL, portR];
+      // Textos não recebem portas de conexão
+      if (!block || block._isPort || block.isLine || block._blockType === "text") return;
+      activePortsRef.current = [createPort(block, "left"), createPort(block, "right")];
       cs.requestRenderAll();
     };
 
+    const getAbsoluteCenter = (obj) => {
+      obj.setCoords();
+      const m = obj.calcTransformMatrix();
+      return { x: m[4], y: m[5] };
+    };
+
+    const getAbsoluteEdge = (obj, side) => {
+      const center = getAbsoluteCenter(obj);
+      const hw     = obj.getScaledWidth() / 2;
+      return {
+        x: side === "left" ? center.x - hw : center.x + hw,
+        y: center.y,
+      };
+    };
+
+    const updateConnectionLines = (block) => {
+      if (!block.connections?.length) return;
+      block.connections.forEach(({ line, sourceBlock, targetBlock, fromSide, toSide }) => {
+        const src = getAbsoluteEdge(sourceBlock, fromSide);
+        const dst = getAbsoluteEdge(targetBlock, toSide);
+        line.set({ x1: src.x, y1: src.y, x2: dst.x, y2: dst.y });
+      });
+    };
+
     const repositionPorts = (block) => {
+      const center = getAbsoluteCenter(block);
+      const hw     = block.getScaledWidth() / 2;
+      const radius = getPortRadius(block);
+      const OFFSET = radius + 18;
       activePortsRef.current.forEach((port) => {
         if (port._block !== block) return;
-        const center = block.getCenterPoint();
-        const hw     = (block.width * block.scaleX) / 2;
-        const OFFSET = PORT_RADIUS + 2;
         const x = port._side === "left" ? center.x - hw - OFFSET : center.x + hw + OFFSET;
-        port.set({ left: x, top: center.y });
+        port.set({ left: x, top: center.y, radius });
         port.setCoords();
+      });
+    };
+
+    const refreshBlock = (block) => {
+      repositionPorts(block);
+      updateConnectionLines(block);
+      cs.requestRenderAll();
+    };
+
+    const refreshActiveSelection = (activeSelection) => {
+      activeSelection.getObjects().forEach((obj) => {
+        if (obj._isPort || obj.isLine) return;
+        updateConnectionLines(obj);
       });
       cs.requestRenderAll();
     };
 
-    const getCenter = (obj) => {
-      const p = obj.getCenterPoint();
-      return { x: p.x, y: p.y };
-    };
-
-    // ─── Connections ─────────────────────────────────────────────────────────
     const createConnection = (source, dest, fromSide, toSide) => {
-      const srcCenter = getCenter(source);
-      const dstCenter = getCenter(dest);
-      const srcHW = (source.width * source.scaleX) / 2;
-      const dstHW = (dest.width   * dest.scaleX)   / 2;
+      const alreadyConnected = source.connections?.some(
+        ({ sourceBlock, targetBlock }) =>
+          (sourceBlock === source && targetBlock === dest) ||
+          (sourceBlock === dest   && targetBlock === source)
+      );
+      if (alreadyConnected) return;
 
-      const x1 = fromSide === "left" ? srcCenter.x - srcHW : srcCenter.x + srcHW;
-      const y1 = srcCenter.y;
-      const x2 = toSide   === "left" ? dstCenter.x - dstHW : dstCenter.x + dstHW;
-      const y2 = dstCenter.y;
+      const src = getAbsoluteEdge(source, fromSide);
+      const dst = getAbsoluteEdge(dest,   toSide);
 
-      const line = new fabric.Line([x1, y1, x2, y2], {
+      const line = new fabric.Line([src.x, src.y, dst.x, dst.y], {
         stroke:      "#ffffff",
         strokeWidth: 5,
         selectable:  false,
@@ -220,25 +239,22 @@ export default function Index() {
       dest.connections.push(conn);
 
       const updateLine = () => {
-        const sc  = getCenter(source);
-        const dc  = getCenter(dest);
-        const shw = (source.width * source.scaleX) / 2;
-        const dhw = (dest.width   * dest.scaleX)   / 2;
-        line.set({
-          x1: fromSide === "left" ? sc.x - shw : sc.x + shw,
-          y1: sc.y,
-          x2: toSide   === "left" ? dc.x - dhw : dc.x + dhw,
-          y2: dc.y,
-        });
+        const s = getAbsoluteEdge(source, fromSide);
+        const d = getAbsoluteEdge(dest,   toSide);
+        line.set({ x1: s.x, y1: s.y, x2: d.x, y2: d.y });
         cs.requestRenderAll();
       };
 
-      source.on("moving", updateLine);
-      dest.on("moving",   updateLine);
+      source.on("moving",   updateLine);
+      source.on("scaling",  updateLine);
+      source.on("modified", updateLine);
+      dest.on("moving",     updateLine);
+      dest.on("scaling",    updateLine);
+      dest.on("modified",   updateLine);
+
       cs.requestRenderAll();
     };
 
-    // ─── Temp line (drag-connect) ─────────────────────────────────────────────
     const startTempLine = (x, y) => {
       const line = new fabric.Line([x, y, x, y], {
         stroke:          "#5083ef",
@@ -275,7 +291,6 @@ export default function Index() {
       };
     };
 
-    // ─── Events ───────────────────────────────────────────────────────────────
     const onMouseDown = (opt) => {
       const target = opt.target;
 
@@ -339,7 +354,7 @@ export default function Index() {
       const target = opt.target;
       if (!target || target.isLine || target._isPort || target === source) return;
 
-      const destCenter = getCenter(target);
+      const destCenter = target.getCenterPoint();
       const pos        = toCanvasPoint(opt.e.clientX, opt.e.clientY);
       const toSide     = pos.x < destCenter.x ? "left" : "right";
 
@@ -348,7 +363,17 @@ export default function Index() {
 
     const onSelected = (opt) => {
       const activeObj = cs.getActiveObject();
-      if (activeObj?.type === "activeSelection") { clearPorts(); return; }
+      if (activeObj?.type === "activeselection") {
+        activeObj.set({
+          hasControls:      false,
+          lockScalingX:     true,
+          lockScalingY:     true,
+          lockScalingFlip:  true,
+        });
+        cs.requestRenderAll();
+        clearPorts();
+        return;
+      }
       const obj = opt.selected?.[0] ?? opt.target;
       if (!obj || obj._isPort || obj.isLine) { clearPorts(); return; }
       showPorts(obj);
@@ -359,7 +384,57 @@ export default function Index() {
     };
 
     const onMoving = (opt) => {
-      repositionPorts(opt.target);
+      const target = opt.target;
+      if (!target) return;
+
+      if (target._isLabel && target._linkedBg) {
+        const center = target.getCenterPoint();
+        target._linkedBg.set({ left: center.x, top: center.y });
+        target._linkedBg.setCoords();
+      }
+
+      if (target.type === "activeselection") {
+        refreshActiveSelection(target);
+      } else {
+        refreshBlock(target);
+        // ── Snap e guias visuais do Axis ──────────────────────────────────────
+        checkAlignmentRef.current?.(target);
+      }
+    };
+
+    const MIN_SIZE = 50;
+    const MAX_SIZE = 1500;
+
+    const onScaling = (opt) => {
+      const target = opt.target;
+      if (!target) return;
+
+      // Textos não têm tamanho mínimo — apenas blocos e grupos
+      if (target.type !== "activeselection" && target._blockType !== "text") {
+        const w = target.width  * target.scaleX;
+        const h = target.height * target.scaleY;
+
+        if (w < MIN_SIZE) target.scaleX = MIN_SIZE / target.width;
+        if (h < MIN_SIZE) target.scaleY = MIN_SIZE / target.height;
+        if (w > MAX_SIZE) target.scaleX = MAX_SIZE / target.width;
+        if (h > MAX_SIZE) target.scaleY = MAX_SIZE / target.height;
+      }
+
+      if (target.type === "activeselection") {
+        refreshActiveSelection(target);
+      } else {
+        refreshBlock(target);
+      }
+    };
+
+    const onModified = (opt) => {
+      const target = opt.target;
+      if (!target) return;
+      if (target.type === "activeselection") {
+        refreshActiveSelection(target);
+      } else {
+        refreshBlock(target);
+      }
     };
 
     const onWheel = (opt) => {
@@ -369,21 +444,35 @@ export default function Index() {
       cs.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
     };
 
+    const fitBgToLabel = (label) => {
+      const bg = label._linkedBg;
+      if (!bg) return;
+      const PAD_X = 28;
+      const PAD_Y = 16;
+      const center = label.getCenterPoint();
+      bg.set({
+        width:  label.width  + PAD_X,
+        height: label.calcTextHeight() + PAD_Y,
+        left:   center.x,
+        top:    center.y,
+      });
+      bg.setCoords();
+    };
+
     const onDoubleClick = (opt) => {
       const target = opt.target;
-      if (!target || target.type !== "group") return;
-      const textbox = target.getObjects().find((o) => o.type === "textbox");
-      if (!textbox) return;
-      target.selectable = false;
-      target.evented    = false;
-      cs.setActiveObject(textbox);
-      textbox.enterEditing();
-      textbox.selectAll();
+      if (!target || !target._isLabel) return;
+      target.enterEditing();
+      target.selectAll();
       cs.requestRenderAll();
-      textbox.on("editing:exited", () => {
-        target.selectable = true;
-        target.evented    = true;
-        cs.setActiveObject(target);
+
+      const onChanged = () => fitBgToLabel(target);
+      target.on("changed", onChanged);
+
+      target.on("editing:exited", function onExit() {
+        target.off("changed",        onChanged);
+        target.off("editing:exited", onExit);
+        fitBgToLabel(target);
         cs.requestRenderAll();
       });
     };
@@ -396,7 +485,7 @@ export default function Index() {
       const active = cs.getActiveObject();
       if (!active || active.isEditing) return;
 
-      if (active.type === "activeSelection") {
+      if (active.type === "activeselection") {
         const objects = [...active.getObjects()];
         cs.discardActiveObject();
         cs.requestRenderAll();
@@ -427,6 +516,7 @@ export default function Index() {
         });
       }
       clearPorts();
+      if (active._isLabel && active._linkedBg) cs.remove(active._linkedBg);
       cs.remove(active);
       cs.discardActiveObject();
       cs.requestRenderAll();
@@ -443,6 +533,8 @@ export default function Index() {
     cs.on("selection:updated", onSelected);
     cs.on("selection:cleared", onDeselected);
     cs.on("object:moving",     onMoving);
+    cs.on("object:scaling",    onScaling);
+    cs.on("object:modified",   onModified);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel",   disableCtrlZoom, { passive: false });
     window.addEventListener("resize",  handleResize);
@@ -457,15 +549,16 @@ export default function Index() {
       cs.off("selection:updated", onSelected);
       cs.off("selection:cleared", onDeselected);
       cs.off("object:moving",     onMoving);
+      cs.off("object:scaling",    onScaling);
+      cs.off("object:modified",   onModified);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel",   disableCtrlZoom);
       window.removeEventListener("resize",  handleResize);
-      cs.dispose();
       canvasInstanceRef.current = null;
+      cs.dispose();
     };
   }, []);
 
-  // ─── Block adders ──────────────────────────────────────────────────────────
   const addBox = () => {
     const cs = canvasInstanceRef.current;
     if (!cs) return;
@@ -494,36 +587,56 @@ export default function Index() {
     const vpt     = cs.viewportTransform;
     const centerX = (window.innerWidth  / 2 - vpt[4]) / vpt[0];
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
-    const box = new fabric.Rect({
-      width: 200, height: 50,
-      fill: "#ffffff",
-      stroke: null,
-      strokeWidth: 0,
-      opacity: 1,
-      paintFirst: "fill",
-      originX: "center", originY: "center",
-      _isBackground: true,
-    });
-    const text = new fabric.Textbox("hello", {
-      width: 200, textAlign: "center", fontFamily: "Josefin Sans",
-      originX: "center", originY: "center",
-      fill: "#000000",
-      _isLabel: true,
-    });
-    const group = new fabric.Group([box, text], {
-      left: centerX, top: centerY,
-      originX: "center", originY: "center",
-      lockRotation: true,
+
+    const PAD_X = 28;
+    const PAD_Y = 16;
+
+    const label = new fabric.Textbox("hello", {
+      left:            centerX,
+      top:             centerY,
+      originX:         "center",
+      originY:         "center",
+      width:           200,
+      fontFamily:      "Josefin Sans",
+      fontSize:        20,
+      textAlign:       "center",
+      fill:            "#000000",
+      selectable:      true,
+      evented:         true,
+      lockRotation:    true,
       hasRotatingPoint: false,
-      stroke: "#cccccc",
-      strokeWidth: 2,
-      strokeUniform: true,
-      paintFirst: "fill",
-      opacity: 1,
-      _blockType: "group",
+      splitByGrapheme: false,
+      _blockType:      "group",
+      _isLabel:        true,
     });
-    cs.add(group);
-    cs.setActiveObject(group);
+
+    const bw = label.width  + PAD_X;
+    const bh = label.height + PAD_Y;
+
+    const bg = new fabric.Rect({
+      left:          centerX,
+      top:           centerY,
+      originX:       "center",
+      originY:       "center",
+      width:         bw,
+      height:        bh,
+      fill:          "#ffffff",
+      stroke:        "#cccccc",
+      strokeWidth:   2,
+      strokeUniform: true,
+      selectable:    false,
+      evented:       false,
+      lockRotation:  true,
+      _isBackground: true,
+      _linkedLabel:  label,
+    });
+
+    label._linkedBg = bg;
+
+    cs.add(bg);
+    cs.add(label);
+    cs.bringObjectToFront(label);
+    cs.setActiveObject(label);
     cs.requestRenderAll();
   };
 
@@ -533,17 +646,37 @@ export default function Index() {
     const vpt     = cs.viewportTransform;
     const centerX = (window.innerWidth  / 2 - vpt[4]) / vpt[0];
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
+
     const text = new fabric.Textbox("Texto", {
-      left: centerX, top: centerY,
-      originX: "center", originY: "center",
-      width: 200,
-      fontFamily: "Josefin Sans",
-      fontSize: 24,
-      textAlign: "center",
-      fill: "#333333",
-      _blockType: "text",
+      left:             centerX,
+      top:              centerY,
+      originX:          "center",
+      originY:          "center",
+      width:            200,
+      fontFamily:       "Josefin Sans",
+      fontSize:         24,
+      textAlign:        "center",
+      fill:             "#333333",
+      splitByGrapheme:  false,
+      _blockType:       "text",
     });
+
+    const fitToContent = () => {
+      const lines  = text.text.split("\n");
+      const tmpCtx = document.createElement("canvas").getContext("2d");
+      tmpCtx.font  = `${text.fontWeight ?? "normal"} ${text.fontSize}px ${text.fontFamily}`;
+      const maxW   = Math.max(...lines.map((l) => tmpCtx.measureText(l).width));
+      const padded = Math.ceil(maxW) + text.fontSize;
+      text.set({ width: Math.max(padded, 40) });
+      text.setCoords();
+      cs.requestRenderAll();
+    };
+
+    text.on("changed",        fitToContent);
+    text.on("editing:exited", fitToContent);
+
     cs.add(text);
+    cs.bringObjectToFront(text);
     cs.setActiveObject(text);
     text.enterEditing();
     text.selectAll();
@@ -556,34 +689,19 @@ export default function Index() {
         <button onClick={addGroup} className={stylestoolbox.button}>addg</button>
         <button onClick={addBox}   className={stylestoolbox.button}>addb</button>
         <button onClick={addText}  className={stylestoolbox.button}>addt</button>
+        <button onClick={centerCanvas} className={stylestoolbox.button}>⌖ center</button>
         <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
       </div>
 
+      <Axis canvasReady={canvasReady} onReady={handleAxisReady} />
+
       <div className={stylescanva.canvaWrapper}>
-        
-        <canvas
-          ref={gridCanvasRef}
-          width={window.innerWidth}
-          height={window.innerHeight}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        />
-      
+        <GridCanvas ref={gridRef} />
         <canvas
           id="canvas"
           className={stylescanva.canva}
           ref={canvasRef}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            zIndex: 1,
-          }}
+          style={{ position: "absolute", top: 0, left: 0, zIndex: 1 }}
         />
       </div>
 

@@ -3,6 +3,7 @@ import styles from "./modules/account.module.css";
 import TopDisplay from './Topdisplay';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Cerberus from "./Cerberus";
 
 function Titlebar({ label }) {
   return (
@@ -134,7 +135,7 @@ export default function Account() {
 
           <div className={styles.avatarRow}>
             <div className={styles.avatarWrap}>
-              <div className={styles.avatar}>AV</div>
+              <Cerberus size={88} />
             </div>
             <div className={styles.avatarMeta}>
               <h1>{form.name || 'ExampleName'}</h1>
@@ -260,7 +261,7 @@ export default function Account() {
         </div>
       </div>
 
-      {/* MODAL LOGOUT */}
+      {/* POP-UP LOGOUT */}
       {openLogout && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -275,7 +276,7 @@ export default function Account() {
         </div>
       )}
 
-      {/* MODAL CANCELAR ASSINATURA */}
+      {/* POP-UP CANCEL */}
       {open && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -306,7 +307,7 @@ export default function Account() {
         </div>
       )}
 
-      {/* MODAL SUCESSO */}
+      {/* POP-UP SUCESSO NO UPDATE */}
       {sucesso && (
         <div className={styles.overlay}>
           <div className={styles.modal}>

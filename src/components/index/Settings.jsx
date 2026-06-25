@@ -1,30 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./modules/settings.module.css";
 
-function Settings({  canvasReady }) {
+function Settings({ canvasReady }) {
   const [width, setWidth]             = useState("");
   const [height, setHeight]           = useState("");
   const [color, setColor]             = useState("#ffffff");
-  const [colorStroke, setColorStroke] = useState("#cccccc");
+  const [colorStroke, setColorStroke] = useState("#efeeee");
   const selectedObjectRef             = useRef(null);
-
 
   const handleObjectSelection = (object) => {
     if (!object || object._isPort || object.isLine) return;
     selectedObjectRef.current = object;
-
-    // Dimensões reais (considerando escala)
     setWidth(Math.round(object.width  * object.scaleX));
     setHeight(Math.round(object.height * object.scaleY));
 
     if (object.type === "group") {
-    
       const bg = object.getObjects().find((o) => o._isBackground);
       setColor(bg?.fill ?? "#ffffff");
-      setColorStroke(object.stroke ?? "#cccccc");
+      setColorStroke(object.stroke ?? "#efeeee");
     } else {
       setColor(object.fill   ?? "#ffffff");
-      setColorStroke(object.stroke ?? "#cccccc");
+      setColorStroke(object.stroke ?? "#efeeee");
     }
   };
 
@@ -36,11 +32,18 @@ function Settings({  canvasReady }) {
     setColorStroke("#cccccc");
   };
 
+  // Após qualquer mudança dimensional, atualiza coords e dispara modified
+  // para que Index.jsx atualize linhas e portas corretamente.
+  const commitResize = () => {
+    const canvas = canvasReady;
+    const obj    = selectedObjectRef.current;
+    if (!canvas || !obj) return;
+    obj.setCoords();
+    canvas.fire("object:modified", { target: obj });
+    canvas.requestRenderAll();
+  };
 
-  // canvasReady é a própria instância do Canvas, não apenas um boolea
- 
   useEffect(() => {
-    // canvasReady é null até o canvas ser inicializado no Index.jsx
     const canvas = canvasReady;
     if (!canvas) return;
 
@@ -57,39 +60,48 @@ function Settings({  canvasReady }) {
       canvas.off("selection:updated", onUpdated);
       canvas.off("selection:cleared", onCleared);
     };
-  }, [canvasReady]); 
+  }, [canvasReady]);
+
+  const MIN_SIZE = 50;
+  const MAX_SIZE = 1500;
+  const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
 
   // ── Width ──
   const handleWidthChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
-    const val = parseInt(e.target.value, 10);
-    setWidth(isNaN(val) ? "" : val);
+    const raw = parseInt(e.target.value, 10);
+    setWidth(isNaN(raw) ? "" : raw);
     const obj = selectedObjectRef.current;
-    if (!obj || isNaN(val) || val <= 0) return;
+    if (!obj || isNaN(raw) || raw <= 0) return;
+
+    const val = clamp(raw);
+    if (val !== raw) setWidth(val);
 
     if (obj.type === "group" || obj.type === "rect") {
-
       obj.set({ scaleX: val / obj.width });
     } else if (obj.type === "textbox") {
       obj.set({ width: val });
     }
-    canvas.requestRenderAll();
+    commitResize();
   };
 
   // ── Height ──
   const handleHeightChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
-    const val = parseInt(e.target.value, 10);
-    setHeight(isNaN(val) ? "" : val);
+    const raw = parseInt(e.target.value, 10);
+    setHeight(isNaN(raw) ? "" : raw);
     const obj = selectedObjectRef.current;
-    if (!obj || isNaN(val) || val <= 0) return;
+    if (!obj || isNaN(raw) || raw <= 0) return;
+
+    const val = clamp(raw);
+    if (val !== raw) setHeight(val);
 
     if (obj.type === "group" || obj.type === "rect") {
       obj.set({ scaleY: val / obj.height });
     }
-    canvas.requestRenderAll();
+    commitResize();
   };
 
   // ── Fill color ──
@@ -102,7 +114,6 @@ function Settings({  canvasReady }) {
     if (!obj) return;
 
     if (obj.type === "group") {
-    
       obj.getObjects().forEach((child) => {
         if (child._isBackground) child.set({ fill: value });
       });
@@ -122,13 +133,8 @@ function Settings({  canvasReady }) {
     const obj = selectedObjectRef.current;
     if (!obj) return;
 
-    if (obj.type === "group") {
-      // Stroke agora fica no próprio Group
-      obj.set({ stroke: value });
-      obj.dirty = true;
-    } else {
-      obj.set({ stroke: value });
-    }
+    obj.set({ stroke: value });
+    if (obj.type === "group") obj.dirty = true;
     canvas.requestRenderAll();
   };
 
