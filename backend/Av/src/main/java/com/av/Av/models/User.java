@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.antlr.v4.runtime.misc.NotNull;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -46,6 +47,9 @@ public class User {
     private String registro;
 
     /*--CONSTRUTORES--*/
+
+    @OneToMany(mappedBy = "user")//Atributo user da class UserMap
+    private List<UserMap> maps;
 
     public User(){
 

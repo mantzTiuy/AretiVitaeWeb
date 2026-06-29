@@ -32,11 +32,22 @@ public class UserService {
 
     public User update(int id, User updatedUser){
         User existingUser = userRepository.findById((int) id).orElseThrow(() -> new RuntimeException("AvBot: U S U A R I O  N A O  E N C O N T R A D O"));
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setIdade(updatedUser.getIdade());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setAssinatura(updatedUser.getAssinatura());
-        existingUser.setAtivo(updatedUser.getAtivo());
+
+        if (updatedUser.getUsername() != null) {
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+        if (updatedUser.getEmail() != null) {
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+        if (updatedUser.getIdade() != 0) {
+            existingUser.setIdade(updatedUser.getIdade());
+        }
+        if (updatedUser.getAssinatura() != 0) {
+            existingUser.setAssinatura(updatedUser.getAssinatura());
+        }
+        if (updatedUser.getAtivo() != 0) {
+            existingUser.setAtivo(updatedUser.getAtivo());
+        }
 
         if(updatedUser.getSenha() != null && !updatedUser.getSenha().isEmpty()) {
             existingUser.setSenha(passwordEncoder.encode(updatedUser.getSenha()));
