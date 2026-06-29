@@ -44,7 +44,7 @@ function App() {
         <Route path="/"             element={<Login />} />
         <Route path="/login"        element={<Login />} />
         <Route path="/home"         element={<Home />} />
-        <Route path="/index"        element={<Index />} />
+        <Route path="/canvas/:id"/*Key do canvas*/   element={<Index />} />
         <Route path="/account"      element={<Account />} />
         <Route path="/networkdemo"  element={<NetworkDemo />} />
         <Route path="/sobre"        element={<About />} />

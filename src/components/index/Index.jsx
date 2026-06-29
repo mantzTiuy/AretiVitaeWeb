@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import * as fabric from "fabric";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 import stylestoolbox from "./modules/toolbox.module.css";
 import stylescanva from "./modules/canva.module.css";
 import Navbar from "./Navbar";
@@ -8,7 +10,11 @@ import GridCanvas from "./GridCanvas";
 import Axis from "./Axis";
 import BackButton from './BackButton'
 
+const generateId = () => Math.random().toString(36).slice(2, 10);
+
 export default function Index() {
+  const { id } = useParams();
+
   const canvasRef         = useRef(null);
   const gridRef           = useRef(null);
   const canvasInstanceRef = useRef(null);
@@ -18,6 +24,11 @@ export default function Index() {
   const activePortsRef    = useRef([]);
   const checkAlignmentRef = useRef(null);
   const [canvasReady, setCanvasReady] = useState(null);
+  const [loadingMap, setLoadingMap]   = useState(true);
+  const [erroMap, setErroMap]         = useState('');
+  const [saveStatus, setSaveStatus]   = useState('idle');
+  const saveTimeoutRef       = useRef(null);
+  const isLoadingFromJsonRef = useRef(false);
 
   const handleAxisReady = useCallback((fn) => {
     checkAlignmentRef.current = fn;
@@ -25,6 +36,9 @@ export default function Index() {
 
   const centerCanvas = () => {
     const cs = canvasInstanceRef.current;
+    window._cs = cs;
+    console.log(window._cs)
+console.log(window._cs?.getObjects)
     if (!cs) return;
     cs.setViewportTransform([1, 0, 0, 1,
       (window.innerWidth  - 5000) / 2,
@@ -36,6 +50,7 @@ export default function Index() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    // ── Remove controle de rotação de todos os tipos de objeto ──────────────
     const removeRotation = (cls) => {
       if (!cls) return;
       if (cls.prototype?.controls?.mtr) {
@@ -48,20 +63,14 @@ export default function Index() {
       }
     };
     [
-      fabric.FabricObject,
-      fabric.Rect,
-      fabric.Circle,
-      fabric.Textbox,
-      fabric.Text,
-      fabric.Group,
-      fabric.ActiveSelection,
-      fabric.Line,
-      fabric.Image,
+      fabric.FabricObject, fabric.Rect, fabric.Circle, fabric.Textbox,
+      fabric.Text, fabric.Group, fabric.ActiveSelection, fabric.Line, fabric.Image,
     ].forEach(removeRotation);
 
     const cs = new fabric.Canvas(canvasRef.current, {
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width:           window.innerWidth,
+      height:          window.innerHeight,
+      backgroundColor: "#eaf4fc",
     });
 
     const drawGrid = () => {
@@ -70,13 +79,15 @@ export default function Index() {
 
     cs.on("after:render", drawGrid);
 
+    // ── Garante _id único em todo objeto adicionado ao canvas ────────────────
     cs.on("object:added", (opt) => {
-      if (opt.target?._blockType !== "text") return;
-      cs.bringObjectToFront(opt.target);
+      const obj = opt.target;
+      if (!obj._id && !obj._isPort && !obj.isLine) {
+        obj._id = generateId();
+      }
+      if (obj._blockType !== "text") return;
+      cs.bringObjectToFront(obj);
     });
-
-    if (cs.lowerCanvasEl) cs.lowerCanvasEl.style.backgroundColor = "transparent";
-    if (cs.upperCanvasEl) cs.upperCanvasEl.style.backgroundColor = "transparent";
 
     const handleResize = () => {
       const w = window.innerWidth;
@@ -102,16 +113,16 @@ export default function Index() {
     canvasInstanceRef.current = cs;
     setCanvasReady(cs);
 
+    // ── Portas de conexão ────────────────────────────────────────────────────
     const PORT_RADIUS_BASE = 7;
     const PORT_FILL        = "#93c5fd";
     const PORT_STROKE      = "#fff";
 
     const getPortRadius = (block) => {
-      const w = block.getScaledWidth();
-      const h = block.getScaledHeight();
+      const w    = block.getScaledWidth();
+      const h    = block.getScaledHeight();
       const size = Math.max(w, h);
-      const steps = size / 100;
-      return PORT_RADIUS_BASE * Math.pow(1.05, steps);
+      return PORT_RADIUS_BASE * Math.pow(1.05, size / 100);
     };
 
     const clearPorts = () => {
@@ -128,7 +139,7 @@ export default function Index() {
       const x = side === "left" ? center.x - hw - OFFSET : center.x + hw + OFFSET;
 
       const port = new fabric.Circle({
-        radius:      radius,
+        radius,
         fill:        PORT_FILL,
         stroke:      PORT_STROKE,
         strokeWidth: 2,
@@ -151,7 +162,6 @@ export default function Index() {
 
     const showPorts = (block) => {
       clearPorts();
-      // Textos não recebem portas de conexão
       if (!block || block._isPort || block.isLine || block._blockType === "text") return;
       activePortsRef.current = [createPort(block, "left"), createPort(block, "right")];
       cs.requestRenderAll();
@@ -208,6 +218,7 @@ export default function Index() {
       cs.requestRenderAll();
     };
 
+    // ── createConnection ─────────────────────────────────────────────────────
     const createConnection = (source, dest, fromSide, toSide) => {
       const alreadyConnected = source.connections?.some(
         ({ sourceBlock, targetBlock }) =>
@@ -255,6 +266,170 @@ export default function Index() {
       cs.requestRenderAll();
     };
 
+    // ── SALVAR MAPA ──────────────────────────────────────────────────────────
+    async function salvarMapa() {
+      const cs = canvasInstanceRef.current;
+      if (!cs) return;
+      setSaveStatus('saving');
+      try {
+        // 1. Remove portas do canvas antes de serializar
+        clearPorts();
+
+        // 2. Garante _id e copia para prop sem underscore (Fabric v6 ignora props com _)
+        cs.getObjects().forEach((obj) => {
+          if (obj._isPort || obj.isLine) return;
+          if (!obj._id) obj._id = generateId();
+          obj.blockId      = obj._id;
+          obj.blockType    = obj._blockType    ?? null;
+          obj.isLabel      = obj._isLabel      ?? false;
+          obj.isBackground = obj._isBackground ?? false;
+        });
+
+        // 3. Extrai conexões sem duplicar
+        const connections = [];
+        const seen = new Set();
+        cs.getObjects().forEach((obj) => {
+          if (!obj.connections?.length) return;
+          obj.connections.forEach((conn) => {
+            if (seen.has(conn)) return;
+            seen.add(conn);
+            connections.push({
+              sourceId: conn.sourceBlock._id,
+              targetId: conn.targetBlock._id,
+              fromSide: conn.fromSide,
+              toSide:   conn.toSide,
+            });
+          });
+        });
+
+        // 4. Serializa usando props sem underscore
+        const canvasJson = cs.toJSON([
+          'blockId', 'blockType', 'isLabel', 'isBackground', 'isLine',
+        ]);
+
+        // 5. Filtra linhas e portas do JSON (não devem ser persistidas)
+        canvasJson.objects = (canvasJson.objects ?? []).filter(
+          (o) => !o.isLine && o.type !== 'Circle'
+        );
+
+        console.log("SALVANDO connections:", connections);
+        console.log("SALVANDO blockIds:", canvasJson.objects.map(o => o.blockId));
+
+        const dataAtual = JSON.stringify({ canvasJson, connections });
+
+        await axios.put(`http://localhost:8081/apiAvMap/update/${id}`, {
+          data: dataAtual,
+        });
+
+        setSaveStatus('saved');
+      } catch (error) {
+        console.log('ERRO AO SALVAR MAPA:', error);
+        setSaveStatus('error');
+      }
+    }
+
+    canvasInstanceRef.current.salvarMapa = salvarMapa;
+
+    // ── CARREGAR MAPA ────────────────────────────────────────────────────────
+    let cancelled = false;
+
+    async function carregarMapa() {
+      try {
+        const { data } = await axios.get(`http://localhost:8081/apiAvMap/${id}`);
+
+        if (cancelled) return;
+
+        if (data?.data) {
+          let parsed;
+          try {
+            parsed = JSON.parse(data.data);
+          } catch {
+            parsed = null;
+          }
+
+          const canvasJson  = parsed?.canvasJson ?? data.data;
+          const connections = parsed?.connections ?? [];
+
+          isLoadingFromJsonRef.current = true;
+
+          await cs.loadFromJSON(canvasJson);
+
+          if (cancelled || !canvasInstanceRef.current) {
+            isLoadingFromJsonRef.current = false;
+            return;
+          }
+
+          isLoadingFromJsonRef.current = false;
+
+          // Restaura _id a partir de blockId (prop sem underscore que o Fabric serializa)
+          cs.getObjects().forEach((obj) => {
+            if (obj.blockId) {
+              obj._id          = obj.blockId;
+              obj._blockType   = obj.blockType   ?? obj._blockType;
+              obj._isLabel     = obj.isLabel      ?? false;
+              obj._isBackground= obj.isBackground ?? false;
+            } else if (!obj._id && !obj._isPort && !obj.isLine) {
+              obj._id = generateId();
+            }
+          });
+
+          // Índice id → objeto
+          const objById = {};
+          cs.getObjects().forEach((obj) => {
+            if (obj._id) objById[obj._id] = obj;
+          });
+
+          console.log("CARREGANDO objById keys:", Object.keys(objById));
+          console.log("CARREGANDO connections:", connections);
+
+          // Reconecta _linkedBg ↔ _isLabel
+          const labels = cs.getObjects().filter((o) => o._isLabel || o.isLabel);
+          const bgs    = cs.getObjects().filter((o) => o._isBackground || o.isBackground);
+          labels.forEach((label) => {
+            const bg = bgs.find(
+              (b) =>
+                (b._linkedLabel?.blockId && b._linkedLabel.blockId === label.blockId) ||
+                b._linkedLabel === label
+            );
+            if (bg) {
+              label._linkedBg = bg;
+              bg._linkedLabel = label;
+            }
+          });
+
+          // Remove linhas fantasma restauradas pelo Fabric
+          cs.getObjects()
+            .filter((o) => o.isLine)
+            .forEach((l) => cs.remove(l));
+
+          // Força cálculo de coordenadas antes de criar as linhas
+          cs.renderAll();
+          cs.getObjects().forEach((obj) => obj.setCoords());
+
+          connections.forEach(({ sourceId, targetId, fromSide, toSide }) => {
+            const source = objById[sourceId];
+            const dest   = objById[targetId];
+            if (!source || !dest) {
+              console.warn("Bloco não encontrado:", sourceId, targetId);
+              return;
+            }
+            createConnection(source, dest, fromSide, toSide);
+          });
+
+          cs.requestRenderAll();
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.log('ERRO AO CARREGAR MAPA:', error);
+        setErroMap('Não foi possível carregar esse mapa.');
+      } finally {
+        if (!cancelled) setLoadingMap(false);
+      }
+    }
+
+    carregarMapa();
+
+    // ── Linha temporária (drag de porta) ─────────────────────────────────────
     const startTempLine = (x, y) => {
       const line = new fabric.Line([x, y, x, y], {
         stroke:          "#5083ef",
@@ -291,6 +466,7 @@ export default function Index() {
       };
     };
 
+    // ── Eventos do canvas ─────────────────────────────────────────────────────
     const onMouseDown = (opt) => {
       const target = opt.target;
 
@@ -359,16 +535,17 @@ export default function Index() {
       const toSide     = pos.x < destCenter.x ? "left" : "right";
 
       createConnection(source, target, fromSide ?? "right", toSide);
+      salvarMapa(); // ← salva automaticamente após criar conexão
     };
 
     const onSelected = (opt) => {
       const activeObj = cs.getActiveObject();
       if (activeObj?.type === "activeselection") {
         activeObj.set({
-          hasControls:      false,
-          lockScalingX:     true,
-          lockScalingY:     true,
-          lockScalingFlip:  true,
+          hasControls:     false,
+          lockScalingX:    true,
+          lockScalingY:    true,
+          lockScalingFlip: true,
         });
         cs.requestRenderAll();
         clearPorts();
@@ -397,7 +574,6 @@ export default function Index() {
         refreshActiveSelection(target);
       } else {
         refreshBlock(target);
-        // ── Snap e guias visuais do Axis ──────────────────────────────────────
         checkAlignmentRef.current?.(target);
       }
     };
@@ -409,11 +585,9 @@ export default function Index() {
       const target = opt.target;
       if (!target) return;
 
-      // Textos não têm tamanho mínimo — apenas blocos e grupos
       if (target.type !== "activeselection" && target._blockType !== "text") {
         const w = target.width  * target.scaleX;
         const h = target.height * target.scaleY;
-
         if (w < MIN_SIZE) target.scaleX = MIN_SIZE / target.width;
         if (h < MIN_SIZE) target.scaleY = MIN_SIZE / target.height;
         if (w > MAX_SIZE) target.scaleX = MAX_SIZE / target.width;
@@ -447,11 +621,11 @@ export default function Index() {
     const fitBgToLabel = (label) => {
       const bg = label._linkedBg;
       if (!bg) return;
-      const PAD_X = 28;
-      const PAD_Y = 16;
+      const PAD_X  = 28;
+      const PAD_Y  = 16;
       const center = label.getCenterPoint();
       bg.set({
-        width:  label.width  + PAD_X,
+        width:  label.width + PAD_X,
         height: label.calcTextHeight() + PAD_Y,
         left:   center.x,
         top:    center.y,
@@ -503,6 +677,7 @@ export default function Index() {
         });
         clearPorts();
         cs.requestRenderAll();
+        salvarMapa(); // ← salva após deletar seleção múltipla
         return;
       }
 
@@ -520,6 +695,7 @@ export default function Index() {
       cs.remove(active);
       cs.discardActiveObject();
       cs.requestRenderAll();
+      salvarMapa(); // ← salva após deletar objeto único
     };
 
     const disableCtrlZoom = (e) => { if (e.ctrlKey) e.preventDefault(); };
@@ -540,6 +716,8 @@ export default function Index() {
     window.addEventListener("resize",  handleResize);
 
     return () => {
+      cancelled = true;
+
       cs.off("mouse:down",        onMouseDown);
       cs.off("mouse:dblclick",    onDoubleClick);
       cs.off("mouse:move",        onMouseMove);
@@ -551,13 +729,19 @@ export default function Index() {
       cs.off("object:moving",     onMoving);
       cs.off("object:scaling",    onScaling);
       cs.off("object:modified",   onModified);
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel",   disableCtrlZoom);
       window.removeEventListener("resize",  handleResize);
       canvasInstanceRef.current = null;
       cs.dispose();
     };
-  }, []);
+  }, [id]);
+
+  const handleSalvarManual = () => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    canvasInstanceRef.current?.salvarMapa?.();
+  };
 
   const addBox = () => {
     const cs = canvasInstanceRef.current;
@@ -566,15 +750,17 @@ export default function Index() {
     const centerX = (window.innerWidth  / 2 - vpt[4]) / vpt[0];
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
     const box = new fabric.Rect({
-      width: 300, height: 300,
-      fill: "#ffffff",
-      stroke: "#cccccc",
-      strokeWidth: 2,
-      strokeUniform: true,
-      left: centerX - 150, top: centerY - 150,
-      lockRotation: true,
+      width:            300,
+      height:           300,
+      fill:             "#ffffff",
+      stroke:           "#cccccc",
+      strokeWidth:      2,
+      strokeUniform:    true,
+      left:             centerX - 150,
+      top:              centerY - 150,
+      lockRotation:     true,
       hasRotatingPoint: false,
-      _blockType: "rect",
+      _blockType:       "rect",
     });
     cs.add(box);
     cs.setActiveObject(box);
@@ -592,22 +778,22 @@ export default function Index() {
     const PAD_Y = 16;
 
     const label = new fabric.Textbox("hello", {
-      left:            centerX,
-      top:             centerY,
-      originX:         "center",
-      originY:         "center",
-      width:           200,
-      fontFamily:      "Josefin Sans",
-      fontSize:        20,
-      textAlign:       "center",
-      fill:            "#000000",
-      selectable:      true,
-      evented:         true,
-      lockRotation:    true,
+      left:             centerX,
+      top:              centerY,
+      originX:          "center",
+      originY:          "center",
+      width:            200,
+      fontFamily:       "Josefin Sans",
+      fontSize:         20,
+      textAlign:        "center",
+      fill:             "#000000",
+      selectable:       true,
+      evented:          true,
+      lockRotation:     true,
       hasRotatingPoint: false,
-      splitByGrapheme: false,
-      _blockType:      "group",
-      _isLabel:        true,
+      splitByGrapheme:  false,
+      _blockType:       "group",
+      _isLabel:         true,
     });
 
     const bw = label.width  + PAD_X;
@@ -648,17 +834,17 @@ export default function Index() {
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
 
     const text = new fabric.Textbox("Texto", {
-      left:             centerX,
-      top:              centerY,
-      originX:          "center",
-      originY:          "center",
-      width:            200,
-      fontFamily:       "Josefin Sans",
-      fontSize:         24,
-      textAlign:        "center",
-      fill:             "#333333",
-      splitByGrapheme:  false,
-      _blockType:       "text",
+      left:            centerX,
+      top:             centerY,
+      originX:         "center",
+      originY:         "center",
+      width:           200,
+      fontFamily:      "Josefin Sans",
+      fontSize:        24,
+      textAlign:       "center",
+      fill:            "#333333",
+      splitByGrapheme: false,
+      _blockType:      "text",
     });
 
     const fitToContent = () => {
@@ -685,11 +871,20 @@ export default function Index() {
 
   return (
     <div className="App">
+      {erroMap && (
+        <div style={{ position: 'absolute', top: 10, left: 10, color: 'red', zIndex: 10 }}>
+          {erroMap}
+        </div>
+      )}
+
       <div className={stylestoolbox.toolbox}>
-        <button onClick={addGroup} className={stylestoolbox.button}>addg</button>
-        <button onClick={addBox}   className={stylestoolbox.button}>addb</button>
-        <button onClick={addText}  className={stylestoolbox.button}>addt</button>
-        <button onClick={centerCanvas} className={stylestoolbox.button}>⌖ center</button>
+        <button onClick={addGroup}           className={stylestoolbox.button}>addg</button>
+        <button onClick={addBox}             className={stylestoolbox.button}>addb</button>
+        <button onClick={addText}            className={stylestoolbox.button}>addt</button>
+        <button onClick={centerCanvas}       className={stylestoolbox.button}>center</button>
+        <button onClick={handleSalvarManual} className={stylestoolbox.button}>
+          {saveStatus === 'saving' ? 'Salvando...' : 'Salvar'}
+        </button>
         <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
       </div>
 
