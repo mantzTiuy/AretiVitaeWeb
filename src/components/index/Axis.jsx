@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import * as fabric from "fabric";
 
 const SNAP_THRESHOLD = 6; // Pixeis da tela de distância de dois blocos, menos que 6 eles grudam automatico
-const GUIDE_COLOR    = "#7700ff";
+const GUIDE_COLOR    = "#5083ef";
 const GUIDE_EXTEND   = 20; // quanto a guia se estende além do container envolvido na interação
 
 export default function Axis({ canvasReady, onReady }) {

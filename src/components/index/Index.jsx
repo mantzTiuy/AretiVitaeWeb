@@ -12,6 +12,29 @@ import BackButton from './BackButton'
 
 const generateId = () => Math.random().toString(36).slice(2, 10);
 
+// Estilo padrão dos handles de scaling/seleção. Aplicado diretamente em cada
+// objeto na criação (mexer em prototype/ownDefaults do Fabric não tem efeito
+// garantido nas versões mais recentes, já que os defaults são "carimbados"
+// como propriedades próprias da instância no momento da construção).
+//
+// IMPORTANTE: essas props NÃO fazem parte do conjunto padrão serializado por
+// cs.toJSON() no Fabric 7.x (cornerColor, cornerStrokeColor, cornerSize,
+// cornerStyle, transparentCorners, borderColor, borderDashArray, padding não
+// são incluídas por padrão). Por isso, após loadFromJSON, os objetos
+// recarregados voltam para o estilo default do Fabric. A correção é reaplicar
+// SELECTION_STYLE manualmente em cada objeto logo após o load (ver
+// carregarMapa() mais abaixo).
+const SELECTION_STYLE = {
+  cornerColor:        "#5083ef",   // preenchimento do handle
+  cornerStrokeColor:  "#ffffff",   // borda do handle
+  cornerSize:         12,          // tamanho em px
+  cornerStyle:        "circle",    // 'rect' (padrão) ou 'circle'
+  transparentCorners: false,       // preenchido, não vazado
+  borderColor:        "#5083ef",   // linha de seleção ao redor do objeto
+  borderDashArray:    [4, 4],
+  padding:            4,           // espaço entre o objeto e a borda de seleção
+};
+
 export default function Index() {
   const { id } = useParams();
 
@@ -36,9 +59,6 @@ export default function Index() {
 
   const centerCanvas = () => {
     const cs = canvasInstanceRef.current;
-    window._cs = cs;
-    console.log(window._cs)
-console.log(window._cs?.getObjects)
     if (!cs) return;
     cs.setViewportTransform([1, 0, 0, 1,
       (window.innerWidth  - 5000) / 2,
@@ -80,10 +100,17 @@ console.log(window._cs?.getObjects)
     cs.on("after:render", drawGrid);
 
     // ── Garante _id único em todo objeto adicionado ao canvas ────────────────
+    // OBS: durante o loadFromJSON, o objeto já vem com `blockId` (propriedade
+    // sem underscore, restaurada pelo Fabric a partir do JSON) no momento em
+    // que este evento dispara. Priorizamos blockId sobre gerar um id novo.
     cs.on("object:added", (opt) => {
       const obj = opt.target;
-      if (!obj._id && !obj._isPort && !obj.isLine) {
-        obj._id = generateId();
+      if (!obj._isPort && !obj.isLine) {
+        if (obj.blockId && !obj._id) {
+          obj._id = obj.blockId;
+        } else if (!obj._id) {
+          obj._id = generateId();
+        }
       }
       if (obj._blockType !== "text") return;
       cs.bringObjectToFront(obj);
@@ -231,13 +258,25 @@ console.log(window._cs?.getObjects)
       const dst = getAbsoluteEdge(dest,   toSide);
 
       const line = new fabric.Line([src.x, src.y, dst.x, dst.y], {
-        stroke:      "#ffffff",
-        strokeWidth: 5,
-        selectable:  false,
-        evented:     false,
-        isLine:      true,
-        originX:     "center",
-        originY:     "center",
+        borderColor:       SELECTION_STYLE.borderColor,
+        borderDashArray:   SELECTION_STYLE.borderDashArray,
+        stroke:            "#ffffff",
+        strokeWidth:       5,
+        // ── Agora a linha PODE ser selecionada e deletada, mas não arrastada ──
+        selectable:        true,
+        evented:           true,
+        hasControls:       false,
+        hasBorders:        true,
+        lockMovementX:     true,
+        lockMovementY:     true,
+        lockScalingX:      true,
+        lockScalingY:      true,
+        lockRotation:      true,
+        hoverCursor:       "pointer",
+        perPixelTargetFind:true, // clique precisa acertar o traço, não só a bounding box
+        isLine:            true,
+        originX:           "center",
+        originY:           "center",
       });
 
       cs.add(line);
@@ -246,8 +285,6 @@ console.log(window._cs?.getObjects)
       if (!source.connections) source.connections = [];
       if (!dest.connections)   dest.connections   = [];
       const conn = { line, sourceBlock: source, targetBlock: dest, fromSide, toSide };
-      source.connections.push(conn);
-      dest.connections.push(conn);
 
       const updateLine = () => {
         const s = getAbsoluteEdge(source, fromSide);
@@ -255,6 +292,11 @@ console.log(window._cs?.getObjects)
         line.set({ x1: s.x, y1: s.y, x2: d.x, y2: d.y });
         cs.requestRenderAll();
       };
+      // guarda a referência para conseguir remover os listeners depois (deleteConnection)
+      conn.updateLine = updateLine;
+
+      source.connections.push(conn);
+      dest.connections.push(conn);
 
       source.on("moving",   updateLine);
       source.on("scaling",  updateLine);
@@ -264,6 +306,36 @@ console.log(window._cs?.getObjects)
       dest.on("modified",   updateLine);
 
       cs.requestRenderAll();
+      return conn;
+    };
+
+    // ── deleteConnection ─────────────────────────────────────────────────────
+    // Remove uma conexão por completo: tira a linha do canvas, desliga os
+    // listeners de moving/scaling/modified dos dois blocos e limpa a entrada
+    // dos arrays `connections` de ambos. Sem isso, deletar só a linha
+    // "visualmente" deixaria a conexão fantasma nos blocos, que voltaria a
+    // aparecer no próximo salvamento/reload.
+    const deleteConnection = (conn) => {
+      if (!conn) return;
+      const { line, sourceBlock, targetBlock, updateLine } = conn;
+
+      if (updateLine) {
+        sourceBlock?.off("moving",   updateLine);
+        sourceBlock?.off("scaling",  updateLine);
+        sourceBlock?.off("modified", updateLine);
+        targetBlock?.off("moving",   updateLine);
+        targetBlock?.off("scaling",  updateLine);
+        targetBlock?.off("modified", updateLine);
+      }
+
+      if (sourceBlock?.connections) {
+        sourceBlock.connections = sourceBlock.connections.filter((c) => c !== conn);
+      }
+      if (targetBlock?.connections) {
+        targetBlock.connections = targetBlock.connections.filter((c) => c !== conn);
+      }
+
+      cs.remove(line);
     };
 
     // ── SALVAR MAPA ──────────────────────────────────────────────────────────
@@ -275,17 +347,13 @@ console.log(window._cs?.getObjects)
         // 1. Remove portas do canvas antes de serializar
         clearPorts();
 
-        // 2. Garante _id e copia para prop sem underscore (Fabric v6 ignora props com _)
+        // 2. Garante _id em todo objeto "de verdade" (não porta, não linha)
         cs.getObjects().forEach((obj) => {
           if (obj._isPort || obj.isLine) return;
           if (!obj._id) obj._id = generateId();
-          obj.blockId      = obj._id;
-          obj.blockType    = obj._blockType    ?? null;
-          obj.isLabel      = obj._isLabel      ?? false;
-          obj.isBackground = obj._isBackground ?? false;
         });
 
-        // 3. Extrai conexões sem duplicar
+        // 3. Extrai conexões sem duplicar (usa os _id garantidos acima)
         const connections = [];
         const seen = new Set();
         cs.getObjects().forEach((obj) => {
@@ -302,18 +370,55 @@ console.log(window._cs?.getObjects)
           });
         });
 
-        // 4. Serializa usando props sem underscore
-        const canvasJson = cs.toJSON([
-          'blockId', 'blockType', 'isLabel', 'isBackground', 'isLine',
-        ]);
+        // 4. Serializa o canvas da forma padrão do Fabric.
+        //    IMPORTANTE: no Fabric 7.x, passar uma lista de propriedades
+        //    customizadas para cs.toJSON(propertiesToInclude) NÃO está
+        //    capturando props atribuídas diretamente na instância
+        //    (obj.blockId = ...) — o campo vinha undefined no JSON gerado.
+        //    Por isso, em vez de confiar nesse mecanismo, serializamos "cru"
+        //    e injetamos os metadados manualmente logo abaixo, por POSIÇÃO,
+        //    já que cs.toJSON().objects preserva exatamente a mesma ordem
+        //    de cs.getObjects().
+        const canvasJson = cs.toJSON();
 
-        // 5. Filtra linhas e portas do JSON (não devem ser persistidas)
-        canvasJson.objects = (canvasJson.objects ?? []).filter(
-          (o) => !o.isLine && o.type !== 'Circle'
-        );
+        const liveObjects = cs.getObjects();
+        const enrichedObjects = [];
+        liveObjects.forEach((obj, i) => {
+          if (obj._isPort || obj.isLine) return; // não persiste portas/linhas
+          const json = canvasJson.objects[i];
+          if (!json) return;
+
+          json.blockId      = obj._id;
+          json.blockType    = obj._blockType    ?? null;
+          json.isLabel      = obj._isLabel      ?? false;
+          json.isBackground = obj._isBackground ?? false;
+          json.linkedId =
+            obj._isLabel && obj._linkedBg
+              ? (obj._linkedBg._id ?? null)
+              : obj._isBackground && obj._linkedLabel
+              ? (obj._linkedLabel._id ?? null)
+              : null;
+
+          enrichedObjects.push(json);
+        });
+        canvasJson.objects = enrichedObjects;
 
         console.log("SALVANDO connections:", connections);
         console.log("SALVANDO blockIds:", canvasJson.objects.map(o => o.blockId));
+
+        // ── Validação de integridade ANTES de enviar ao backend ─────────────
+        // Se isso disparar, o problema é no cliente (algo dessincroniza _id
+        // antes do save). Se isso NUNCA disparar e mesmo assim o load vier
+        // com ids diferentes, o problema está 100% no backend/round-trip.
+        const savedBlockIds = new Set(canvasJson.objects.map(o => o.blockId));
+        connections.forEach(({ sourceId, targetId }) => {
+          if (!savedBlockIds.has(sourceId) || !savedBlockIds.has(targetId)) {
+            console.error(
+              "[INTEGRIDADE] Conexão referencia bloco que NÃO está sendo salvo!",
+              { sourceId, targetId, savedBlockIds: [...savedBlockIds] }
+            );
+          }
+        });
 
         const dataAtual = JSON.stringify({ canvasJson, connections });
 
@@ -361,15 +466,49 @@ console.log(window._cs?.getObjects)
 
           isLoadingFromJsonRef.current = false;
 
-          // Restaura _id a partir de blockId (prop sem underscore que o Fabric serializa)
-          cs.getObjects().forEach((obj) => {
-            if (obj.blockId) {
-              obj._id          = obj.blockId;
-              obj._blockType   = obj.blockType   ?? obj._blockType;
-              obj._isLabel     = obj.isLabel      ?? false;
-              obj._isBackground= obj.isBackground ?? false;
+          // ── Restaura _id de forma robusta ──────────────────────────────────
+          // Em vez de confiar apenas na propriedade `blockId` que o Fabric
+          // deveria ter restaurado no objeto vivo (o que pode falhar
+          // silenciosamente dependendo do tipo de objeto/versão do Fabric),
+          // usamos o próprio array `canvasJson.objects` que já temos em mãos
+          // e correlacionamos por POSIÇÃO com `cs.getObjects()`. O Fabric
+          // preserva a ordem de inserção em loadFromJSON, então objeto[i] do
+          // JSON salvo corresponde sempre a objeto[i] carregado no canvas.
+          const savedObjects  = canvasJson.objects ?? [];
+          const loadedObjects = cs.getObjects();
+
+          if (savedObjects.length !== loadedObjects.length) {
+            console.warn(
+              "Divergência entre objetos salvos e carregados:",
+              savedObjects.length, "vs", loadedObjects.length
+            );
+          }
+
+          loadedObjects.forEach((obj, i) => {
+            const meta = savedObjects[i];
+            const blockId = obj.blockId || meta?.blockId;
+
+            if (blockId) {
+              obj._id           = blockId;
+              obj._blockType    = obj.blockType    ?? meta?.blockType    ?? obj._blockType;
+              obj._isLabel      = obj.isLabel      ?? meta?.isLabel      ?? false;
+              obj._isBackground = obj.isBackground ?? meta?.isBackground ?? false;
+              obj._linkedIdRaw  = obj.linkedId     ?? meta?.linkedId     ?? null;
             } else if (!obj._id && !obj._isPort && !obj.isLine) {
               obj._id = generateId();
+            }
+
+            // ── Reaplica o estilo de seleção/handles (SELECTION_STYLE) ─────────
+            // cs.toJSON() no Fabric 7.x NÃO inclui por padrão as props de estilo
+            // de controle (cornerColor, cornerStrokeColor, cornerSize,
+            // cornerStyle, transparentCorners, borderColor, borderDashArray,
+            // padding). Elas só existem nos objetos criados nesta sessão via
+            // addBox/addGroup/addText (que fazem o spread de SELECTION_STYLE na
+            // criação). Após um loadFromJSON esses objetos voltam para o
+            // default do Fabric, então precisamos reaplicar aqui manualmente,
+            // objeto por objeto, exatamente como já fazemos com blockId/_id.
+            if (!obj._isPort && !obj.isLine) {
+              obj.set(SELECTION_STYLE);
             }
           });
 
@@ -382,18 +521,17 @@ console.log(window._cs?.getObjects)
           console.log("CARREGANDO objById keys:", Object.keys(objById));
           console.log("CARREGANDO connections:", connections);
 
-          // Reconecta _linkedBg ↔ _isLabel
-          const labels = cs.getObjects().filter((o) => o._isLabel || o.isLabel);
-          const bgs    = cs.getObjects().filter((o) => o._isBackground || o.isBackground);
-          labels.forEach((label) => {
-            const bg = bgs.find(
-              (b) =>
-                (b._linkedLabel?.blockId && b._linkedLabel.blockId === label.blockId) ||
-                b._linkedLabel === label
-            );
-            if (bg) {
-              label._linkedBg = bg;
-              bg._linkedLabel = label;
+          // Reconecta _linkedBg ↔ _isLabel usando linkedId (por ID, não por referência)
+          cs.getObjects().forEach((obj) => {
+            if (!obj._linkedIdRaw) return;
+            const other = objById[obj._linkedIdRaw];
+            if (!other) return;
+            if (obj._isLabel) {
+              obj._linkedBg     = other;
+              other._linkedLabel = obj;
+            } else if (obj._isBackground) {
+              obj._linkedLabel = other;
+              other._linkedBg  = obj;
             }
           });
 
@@ -651,6 +789,20 @@ console.log(window._cs?.getObjects)
       });
     };
 
+    // Dado um objeto de linha, encontra a conexão correspondente vasculhando
+    // os arrays `connections` dos blocos (a linha não guarda referência
+    // direta para trás, então precisamos procurar).
+    const findConnectionByLine = (line) => {
+      let found = null;
+      cs.getObjects().some((obj) => {
+        if (!obj.connections?.length) return false;
+        const conn = obj.connections.find((c) => c.line === line);
+        if (conn) { found = conn; return true; }
+        return false;
+      });
+      return found;
+    };
+
     const onKeyDown = (e) => {
       if (e.key !== "Delete") return;
       const cs = canvasInstanceRef.current;
@@ -659,19 +811,36 @@ console.log(window._cs?.getObjects)
       const active = cs.getActiveObject();
       if (!active || active.isEditing) return;
 
+      // ── Deletar apenas uma linha/conexão selecionada ──────────────────────
+      if (active.isLine) {
+        const conn = findConnectionByLine(active);
+        if (conn) {
+          deleteConnection(conn);
+        } else {
+          cs.remove(active); // linha órfã (sem conexão associada), remove direto
+        }
+        cs.discardActiveObject();
+        cs.requestRenderAll();
+        salvarMapa(); // ← salva após deletar a conexão
+        return;
+      }
+
       if (active.type === "activeselection") {
         const objects = [...active.getObjects()];
         cs.discardActiveObject();
         cs.requestRenderAll();
         objects.forEach((obj) => {
+          if (obj.isLine) {
+            const conn = findConnectionByLine(obj);
+            if (conn) {
+              deleteConnection(conn);
+            } else {
+              cs.remove(obj);
+            }
+            return;
+          }
           if (obj.connections?.length) {
-            obj.connections.forEach(({ line, sourceBlock, targetBlock }) => {
-              cs.remove(line);
-              const other = sourceBlock === obj ? targetBlock : sourceBlock;
-              if (other?.connections) {
-                other.connections = other.connections.filter((c) => c.line !== line);
-              }
-            });
+            [...obj.connections].forEach((conn) => deleteConnection(conn));
           }
           cs.remove(obj);
         });
@@ -682,13 +851,7 @@ console.log(window._cs?.getObjects)
       }
 
       if (active.connections?.length) {
-        active.connections.forEach(({ line, sourceBlock, targetBlock }) => {
-          cs.remove(line);
-          const other = sourceBlock === active ? targetBlock : sourceBlock;
-          if (other?.connections) {
-            other.connections = other.connections.filter((c) => c.line !== line);
-          }
-        });
+        [...active.connections].forEach((conn) => deleteConnection(conn));
       }
       clearPorts();
       if (active._isLabel && active._linkedBg) cs.remove(active._linkedBg);
@@ -750,6 +913,7 @@ console.log(window._cs?.getObjects)
     const centerX = (window.innerWidth  / 2 - vpt[4]) / vpt[0];
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
     const box = new fabric.Rect({
+      ...SELECTION_STYLE,
       width:            300,
       height:           300,
       fill:             "#ffffff",
@@ -778,6 +942,7 @@ console.log(window._cs?.getObjects)
     const PAD_Y = 16;
 
     const label = new fabric.Textbox("hello", {
+      ...SELECTION_STYLE,
       left:             centerX,
       top:              centerY,
       originX:          "center",
@@ -834,6 +999,7 @@ console.log(window._cs?.getObjects)
     const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
 
     const text = new fabric.Textbox("Texto", {
+      ...SELECTION_STYLE,
       left:            centerX,
       top:             centerY,
       originX:         "center",
