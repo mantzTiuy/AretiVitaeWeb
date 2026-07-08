@@ -15,19 +15,17 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── ROOT ── */
 .root {
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   background: var(--bg-deep);
   font-family: 'Josefin Sans', sans-serif;
   color: var(--white);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-/* ── DISPLAY (Three.js canvas slot) ── */
 .display {
   width: 100%;
   height: 26.4vh;
@@ -38,35 +36,48 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* ── BODY ── */
 .bodyWrapper {
-  flex: 1;
+  flex: 1;/*Atalho*/
   display: flex;
   justify-content: center;
   padding: 0 44px 53px;
   background: var(--bg-deep);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .body {
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 24px;
+  padding-top: 24px;
+  min-height: 0;
+}
+
+.column {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 24px;
 }
 
-/* ── WINDOW (janela flutuante) ── */
 .window {
-  border-radius: var(--radius);
+  border-radius: var(--radius);/*Var nas primeiras linhas*/
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   border-left: none;
   border-right: none;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-/* ── TITLEBAR ── */
 .titlebar {
   display: flex;
   align-items: center;
@@ -96,11 +107,12 @@
   border-radius: 50%;
 }
 
+
+/*DA PRA TROCAR AS CORZINHA DOS PONTINHOS DA TITLE BAR*/
 .dotGray   { background: rgba(255, 255, 255, 0.22); }
 .dotYellow { background: #e5c040; }
 .dotRed    { background: #e05555; }
 
-/* ── FORM WINDOW BODY ── */
 .formBody {
   background: var(--card-bg);
   padding: clamp(1.1rem, 2.8vh, 1.8rem) clamp(1.2rem, 3vw, 2rem);
@@ -109,13 +121,40 @@
   gap: clamp(0.9rem, 1.8vh, 1.4rem);
 }
 
-/* ── MAPS WINDOW BODY ── */
 .mapsBody {
-  background: rgba(55, 75, 140, 0.55);
+  background: var(--card-bg);
   padding: 16px 20px 22px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-/* ── SECTION TITLE ── */
+.mapsBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mapsBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mapsBody::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+}
+
+.mapsBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.mapsStatus {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  padding: 24px 0;
+  letter-spacing: 0.03em;
+}
+
 .sectionTitle {
   display: flex;
   align-items: center;
@@ -140,7 +179,6 @@
   background: rgba(255, 255, 255, 0.20);
 }
 
-/* ── FIELD ── */
 .field {
   display: flex;
   flex-direction: column;
@@ -160,7 +198,6 @@
 
 .field:focus-within label { color: rgba(255, 255, 255, 0.85); }
 
-/* ── INPUT / TEXTAREA ── */
 .field input,
 .field textarea {
   width: 100%;
@@ -219,7 +256,6 @@
   margin-top: -8px;
 }
 
-/* ── SIZE BUTTONS ── */
 .sizeButtons {
   display: flex;
   gap: 8px;
@@ -254,7 +290,6 @@
   color: #fff !important;
 }
 
-/* ── ACTION BUTTONS ── */
 .btnRow {
   display: flex;
   gap: 10px;
@@ -296,7 +331,6 @@
 .discard:hover  { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .discard:active { transform: scale(0.98); }
 
-/* ── MAPS GRID ── */
 .mapsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -304,58 +338,96 @@
   margin-top: 14px;
 }
 
-/* ── MAP CARD ── */
-.mapCard {
-  background: var(--card-inner);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+.card {
+  flex-shrink: 0;
+  width: 170px;
+  background: rgb(100, 122, 200);
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.16s, filter 0.16s;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.18s ease, filter 0.18s ease;
 }
 
-.mapCard:hover {
+.card:hover {
   transform: translateY(-3px);
   filter: brightness(1.08);
 }
 
-.mapThumb {
-  width: 100%;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.07);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+.cardTitlebar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.22);
-  font-size: 22px;
+  justify-content: flex-end;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
-.mapInfo {
-  padding: 8px 10px 10px;
+.cardDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.thumb {
+  width: 100%;
+  height: 96px;
+  background: #ffffff;
 }
 
-.mapName {
+.info {
+  padding: 9px 12px 11px;
+}
+
+.name {
   font-family: 'Montserrat', sans-serif;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #fff;
   letter-spacing: 0.03em;
 }
 
-.mapDate {
+.date {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.40);
+  color: rgba(255, 255, 255, 0.5);
   margin-top: 3px;
   font-family: 'Montserrat', sans-serif;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-/* ── RESPONSIVE ── */
+/*Tela de loading que evita com que o usuário veja o canvas carregando*/
+
+.transitionOverlay {
+  position: fixed;
+  inset: 0;
+  background:#eaf4fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 0;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.transitionText {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .body { flex-direction: column; }
+}
+
 @media (max-width: 768px) {
   .bodyWrapper { padding: 0 20px 40px; }
   .sizeButtons { flex-wrap: wrap; }

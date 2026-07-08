@@ -1,19 +1,87 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './modules/CreateCanvas.module.css';
-
-const MAPS = [
-  { id: 1, name: 'MúsicaRitmo',  date: '11 jun 2024' },
-  { id: 2, name: 'Hunger games no roblox',  date: '20 jan 2026' },
-  { id: 3, name: 'Jogo tipo unbound',  date: '08 jun 2026' },
-  { id: 4, name: 'Biblioteca para java',     date: '05 set 2026' },
-  { id: 5, name: 'AretiVitae',    date: '01 ago 2026' },
-  { id: 6, name: 'julo',  date: '28  out 2021' },
-  { id: 7, name: 'GalinheiroProjeto',   date: '20 mai 2026' },
-  { id: 8, name: 'Hortinha',     date: '15 mai 2026' },
-];
+import axios from 'axios';
 
 export default function MapCarousel({ onSelect }) {
+  const navigate = useNavigate();
+
+  const [itens, setItens] = useState([]); //ITENS do objeto
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState("");
+  const [navegando, setNavegando] = useState(false); //Controla o overlay de transição entre telas
+
+  useEffect(() => {
+    let cancel = false;
+
+    async function load(){
+      const userStr = localStorage.getItem("user");//Pega o user do localstorage
+
+      if (!userStr) {
+        if (!cancel) {//Verifica se cancel é false, evitando que ele de erro "direto"
+          setErro("Usuário não encontrado. Faça login novamente.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      let username;
+      try {
+        username = JSON.parse(userStr).username;//Converte json em objeto e pega o username
+      } catch {
+        username = null; // Deixe o username null caso não tenha informações (usuário não cadastrou mapas ou erro no servidor)
+      }
+
+      if (!username) {
+        if (!cancel) {
+          setErro("Usuário não encontrado. Faça login novamente.");
+          setLoading(false);
+        }
+        return;
+      }
+
+      try{
+          const { data } = await axios.get(`http://localhost:8081/apiAvMap/username/${username}`);
+          if (!cancel) setItens(data);
+      }
+      catch(er){
+        console.log("Erro ao carregar itens:", er);
+        if (!cancel) setErro("Você ainda não tem mapas.");
+      }
+      finally{
+         if (!cancel) setLoading(false);//Se cancel for false ele garante que ao final o loading vai sumir de alguma forma
+      }
+    }
+
+    load();//Executa a função (não pensei em um jeito melhor de fazer isso)
+
+    return () => { cancel = true; };//Retorna o cancel e evita que haja multiplas requisições sendo disparadas, evitando o seguinte problema: O usuário pode clicar e sair pra outra tela de alguma forma, o que faz com que o react não processe mais a tela porém o rota ainda está aberta "executando a função", podendo gerar problemas como telas do react sendo renderizadas sem a presença do contéudo do backend(como o canvas vazio)
+
+  },[]);
+
+  function handleCardClick(m) {
+    if (onSelect) {
+      onSelect(m);
+      return;
+    }
+
+    setNavegando(true); //Mostra o overlay imediatamente
+
+    //Pequeno delay só pra dar tempo do fade aparecer antes da troca de tela
+    //(sem isso, o navigate acontece instantaneamente e o overlay nem chega a ser percebido)
+    setTimeout(() => {
+      navigate(`/canvas/${m.id}`);
+    }, 300);
+  }
+
   return (
     <div className={styles.window}>
+      {navegando && (
+        <div className={styles.transitionOverlay}>
+          <p className={styles.transitionText}>Abrindo mapa...</p>
+        </div>
+      )}
+
       <div className={styles.titlebar}>
         <span className={styles.titlebarLabel}>Últimos mapas</span>
         <div className={styles.dots}>
@@ -24,23 +92,38 @@ export default function MapCarousel({ onSelect }) {
       </div>
 
       <div className={styles.mapsBody}>
-        <div className={styles.mapsGrid}>
-          {MAPS.map((m) => (
-            <div
-              key={m.id}
-              className={styles.mapCard}
-              onClick={() => onSelect?.(m)}
-            >
-              <div className={styles.mapThumb}>
-                <i className="ti ti-loader" aria-hidden="true" />
+        {loading && <p className={styles.mapsStatus}>Carregando...</p>}
+
+        {!loading && erro && (
+          <p className={styles.mapsStatus}>{erro}</p>
+        )}
+
+        {!loading && !erro && itens.length === 0 && (
+          <p className={styles.mapsStatus}>Nenhum mapa encontrado.</p>
+        )}
+
+        {!loading && !erro && itens.length > 0 && (
+          <div className={styles.mapsGrid}>
+            {itens.map((m) => (
+              <div
+                key={m.id}//Cada card tem um id, esse que é passado para o handle e leva ao canvas de respectivo id
+                className={styles.card}
+                onClick={() => handleCardClick(m)}
+              >
+                <div className={styles.cardTitlebar}>
+                  <div className={styles.cardDot} />
+                </div>
+
+                <div className={styles.thumb} />
+
+                <div className={styles.info}>
+                  <p className={styles.name}>{m.title}</p>
+                  {m.date && <p className={styles.date}>{m.date}</p>}
+                </div>
               </div>
-              <div className={styles.mapInfo}>
-                <p className={styles.mapName}>{m.name}</p>
-                <p className={styles.mapDate}>{m.date}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

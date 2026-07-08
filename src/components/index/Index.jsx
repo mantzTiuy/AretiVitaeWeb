@@ -10,33 +10,24 @@ import GridCanvas from "./GridCanvas";
 import Axis from "./Axis";
 import BackButton from './BackButton'
 
-const generateId = () => Math.random().toString(36).slice(2, 10);
+const generateId = () => Math.random().toString(36).slice(2, 10); //Gerador de ids para os blocos
 
-// Estilo padrão dos handles de scaling/seleção. Aplicado diretamente em cada
-// objeto na criação (mexer em prototype/ownDefaults do Fabric não tem efeito
-// garantido nas versões mais recentes, já que os defaults são "carimbados"
-// como propriedades próprias da instância no momento da construção).
-//
-// IMPORTANTE: essas props NÃO fazem parte do conjunto padrão serializado por
-// cs.toJSON() no Fabric 7.x (cornerColor, cornerStrokeColor, cornerSize,
-// cornerStyle, transparentCorners, borderColor, borderDashArray, padding não
-// são incluídas por padrão). Por isso, após loadFromJSON, os objetos
-// recarregados voltam para o estilo default do Fabric. A correção é reaplicar
-// SELECTION_STYLE manualmente em cada objeto logo após o load (ver
-// carregarMapa() mais abaixo).
+
+//Essas determinadas seleções não fazem parte do carregamento feito em json
 const SELECTION_STYLE = {
-  cornerColor:        "#5083ef",   // preenchimento do handle
-  cornerStrokeColor:  "#ffffff",   // borda do handle
-  cornerSize:         12,          // tamanho em px
-  cornerStyle:        "circle",    // 'rect' (padrão) ou 'circle'
-  transparentCorners: false,       // preenchido, não vazado
-  borderColor:        "#5083ef",   // linha de seleção ao redor do objeto
+  cornerColor:        "#5083ef",   
+  cornerStrokeColor:  "#ffffff",   
+  cornerSize:         12,         
+  cornerStyle:        "circle",   
+  transparentCorners: false,      
+  borderColor:        "#5083ef",  
   borderDashArray:    [4, 4],
-  padding:            4,           // espaço entre o objeto e a borda de seleção
+  padding:            4,         
 };
 
 export default function Index() {
   const { id } = useParams();
+
 
   const canvasRef         = useRef(null);
   const gridRef           = useRef(null);
@@ -53,40 +44,25 @@ export default function Index() {
   const saveTimeoutRef       = useRef(null);
   const isLoadingFromJsonRef = useRef(false);
 
+//Permite que o os Axis não sejam reconstruidos no f5, por causa do useCallback
   const handleAxisReady = useCallback((fn) => {
     checkAlignmentRef.current = fn;
   }, []);
 
+
   const centerCanvas = () => {
     const cs = canvasInstanceRef.current;
-    if (!cs) return;
+    if (!cs) return;//Se o canvas não existir retorne
     cs.setViewportTransform([1, 0, 0, 1,
       (window.innerWidth  - 5000) / 2,
       (window.innerHeight - 5000) / 2,
     ]);
-    cs.requestRenderAll();
+    cs.requestRenderAll();//Renderiza o canvas com as especicações acima
   };
 
   useEffect(() => {
+    //Construtor que passa as infomações básicas acerca do canvas
     if (!canvasRef.current) return;
-
-    // ── Remove controle de rotação de todos os tipos de objeto ──────────────
-    const removeRotation = (cls) => {
-      if (!cls) return;
-      if (cls.prototype?.controls?.mtr) {
-        cls.prototype.controls.mtr.visible = false;
-        cls.prototype.controls.mtr.render  = () => {};
-      }
-      if (cls.ownDefaults?.controls?.mtr) {
-        cls.ownDefaults.controls.mtr.visible = false;
-        cls.ownDefaults.controls.mtr.render  = () => {};
-      }
-    };
-    [
-      fabric.FabricObject, fabric.Rect, fabric.Circle, fabric.Textbox,
-      fabric.Text, fabric.Group, fabric.ActiveSelection, fabric.Line, fabric.Image,
-    ].forEach(removeRotation);
-
     const cs = new fabric.Canvas(canvasRef.current, {
       width:           window.innerWidth,
       height:          window.innerHeight,
@@ -96,36 +72,36 @@ export default function Index() {
     const drawGrid = () => {
       gridRef.current?.redraw(cs.viewportTransform, cs.getZoom());
     };
-
+//Desenha o grid
     cs.on("after:render", drawGrid);
 
-    // ── Garante _id único em todo objeto adicionado ao canvas ────────────────
-    // OBS: durante o loadFromJSON, o objeto já vem com `blockId` (propriedade
-    // sem underscore, restaurada pelo Fabric a partir do JSON) no momento em
-    // que este evento dispara. Priorizamos blockId sobre gerar um id novo.
+    //Instaura um id para cada objeto, com objetivo de que quando salvo no json, ele retorne o mesmo id posteriormente para garantir a integridade das conexões
     cs.on("object:added", (opt) => {
       const obj = opt.target;
       if (!obj._isPort && !obj.isLine) {
         if (obj.blockId && !obj._id) {
-          obj._id = obj.blockId;
+          obj._id = obj.blockId;//Se tiver ID já instaurado ele prioriza o id do json
         } else if (!obj._id) {
-          obj._id = generateId();
+          obj._id = generateId();//Caso não tenha nada ele gera um ID
         }
       }
       if (obj._blockType !== "text") return;
       cs.bringObjectToFront(obj);
     });
 
+
     const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
+      //Redimencionamento básico
       cs.width  = w;
       cs.height = h;
-      const upperCanvas = cs.upperCanvasEl;
-      const lowerCanvas = cs.lowerCanvasEl;
-      if (upperCanvas) { upperCanvas.width = w; upperCanvas.height = h; }
+      //Fabric usa de dois canvas sobrepostos, ou seja, para resize adequado é necessário que faça o resize de dois canvas ao mesmo tempo
+      const upperCanvas = cs.upperCanvasEl;//Upper canvas para interações
+      const lowerCanvas = cs.lowerCanvasEl;//Lower canvas que instaura o objeto
+      if (upperCanvas) { upperCanvas.width = w; upperCanvas.height = h; }//Quando atingir o limite
       if (lowerCanvas) { lowerCanvas.width = w; lowerCanvas.height = h; }
-      gridRef.current?.resize();
+      gridRef.current?.resize();//Garante que o canvas se redimencione no HTML
       drawGrid();
       cs.requestRenderAll();
     };
@@ -134,7 +110,7 @@ export default function Index() {
     cs.setViewportTransform([1, 0, 0, 1,
       (window.innerWidth  - 5000) / 2,
       (window.innerHeight - 5000) / 2,
-    ]);
+    ]);//Define a "camera no centro do canvas"
     cs.requestRenderAll();
 
     canvasInstanceRef.current = cs;
@@ -752,7 +728,7 @@ export default function Index() {
     const onWheel = (opt) => {
       opt.e.preventDefault();
       let zoom = cs.getZoom() * (0.999 ** opt.e.deltaY);
-      zoom = Math.min(Math.max(zoom, 0.5), 1.5);
+      zoom = Math.min(Math.max(zoom, 0.5), 2.25); // zoom máximo aumentado de 1.5 para 2.25 (+50%)
       cs.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
     };
 

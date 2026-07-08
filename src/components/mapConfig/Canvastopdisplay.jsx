@@ -14,16 +14,16 @@ export default function CanvasTopDisplay() {
     const width  = mount.clientWidth;
     const height = mount.clientHeight;
 
-    // ── SCENE ──
+    // CENA
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x01172F);
 
-    // ── CAMERA ──
+    //CAMERA
     const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 1000);
     camera.position.set(0, 5, 20);
     camera.lookAt(0, 0, 0);
 
-    // ── RENDERER ──
+    //RENDER
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
@@ -34,7 +34,7 @@ export default function CanvasTopDisplay() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
 
-    // ── LIGHTS ──
+    //LUZ
     scene.add(new THREE.AmbientLight(0xd0e8ff, 1.2));
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
@@ -59,7 +59,7 @@ export default function CanvasTopDisplay() {
     centerGlow.position.set(0, 0, 2);
     scene.add(centerGlow);
 
-    // ── STARS (instanced icosahedra) ──
+    // ESTRELAS (ICOSAEDROS)
     const starCount = 2026;
     const geo = new THREE.IcosahedronGeometry(0.1, 0);
     const mat = new THREE.MeshStandardMaterial({
@@ -93,7 +93,7 @@ export default function CanvasTopDisplay() {
       stars.setMatrixAt(i, dummy.matrix);
     }
 
-    // ── EXTRA CLOSE STARS ──
+    // ESTRELAS DA SEGUNDA CAMADA
     const closeCount = 450;
     const geoS = new THREE.IcosahedronGeometry(0.055, 0);
     const matS = new THREE.MeshStandardMaterial({
@@ -121,11 +121,12 @@ export default function CanvasTopDisplay() {
       starsClose.setMatrixAt(i, dummyS.matrix);
     }
 
-    // ── NEBULA POINTS ──
+    // PONTOS DA PROFUNDIDADE (TIPO UMA NEBULOSA)
     const nebulaCount = 1200;
-    const nebulaPositions = new Float32Array(nebulaCount * 3);
+    const nebulaPositions = new Float32Array(nebulaCount * 3);//Interessante que seja o array de 32bits impreciso porque ajuda a ficar mais leve e "restringe mais"
     const nebulaColors    = new Float32Array(nebulaCount * 3);
     for (let i = 0; i < nebulaCount; i++) {
+      //Camadas da nebulosa
       nebulaPositions[i * 3]     = (Math.random() - 0.5) * 120;
       nebulaPositions[i * 3 + 1] = (Math.random() - 0.5) * 40;
       nebulaPositions[i * 3 + 2] = (Math.random() - 0.5) * 60;
@@ -146,14 +147,12 @@ export default function CanvasTopDisplay() {
     });
     const nebula = new THREE.Points(nebulaGeo, nebulaMat);
 
-    // ── GROUP ──
     const starsGroup = new THREE.Group();
     starsGroup.add(stars);
     starsGroup.add(starsClose);
     starsGroup.add(nebula);
     scene.add(starsGroup);
 
-    // ── MODEL ──
     const loader = new GLTFLoader();
     loader.load(
       '/models/TouchingHands.glb',
@@ -176,7 +175,7 @@ export default function CanvasTopDisplay() {
         scene.add(model);
 
         const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());//Vector3 é o "motor gráfico" que cria o ambiente 3d de forma vetorizada
         const size = box.getSize(new THREE.Vector3());
         model.position.sub(center);
 
@@ -198,7 +197,6 @@ export default function CanvasTopDisplay() {
     };
     window.addEventListener('resize', handleResize);
 
-    // ── ANIMATE ──
     const clock = new THREE.Clock();
     let animId;
 
