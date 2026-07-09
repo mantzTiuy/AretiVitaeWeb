@@ -18,7 +18,7 @@ export default function CreateCanvas() {
 
   const emptyName   = form.name.trim() === '';
   const nameTooLong = form.name.length > 32;
-  const descTooLong = form.description.length > 240;
+  const descTooLong = form.description.length > 2000;
   const camposVazios = emptyName || nameTooLong || descTooLong;
 
   async function handleCadastro() {
@@ -116,11 +116,11 @@ export default function CreateCanvas() {
                     value={form.description}
                     onChange={(e) => setForm({ ...form/*OS 3 PONTINHOS LEVAM A INFORMAÇÃO PARA O OBJETO DO FORM, NO CASO, AQUI ELE LEVA A DESCRIÇÃO*/, description: e.target.value })}
                     placeholder="Seja livre e descreva sua ideia aqui..."
-                    maxLength={240}
+                    maxLength={2000}
                     className={descTooLong ? styles.inputError : ''}
                   />
                 </div>
-                <p className={styles.charCount}>{form.description.length}/240</p>
+                <p className={styles.charCount}>{form.description.length}/2000</p>
 
                 {erro && <p className={styles.errorMsg}>{erro}</p>}
 

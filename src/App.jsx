@@ -9,6 +9,7 @@ import Account from "./components/account/Account";
 import About from "./components/about/About";
 import NetConfig from "./components/networkcreation/Notespage.jsx"
 import CreateCanvas from "./components/mapConfig/CreateCanvas.jsx";
+import MapSpecs from "./components/mapSpecs/mapSpecs.jsx";
 
 function App() {
 
@@ -50,6 +51,7 @@ function App() {
         <Route path="/sobre"        element={<About />} />
         <Route path="/notes" element={<NetConfig />} />
         <Route path="/create" element={<CreateCanvas/>}/>
+        <Route path="/canvas/:id/editar" element={<MapSpecs/>}/>
       </Routes>
     </Router>
   );
