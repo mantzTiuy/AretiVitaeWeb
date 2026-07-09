@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './modules/CreateCanvas.module.css';
 import axios from 'axios';
+import UseContextMenu from './UseContextMenu';
 
 export default function MapCarousel({ onSelect }) {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function MapCarousel({ onSelect }) {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
   const [navegando, setNavegando] = useState(false); //Controla o overlay de transição entre telas
+  const { menu, openMenu, closeMenu, menuRef } = UseContextMenu();
 
   useEffect(() => {
     let cancel = false;
@@ -74,6 +76,17 @@ export default function MapCarousel({ onSelect }) {
     }, 300);
   }
 
+  function handleAbrir() {
+    const mapa = itens.find((m) => m.id === menu.targetId);
+    if (mapa) handleCardClick(mapa);
+    closeMenu();
+  }
+
+  function handleEditar() {
+    navigate(`/canvas/${menu.targetId}/editar`); // ajuste a rota quando a tela existir
+    closeMenu();
+  }
+
   return (
     <div className={styles.window}>
       {navegando && (
@@ -109,6 +122,7 @@ export default function MapCarousel({ onSelect }) {
                 key={m.id}//Cada card tem um id, esse que é passado para o handle e leva ao canvas de respectivo id
                 className={styles.card}
                 onClick={() => handleCardClick(m)}
+                onContextMenu={(e) => openMenu(e, m.id)}
               >
                 <div className={styles.cardTitlebar}>
                   <div className={styles.cardDot} />
@@ -125,6 +139,21 @@ export default function MapCarousel({ onSelect }) {
           </div>
         )}
       </div>
+
+      {menu.visible && (
+        <ul
+          ref={menuRef}
+          className={styles.contextMenu}
+          style={{ top: menu.y, left: menu.x }}
+        >
+          <li onClick={handleAbrir} className={styles.contextMenuItem}>
+            Abrir
+          </li>
+          <li onClick={handleEditar} className={styles.contextMenuItem}>
+            Editar
+          </li>
+        </ul>
+      )}
     </div>
   );
 }
