@@ -44,12 +44,12 @@ export default function MapSpecs() {
     setErro('');
 
     try {
-      await axios.put(`http://localhost:8081/apiAvMap/${id}`, {
+      await axios.put(`http://localhost:8081/apiAvMap/update/${id}`, {
         title: form.name,
         description: form.description,
       });
 
-      navigate(`/canvas/${id}`);
+      navigate(`/create`);
     } catch (error) {
       console.log('ERRO COMPLETO:', error);
       console.log('RESPOSTA:', error.response);
