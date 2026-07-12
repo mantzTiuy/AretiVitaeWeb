@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+//eu amo minha vida
 @Service
 public class UserMapService {
 
@@ -63,7 +63,7 @@ public class UserMapService {
     }
 
     public UserMap update(int id, UserMap updatedMap){
-        UserMap existingMap = mapRepository.findById((int) id).orElseThrow(() -> new RuntimeException("MAPA NAO ENCONTRADO"));
+        UserMap existingMap = mapRepository.findById((int) id).orElseThrow(() -> new RuntimeException("ID DE MAPA NAO ENCONTRADO"));
         if(updatedMap.getTitle() != null) {
             existingMap.setTitle(updatedMap.getTitle());
         }
