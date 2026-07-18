@@ -1,18 +1,15 @@
-import { useState } from "react";
 import styles from "./modules/NewNoteModal.module.css";
 
-export default function NewNoteModal({ onConfirm, onClose }) {
-  const [title, setTitle] = useState("");
-
-  const handleConfirm = () => {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    onConfirm(trimmed);
-    setTitle("");
-  };
-
+export default function NewNoteModal({
+  titulo,
+  onTituloChange,
+  toLogTitle,
+  camposVazios,
+  onConfirm,
+  onClose,
+}) {
   const handleKey = (e) => {
-    if (e.key === "Enter")  handleConfirm();
+    if (e.key === "Enter")  onConfirm();
     if (e.key === "Escape") onClose();
   };
 
@@ -44,19 +41,21 @@ export default function NewNoteModal({ onConfirm, onClose }) {
             className={styles.input}
             type="text"
             placeholder="Título da nota…"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={titulo}
+            onChange={(e) => onTituloChange(e.target.value)}
             onKeyDown={handleKey}
             autoFocus
-            maxLength={80}
           />
+          {toLogTitle && (
+            <p className={styles.errorMsg}>Título muito longo.</p>
+          )}
 
           <div className={styles.btnRow}>
-            <button className={styles.cancelBtn}  onClick={onClose}>Cancelar</button>
+            <button className={styles.cancelBtn} onClick={onClose}>Cancelar</button>
             <button
               className={styles.confirmBtn}
-              onClick={handleConfirm}
-              disabled={!title.trim()}
+              onClick={onConfirm}
+              disabled={camposVazios}
             >
               Criar nota
             </button>

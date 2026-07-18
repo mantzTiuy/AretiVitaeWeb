@@ -106,56 +106,33 @@
 /* ── Rodapé com botões ── */
 .winFooter {
   display: flex;
-  gap: 16px;
-  padding: 16px clamp(16px, 3vw, 40px);
-  background: rgb(38, 54, 108);
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
-  flex-shrink: 0;
-}
-
-.save {
-  flex: 1;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.75);
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(11px, 1.1vw, 12px);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: filter 0.18s, transform 0.12s;
-}
-.save:hover  { filter: brightness(1.18); }
-.save:active { transform: scale(0.98); }
-
-.discard {
-  flex: 1;
-  height: 40px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.35);
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(11px, 1.1vw, 12px);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: color 0.18s, border-color 0.18s, transform 0.12s;
-}
-.discard:hover  { color: rgba(255, 255, 255, 0.65); border-color: rgba(255, 255, 255, 0.22); }
-.discard:active { transform: scale(0.98); }
-
-.winFooter {
-  display: flex;
+  justify-content: center;
   gap: 16px;
   padding: 14px clamp(16px, 3vw, 40px);
   background: rgb(38, 54, 108);
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   flex-shrink: 0;
 }
-.discard:hover  { color: rgba(255, 255, 255, 0.90); border-color: rgba(255, 255, 255, 0.38); }
+
+.save:hover  { filter: brightness(1.18); }
+.save:active { transform: scale(0.98); }
+
+.discard {
+  flex: none;
+  width: min(280px, 60%);
+  height: 40px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(11px, 1.1vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
+}
+.discard:hover  { background: rgba(255, 255, 255, 0.24); border-color: rgba(255, 255, 255, 0.55); }
 .discard:active { transform: scale(0.98); }
 
 @media (max-width: 600px) {

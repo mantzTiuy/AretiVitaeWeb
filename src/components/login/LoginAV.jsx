@@ -74,7 +74,7 @@ export default function LoginAV() {
         senha: loginPassword,
       });
 
-      const { senha: _/*ignored*/, ...another } = data;
+      const { senha: _/*ignora tudo*/, ...another } = data;
       const anotherStr = JSON.stringify(another);
       localStorage.setItem("user", anotherStr);
       window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));

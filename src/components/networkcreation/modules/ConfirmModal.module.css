@@ -67,58 +67,15 @@
   padding: clamp(1.4rem, 3vh, 2rem) clamp(1.2rem, 3vw, 2rem);
 }
 
-.sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  color:white;
-}
-.sectionLine {
-  flex: 1;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.20);
-}
-.sectionText {
-  margin: 0;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600;
-  font-size: clamp(0.6rem, 1vh, 0.78rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.70;
-  white-space: nowrap;
-  color:white;
-}
-
-.sub {
+.message {
   margin: 0;
   font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(0.78rem, 1.4vh, 0.94rem);
-  color: rgba(255, 255, 255, 0.58);
-  text-align: center;
-  letter-spacing: 0.04em;
-  width: 100%;
-}
-
-.input {
-  width: 100%;
-  height: clamp(2rem, 4.8vh, 3.1rem);
-  padding: 0 1rem;
-  font-size: clamp(0.76rem, 1.4vh, 0.96rem);
+  font-size: clamp(0.9rem, 1.6vh, 1.05rem);
   color: rgba(255, 255, 255, 0.90);
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: 'Josefin Sans', sans-serif;
-  letter-spacing: 0.04em;
-  box-sizing: border-box;
-}
-.input::placeholder { color: rgba(255, 255, 255, 0.28); }
-.input:focus {
-  border-color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  width: 100%;
 }
 
 .btnRow {
@@ -159,3 +116,8 @@
 .confirmBtn:hover:not(:disabled)  { filter: brightness(1.18); }
 .confirmBtn:active:not(:disabled) { transform: scale(0.97); }
 .confirmBtn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+/* Variante para ações destrutivas (ex: excluir) */
+.confirmBtnDanger {
+  background: rgb(150, 55, 60);
+}

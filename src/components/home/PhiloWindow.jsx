@@ -1,9 +1,51 @@
-import styles from './modules/Window.module.css'
-
-
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import styles from './modules/Window.module.css';
 
 export default function PhiloWindow() {
-  
+  const [note, setNote] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+
+    async function loadLastNote() {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        if (!cancel) setLoading(false);
+        return;
+      }
+
+      let userId;
+      try {
+        userId = JSON.parse(userStr).id;
+      } catch {
+        userId = null;
+      }
+
+      if (!userId) {
+        if (!cancel) setLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await axios.get(`http://localhost:8081/apiAvNotes/User/${userId}`);
+
+        if (!cancel && Array.isArray(data) && data.length > 0) {
+          const ultima = [...data].sort((a, b) => b.id - a.id)[0];
+          setNote(ultima);
+        }
+      } catch (er) {
+        console.log('Erro ao carregar última nota:', er);
+      } finally {
+        if (!cancel) setLoading(false);
+      }
+    }
+
+    loadLastNote();
+
+    return () => { cancel = true; };
+  }, []);
 
   return (
     <div className={`${styles.winWindow} ${styles.philoWindow}`}>
@@ -16,15 +58,17 @@ export default function PhiloWindow() {
         </div>
       </div>
       <div className={`${styles.winBody} ${styles.philoBody}`}>
-        <div className={styles.quoteDisplay}>
-          <p className={styles.quoteText}>Estou tendo essa maravilhosa ideia no dia de hoje, quero fazer um jogo onde um ser mitologico que nasceu nas profundezas 
-            de um planeta luta para conseguir chegar a superfície, e lá, ele começa a perceber os problemas presentes naquele lugar, e agora, deseja chegar ao céu, onde 
-            reside o rei daquele mundo.
-          </p>
-          <div className={styles.quoteDivider} />
-          <p className={styles.quoteAuthor}>15/06/2025</p>
-        </div>
+        {!loading && (
+          <div className={styles.quoteDisplay}>
+            {note && (
+              <p className={styles.quoteAuthor}>{note.title}</p>
+            )}
+            <p className={styles.quoteText}>
+              {note ? note.note : 'Nenhuma nota criada ainda.'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

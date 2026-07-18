@@ -5,9 +5,20 @@
   border-radius: 14px;
   overflow: hidden;
   transition: filter 0.18s, transform 0.18s;
+
+  /* tamanho padrão para todos os cards */
+  width: 100%;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
 }
 .card:hover { filter: brightness(1.05); }
-.cardEditing { filter: none !important; transform: none !important; }
+.cardEditing {
+  filter: none !important;
+  transform: none !important;
+  height: auto;
+  min-height: 160px;
+}
 
 /* ── Titlebar do card ── */
 .cardTitlebar {
@@ -15,6 +26,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 9px 14px;
+  flex-shrink: 0;
 }
 
 .cardTitlebarLeft {
@@ -27,7 +39,7 @@
 .cardTitle {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: clamp(11px, 1.1vw, 13px);
+  font-size: clamp(9.9px, 0.99vw, 12.5px);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.90);
   letter-spacing: 0.05em;
@@ -39,12 +51,31 @@
 .cardDate {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: 9px;
+  font-size: clamp(8.1px, 0.6vw, 9.5px);
   font-weight: 500;
   letter-spacing: 0.16em;
   color: rgba(255, 255, 255, 0.40);
   text-transform: uppercase;
 }
+
+.titleInput {
+  margin: 0;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(9.9px, 0.99vw, 12.5px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.90);
+  letter-spacing: 0.05em;
+  padding: 0 0 2px 0;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.titleInput:focus { border-color: rgba(255, 255, 255, 0.70); }
+.titleInput::placeholder { color: rgba(255, 255, 255, 0.35); }
 
 .headerActions {
   display: flex;
@@ -52,25 +83,22 @@
   flex-shrink: 0;
 }
 
-.editBtn,
-.deleteBtn {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+.editDot,
+.deleteDot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: filter 0.15s, transform 0.1s;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.65);
 }
-.editBtn   { background: rgba(255, 255, 255, 0.10); }
-.editBtn:hover { background: rgba(255, 255, 255, 0.22); color: #fff; }
-.deleteBtn { background: rgba(255, 100, 100, 0.15); color: rgba(255, 160, 160, 0.8); }
-.deleteBtn:hover { background: rgba(255, 100, 100, 0.38); color: #fff; }
-.editBtn:active, .deleteBtn:active { transform: scale(0.90); }
+.editDot   { background: rgba(255, 255, 255, 0.55); }
+.editDot:hover { filter: brightness(1.3); }
+.deleteDot { background: rgb(230, 90, 90); }
+.deleteDot:hover { filter: brightness(1.15); }
+.editDot:active, .deleteDot:active { transform: scale(0.85); }
 
 /* ── Body ── */
 .cardBody {
@@ -78,22 +106,28 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .cardPreview {
   margin: 0;
   font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(11px, 1.1vw, 13px);
+  font-size: clamp(9.9px, 0.99vw, 12.5px);
   font-weight: 300;
   color: rgba(255, 255, 255, 0.72);
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 .emptyHint { color: rgba(255, 255, 255, 0.28); font-style: italic; }
 .moreHint  { color: rgba(180, 200, 255, 0.60); font-size: 11px; }
 
-/* ── Editor ── */
 .editorArea {
   display: flex;
   flex-direction: column;
@@ -109,7 +143,7 @@
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.90);
   font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(12px, 1.2vw, 14px);
+  font-size: clamp(10.8px, 1.08vw, 13px);
   line-height: 1.65;
   padding: 12px 14px;
   outline: none;
@@ -120,36 +154,6 @@
 .textarea:focus { border-color: rgba(255, 255, 255, 0.42); }
 .textarea::placeholder { color: rgba(255, 255, 255, 0.28); }
 
-.editorFooter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.lineBar {
-  flex: 1;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.10);
-  border-radius: 4px;
-  overflow: hidden;
-  min-width: 60px;
-}
-.lineBarFill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.2s, background 0.3s;
-}
-.lineCount {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.38);
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-/* ── Save / discard buttons ── */
 .editorBtns {
   display: flex;
   gap: 8px;
@@ -159,16 +163,15 @@
 
 .cancelBtn {
   flex: 1;
-  height: 2.6rem;
-  border-radius: 10px;
+  height: 1.43rem;
+  border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.40);
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.65rem;
   letter-spacing: 0.10em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: background 0.18s, transform 0.1s;
 }
@@ -177,18 +180,43 @@
 
 .saveBtn {
   flex: 2;
-  height: 2.6rem;
-  border-radius: 10px;
+  height: 1.43rem;
+  border-radius: 9px;
   border: none;
   background: rgb(35, 50, 100);
   color: #fff;
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.65rem;
   letter-spacing: 0.10em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: filter 0.18s, transform 0.1s;
 }
 .saveBtn:hover  { filter: brightness(1.25); }
 .saveBtn:active { transform: scale(0.97); }
+
+/* ─── Telas grandes (1920px+) ─────────────────────────── */
+@media (min-width: 1920px) {
+  .card {
+    height: 170px;
+  }
+  .cardEditing {
+    min-height: 170px;
+  }
+  .cardTitle,
+  .titleInput,
+  .cardPreview {
+    font-size: 13px;
+  }
+  .cardDate {
+    font-size: 9.5px;
+  }
+  .textarea {
+    font-size: 13px;
+  }
+  .cancelBtn,
+  .saveBtn {
+    font-size: 0.7rem;
+    height: 1.5rem;
+  }
+}

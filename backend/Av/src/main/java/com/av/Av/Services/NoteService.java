@@ -43,13 +43,7 @@ public class NoteService {
         userRepository.findById(userid)
                 .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));
 
-        List<Note> notes = noteRepository.findByUser_IdAndAtivo(userid, 0);
-
-        if(notes.isEmpty()){
-            throw new RuntimeException("ESSE USUARIO NAO TEM NOTAS");
-        }
-
-        return notes;
+        return noteRepository.findByUser_IdAndAtivo(userid, 0);
     }
 
     public Note update(int id, Note updatedNote){
