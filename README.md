@@ -1,4 +1,4 @@
-# ARETI VITAE - 0.7.1 - ABOUT REFORMULED
+# ARETI VITAE - 0.7.2 - INDEX CODE REWORK
 
  O "Areti Vitae: Ilustrador de ideias" é uma plataforma digital e inovadora que visa auxiliar criadores na conceitualização e no desenvolvimento de projetos e ideias por meio de um mapeamento visual intuitivo. Ele se destaca pelo canvas interativo e estética inovadora, buscando evoluir ideias promissoras, especialmente aquelas de menor escala, e incentivando o pensamento criativo juntamente da organização adequada
 O projeto tem como premissa fundamental promover a criação e o desenvolvimento de ideias inovadoras, empregando métodos intuitivos e ferramentas de suporte, além de se garantir de uma estética voltada para o método criativo.
