@@ -138,8 +138,8 @@ export default function Account() {
               <Cerberus size={88} />
             </div>
             <div className={styles.avatarMeta}>
-              <h1>{form.name || 'ExampleName'}</h1>
-              <p>{form.email || 'example@email.com'}</p>
+              <h1>{form.name}</h1>
+              <p>{form.email}</p>
             </div>
           </div>
 
@@ -164,7 +164,7 @@ export default function Account() {
                   <input
                     type="email"
                     value={form.email}
-                    placeholder="seu@email.com"
+                    placeholder="nomedoemail@email.com"
                     readOnly
                   />
                 </div>

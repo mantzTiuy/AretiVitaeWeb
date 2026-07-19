@@ -1,113 +1,115 @@
 import { useNavigate } from 'react-router-dom'
 import styles from './modules/About.module.css'
+// ajuste este caminho conforme a pasta onde ficar o mapSpecs/
+// (aqui assumi About.jsx e mapSpecs/ como pastas irmãs)
+import CanvasStarBackground from '../mapSpecs/CanvasStarBackground'
+
+// rótulo local para separar as seções. O SectionTitle do mapSpecs vinha com
+// cor escura hardcoded (provavelmente pensado para um fundo claro) e ficava
+// quase invisível aqui em cima do navy — troquei por este até você decidir
+// se corrige a cor lá na origem ou mantém esse aqui.
+function SectionLabel({ children }) {
+  return <p className={styles.sectionLabel}>{children}</p>
+}
 
 export default function About() {
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+
   return (
-    <div className={styles.page}>
+    <div className={styles.root}>
+      <CanvasStarBackground />
 
-      
-      <div className={styles.left}>
-        <div className={styles.leftInner}>
-          <p className={styles.leftLabel}>SOBRE O PROJETO</p>
-          <h1 className={styles.leftTitle}>AretiVitae</h1>
-          <p className={styles.leftSub}>ILUSTRADOR DE IDEIAS</p>
+      <div className={styles.bodyWrapper}>
+        <div className={styles.window}>
 
-          <div className={styles.leftDivider} />
+          <div className={styles.titlebar}>
+            <span className={styles.titlebarLabel}>Sobre o AretiVitae</span>
+            <div className={styles.dots}>
+              <div className={`${styles.dot} ${styles.dotGray}`} />
+              <div className={`${styles.dot} ${styles.dotYellow}`} />
+              <div className={`${styles.dot} ${styles.dotRed}`} />
+            </div>
+          </div>
 
-          <div className={styles.contactRow}>
-            <span className={styles.contactIcon}>✉</span>
-            <a href="mailto:aretivitae@gmail.com" className={styles.contactLink}>
-              aretivitae@gmail.com
-            </a>
+          <div className={styles.formBody}>
+
+            <div className={styles.brandBlock}>
+              <h1 className={styles.brandTitle}>AretiVitae</h1>
+              <p className={styles.brandSub}>ILUSTRADOR DE IDEIAS</p>
+              <a href="mailto:aretivitae@gmail.com" className={styles.contactLink}>
+                aretivitae@gmail.com
+              </a>
+            </div>
+
+            <SectionLabel>O que é</SectionLabel>
+
+            <p className={styles.paragraph}>
+              O <strong>Areti Vitae: Ilustrador de ideias</strong> é uma plataforma digital
+              e inovadora que visa auxiliar individuos  na conceitualização e no
+              desenvolvimento de projetos e ideias por meio de um mapeamento visual intuitivo, com
+              foco no desenvolvimento eficiente. Ele se destaca pelo canvas imersivo integrado a um sistema de notas, buscando
+              evoluir ideias promissoras, especialmente aquelas de menor escala, e
+              incentivando o desenvolvimento criativo.
+            </p>
+
+            <p className={styles.paragraph}>
+              O projeto tem como premissa fundamental promover a criação e o desenvolvimento de
+              ideias de maneira eficiente, empregando métodos intuitivos e ferramentas de suporte,
+              além de possibilitar a contribuição dos usuários com suas respectivas ideias.
+            </p>
+
+            <p className={styles.paragraph}>
+              O <em>Areti Vitae</em> é acessível a indivíduo com ideias
+              criativas e inovadoras, sendo restrita ao uso de pessoas acima de 13 anos, e tem
+              funcionalidades aos assinantes da versão <strong>"Moon-Modules"</strong>, com mais recursos
+              para desenvolvimento e planejamento em maior escala.
+            </p>
+
+            <SectionLabel>Aplicativo mobile</SectionLabel>
+
+            <p className={styles.paragraph}>
+              Além da versão web, o <strong>AretiVitae</strong> conta com um aplicativo mobile
+              complementar, pensado para acompanhar o desenvolvimento das ideias no dia a dia. Ele
+              é focado no recurso de notas, permitindo registrar pensamentos rapidamente,
+              onde quer que a inspiração apareça, para depois organizá-los no canvas principal.
+            </p>
+
+            <SectionLabel>Propósito</SectionLabel>
+
+            <p className={styles.paragraph}>
+              <em>Areti Vitae</em> busca auxiliar os usuários mais criativos e trazer uma nova
+              perspectiva para quem nunca se imergiu dentro das próprias ideias. O projeto busca
+              resolver um grande problema, sendo ele o possível déficit de organização e coerência
+              em uma linha de pensamento complexa ligada a alguma ideia.
+            </p>
+
+            <p className={styles.paragraph}>
+              Grandes projetos começam com uma simples conversa entre amigos, e{' '}
+              <strong>AretiVitae</strong> ajuda com que essa ideia saia do papel e comece a ser
+              conceitualizada de forma mais concreta.
+            </p>
+
+            <SectionLabel>Criadores</SectionLabel>
+
+            <div className={styles.creatorsRow}>
+              <span className={styles.creatorName}>João Mantz de Oliveira</span>
+              <span className={styles.creatorSeparator} aria-hidden="true">·</span>
+              <span className={styles.creatorName}>Maurício Fernandes Ferreira</span>
+            </div>
+            <p className={styles.creatorsNote}>
+              Projeto desenvolvido por alunos da Unicamp (Universidade Estadual de Campinas)
+            </p>
+
+            <div className={styles.btnRow}>
+              <button className={styles.discard} onClick={() => navigate('/home')}>
+                Voltar
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
-
-    
-      <div className={styles.right}>
-        <div className={styles.rightInner}>
-
-          {/*O que é*/}
-          <div className={styles.card}>
-
-            <div className={styles.cardHeader}>
-              <span className={styles.cardTitle}>O QUE É</span>
-            </div>
-
-            <div className={styles.cardBody}>
-              <p className={styles.paragraph}>
-                O <strong>Areti Vitae: Ilustrador de ideias</strong> é uma plataforma digital
-                e inovadora que visa auxiliar individuos  na conceitualização e no
-                desenvolvimento de projetos e ideias por meio de um mapeamento visual intuitivo, com
-                foco no desenvolvimento eficiente. Ele se destaca pelo canvas imersivo integrado a um sistema de notas, buscando
-                evoluir ideias promissoras, especialmente aquelas de menor escala, e
-                incentivando o desenvolvimento criativo.
-              </p>
-
-              <p className={styles.paragraph}>
-                O projeto tem como premissa fundamental promover a criação e o desenvolvimento de
-                ideias de maneira eficiente, empregando métodos intuitivos e ferramentas de suporte,
-                além de possibilitar a contribuição dos usuários com suas respectivas ideias.
-              </p>
-
-              <p className={styles.paragraph}>
-                O <em>Areti Vitae</em> é acessível a indivíduo com ideias
-                criativas e inovadoras, sendo restrita ao uso de pessoas acima de 13 anos, e tem
-                funcionalidades aos assinantes da versão <strong>"Moon-Modules"</strong>, com mais recursos
-                para desenvolvimento e planejamento em maior escala.
-              </p>
-            </div>
-
-            <div className={styles.cardFooter}>
-              <p className={styles.footerLabel}>CRIADORES</p>
-              <div className={styles.creatorsRow}>
-                <div className={styles.creatorChip}>
-                  <div className={styles.creatorAvatar}>JM</div>
-                  <span className={styles.creatorName}>João Mantz de Oliveira</span>
-                </div>
-                <div className={styles.creatorChip}>
-                  <div className={styles.creatorAvatar}>MF</div>
-                  <span className={styles.creatorName}>Maurício Fernandes Ferreira</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/*Justificativa*/}
-          <div className={styles.card}>
-
-            <div className={styles.cardHeader}>
-              <span className={styles.cardTitle}>PROPÓSITO</span>
-            </div>
-
-            <div className={styles.cardBody}>
-              <p className={styles.paragraph}>
-                <em>Areti Vitae</em> busca auxiliar os usuários mais criativos e trazer uma nova
-                perspectiva para quem nunca se imergiu dentro das próprias ideias. O projeto busca
-                resolver um grande problema, sendo ele o possível déficit de organização e coerência
-                em uma linha de pensamento complexa ligada a alguma ideia.
-              </p>
-
-              <p className={styles.paragraph}>
-                Grandes projetos começam com uma simples conversa entre amigos, e{' '}
-                <strong>AretiVitae</strong> ajuda com que essa ideia saia do papel e comece a ser
-                conceitualizada de forma mais concreta.
-              </p>
-            </div>
-
-          </div>
-
-          
-          <button className={styles.backBtn} onClick={() => navigate('/home')}>
-            ← Voltar
-          </button>
-
-        </div>
-      </div>
-
     </div>
   )
 }
