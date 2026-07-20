@@ -1,6 +1,6 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 
-const GRID_SIZE  = 50;
+const GRID_SIZE  = 40; 
 const BG_COLOR   = "#cce6fe";
 const LINE_COLOR = "#89bce8";
 

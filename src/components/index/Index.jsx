@@ -8,6 +8,7 @@ import Settings from "./Settings";
 import GridCanvas from "./GridCanvas";
 import Axis from "./Axis";
 import BackButton from './BackButton';
+import { createMediaImporter } from "./useMediaImporter";
 
 import { generateId, SELECTION_STYLE } from "./constants";
 import { createPortsAndConnections } from "./usePortsAndConnections";
@@ -22,6 +23,9 @@ export default function Index() {
   const gridRef           = useRef(null);
   const canvasInstanceRef = useRef(null);
   const sourceBlockRef    = useRef(null); // Guarda temporariamente o bloco/lado quando existe dragging de porta
+  const mediaImporterRef  = useRef(null); // Ref das mídias (importador de PDF/imagem)
+  const fileInputRef      = useRef(null); // Input escondido pra seleção manual de PDF/imagem
+  const [isDragOver, setIsDragOver] = useState(false); // feedback visual do drop do pdf
   const tempLineRef       = useRef(null); // Linha temporária para definir conexão entre portas
   const isDraggingPort    = useRef(false); // Define se está ou não em um "estado de arrasto"
   const activePortsRef    = useRef([]); // Array com as portas selecionadas
@@ -75,15 +79,20 @@ export default function Index() {
       cs.bringObjectToFront(obj);
     });
 
+    // CORREÇÃO (qualidade/nitidez): antes esta função escrevia direto em
+    // cs.width e em upperCanvas/lowerCanvas.width/height usando os pixels
+    // CSS (window.innerWidth/innerHeight) crus. O Fabric, por padrão, já usa
+    // retina scaling: o buffer real de pixels é dimensionado em
+    // largura_css * devicePixelRatio, o que é o que garante texto e bordas
+    // nítidas em telas com DPR > 1 (Mac retina, Windows com escala 125%/
+    // 150%, celular etc.). Sobrescrever manualmente esses valores anulava
+    // esse scaling e fazia o canvas voltar a renderizar em 1:1, esticado via
+    // CSS — daí o aspecto borrado nos cards. cs.setDimensions() delega esse
+    // cálculo pro próprio Fabric, preservando a escala retina.
     const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      cs.width  = w;
-      cs.height = h;
-      const upperCanvas = cs.upperCanvasEl;
-      const lowerCanvas = cs.lowerCanvasEl;
-      if (upperCanvas) { upperCanvas.width = w; upperCanvas.height = h; }
-      if (lowerCanvas) { lowerCanvas.width = w; lowerCanvas.height = h; }
+      cs.setDimensions({ width: w, height: h });
       gridRef.current?.resize();
       drawGrid();
       cs.requestRenderAll();
@@ -117,6 +126,9 @@ export default function Index() {
 
     canvasInstanceRef.current.salvarMapa = salvarMapa;
 
+    // Importador de mídias (PDF/imagem) — mesmo padrão dos outros módulos
+    mediaImporterRef.current = createMediaImporter({ cs, salvarMapa });
+
     const cancelledRef = { current: false };
     carregarMapa(cs, cancelledRef);
 
@@ -130,13 +142,36 @@ export default function Index() {
       salvarMapa,
     });
 
+    // ── Download de mídia: botão desenhado no card + duplo clique como atalho ──
+    // O botão é detectado via opt.subTargets no "mouse:up" (equivalente a um
+    // click, sem interferir no início de um drag no "mouse:down"
+    // Precisa de subTargetCheck: true no group (já configurado em
+    // buildMediaCard) pra que o fabric preencha subTargets com os objetos
+    // marcados _isDownloadBtn. :D
+    const onMediaMouseUp = (opt) => {
+      const clickedBtn = opt.subTargets?.some((o) => o._isDownloadBtn);
+      if (clickedBtn && opt.target?._blockType === "media") {
+        mediaImporterRef.current?.downloadMediaImage(opt.target);
+      }
+    };
+
+    // Atalho: duplo clique em qualquer parte do card também baixa,
+    // não só quando acerta o botão em cima. Pra facilitar considerando que o botão pode ser dificil de ver
+    const onMediaDoubleClick = (opt) => {
+      if (opt.target?._blockType === "media") {
+        mediaImporterRef.current?.downloadMediaImage(opt.target);
+      }
+    };
+
     const onKeyDown = (e) => interactions.onKeyDown(e, canvasInstanceRef);
     const disableCtrlZoom = (e) => { if (e.ctrlKey) e.preventDefault(); };
 
     cs.on("mouse:down",        interactions.onMouseDown);
-    cs.on("mouse:dblclick",    interactions.onDoubleClick);
-    cs.on("mouse:move",        interactions.onMouseMove);
     cs.on("mouse:up",          interactions.onMouseUp);
+    cs.on("mouse:up",          onMediaMouseUp);
+    cs.on("mouse:dblclick",    interactions.onDoubleClick);
+    cs.on("mouse:dblclick",    onMediaDoubleClick);
+    cs.on("mouse:move",        interactions.onMouseMove);
     cs.on("mouse:wheel",       interactions.onWheel);
     cs.on("selection:created", interactions.onSelected);
     cs.on("selection:updated", interactions.onSelected);
@@ -146,15 +181,16 @@ export default function Index() {
     cs.on("object:modified",   interactions.onModified);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel",   disableCtrlZoom, { passive: false });
-    window.addEventListener("resize",  handleResize);
 
     return () => {
       cancelledRef.current = true;
 
       cs.off("mouse:down",        interactions.onMouseDown);
-      cs.off("mouse:dblclick",    interactions.onDoubleClick);
-      cs.off("mouse:move",        interactions.onMouseMove);
       cs.off("mouse:up",          interactions.onMouseUp);
+      cs.off("mouse:up",          onMediaMouseUp);
+      cs.off("mouse:dblclick",    interactions.onDoubleClick);
+      cs.off("mouse:dblclick",    onMediaDoubleClick);
+      cs.off("mouse:move",        interactions.onMouseMove);
       cs.off("mouse:wheel",       interactions.onWheel);
       cs.off("selection:created", interactions.onSelected);
       cs.off("selection:updated", interactions.onSelected);
@@ -171,19 +207,48 @@ export default function Index() {
     };
   }, [id]);
 
+  //Drag & drop de PDF ou Imagem
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer?.files?.length) {
+      mediaImporterRef.current?.handleFiles(e.dataTransfer.files);
+    }
+  };
+
   const handleSalvarManual = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     canvasInstanceRef.current?.salvarMapa?.();
+  };
+
+  // Seleção manual de mídia (botão), alternativa ao drag-and-drop 
+  const openFilePicker = () => fileInputRef.current?.click();
+
+  const handleFileInputChange = (e) => {
+    if (e.target.files?.length) {
+      mediaImporterRef.current?.handleFiles(e.target.files);
+    }
+    e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
   };
 
   const addBox   = () => addBoxToCanvas(canvasInstanceRef.current);
   const addGroup = () => addGroupToCanvas(canvasInstanceRef.current);
   const addText  = () => addTextToCanvas(canvasInstanceRef.current);
 
-  return (
+ return (
     <div className="App">
       {erroMap && (
-        <div style={{ position: 'absolute', top: 10, left: 10, color: 'red', zIndex: 10 }}>
+        <div className={stylescanva.errorMessage}>
           {erroMap}
         </div>
       )}
@@ -193,22 +258,41 @@ export default function Index() {
         <button onClick={addBox}             className={stylestoolbox.button}>addb</button>
         <button onClick={addText}            className={stylestoolbox.button}>addt</button>
         <button onClick={centerCanvas}       className={stylestoolbox.button}>center</button>
+        <button onClick={openFilePicker}     className={stylestoolbox.button}>midia</button>
         <button onClick={handleSalvarManual} className={stylestoolbox.button}>
           {saveStatus === 'saving' ? 'Salvando...' : 'Salvar'}
         </button>
         <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
       </div>
 
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="application/pdf,image/*"
+        multiple
+        className={stylescanva.hiddenInput}
+        onChange={handleFileInputChange}
+      />
+
       <Axis canvasReady={canvasReady} onReady={handleAxisReady} />
 
-      <div className={stylescanva.canvaWrapper}>
+      <div
+        className={stylescanva.canvaWrapper}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <GridCanvas ref={gridRef} />
         <canvas
           id="canvas"
           className={stylescanva.canva}
           ref={canvasRef}
-          style={{ position: "absolute", top: 0, left: 0, zIndex: 1 }}
         />
+        {isDragOver && (
+          <div className={stylescanva.dragOverlay}>
+            Solte o PDF ou imagem aqui
+          </div>
+        )}
       </div>
 
       <Navbar />

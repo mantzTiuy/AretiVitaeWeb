@@ -17,7 +17,10 @@ function Settings({ canvasReady }) {
     if (object.type === "group") {
       const bg = object.getObjects().find((o) => o._isBackground);
       setColor(bg?.fill ?? "#ffffff");
-      setColorStroke(object.stroke ?? "#efeeee");
+      // A borda "real" de um group (blocos normais ou cards de mídia)
+      // fica no Rect filho marcado _isBackground, não no stroke do
+      // próprio group — por isso lemos daí primeiro.
+      setColorStroke(bg?.stroke ?? object.stroke ?? "#efeeee");
     } else {
       setColor(object.fill   ?? "#ffffff");
       setColorStroke(object.stroke ?? "#efeeee");
@@ -62,7 +65,8 @@ function Settings({ canvasReady }) {
     };
   }, [canvasReady]);
 
-  const MIN_SIZE = 50;
+  // Mantido em sincronia com MIN_SIZE/MAX_SIZE de constants.js (mapEditor)
+  const MIN_SIZE = 30;
   const MAX_SIZE = 1500;
   const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
 
@@ -133,8 +137,21 @@ function Settings({ canvasReady }) {
     const obj = selectedObjectRef.current;
     if (!obj) return;
 
-    obj.set({ stroke: value });
-    if (obj.type === "group") obj.dirty = true;
+    if (obj.type === "group") {
+      // Mesma lógica do fill: a borda visível de um group (inclusive
+      // os cards de mídia/PDF vindos do useMediaImporter) está no Rect
+      // filho _isBackground, então é nele que o stroke precisa ser
+      // aplicado para ter efeito visual.
+      const bg = obj.getObjects().find((o) => o._isBackground);
+      if (bg) {
+        bg.set({ stroke: value });
+      } else {
+        obj.set({ stroke: value });
+      }
+      obj.dirty = true;
+    } else {
+      obj.set({ stroke: value });
+    }
     canvas.requestRenderAll();
   };
 

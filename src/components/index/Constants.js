@@ -6,7 +6,7 @@ export const generateId = () => Math.random().toString(36).slice(2, 10);
 export const SELECTION_STYLE = {
   cornerColor: "#5083ef",
   cornerStrokeColor: "#ffffff",
-  cornerSize: 12,
+  cornerSize: 8,
   cornerStyle: "square",
   transparentCorners: false,
   borderColor: "#5083ef",
@@ -15,12 +15,12 @@ export const SELECTION_STYLE = {
 };
 
 // Informações básicas das portas
-export const PORT_RADIUS_BASE = 7;
+export const PORT_RADIUS_BASE = 5;
 export const PORT_FILL = "#93c5fd";
 export const PORT_STROKE = "#fff";
 
 // Limites de escala dos blocos
-export const MIN_SIZE = 50;
+export const MIN_SIZE = 30;
 export const MAX_SIZE = 1500;
 
 // Base da API de mapas

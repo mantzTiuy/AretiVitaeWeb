@@ -201,7 +201,7 @@ export function createCanvasInteractions({
   const onWheel = (opt) => {
     opt.e.preventDefault();
     let zoom = cs.getZoom() * (0.999 ** opt.e.deltaY);
-    zoom = Math.min(Math.max(zoom, 0.5), 2.25); // zoom máximo aumentado de 1.5 para 2.25 (+50%)
+    zoom = Math.min(Math.max(zoom, 0.5), 4.05); // zoom máximo aumentado de 2.25 para 4.05 (+80%)
     cs.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
   };
 

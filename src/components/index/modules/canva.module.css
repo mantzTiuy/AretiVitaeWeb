@@ -8,13 +8,42 @@
   z-index: 0;
 }
 
-
 .canva {
   display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
   background: transparent !important;
 }
 
 /* O canvas lower do Fabric também recebe background inline */
 .canvaWrapper canvas {
   background: transparent !important;
+}
+
+.errorMessage {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  color: red;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-weight: 600;
+  color: #5083ef;
+  background: rgba(80, 131, 239, 0.08);
+  border: 2px dashed #5083ef;
 }

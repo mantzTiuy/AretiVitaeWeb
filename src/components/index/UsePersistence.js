@@ -1,9 +1,7 @@
 import axios from "axios";
 import { API_BASE, generateId } from "./constants";
 
-// Fábrica que recebe tudo que salvarMapa/carregarMapa precisam de fora
-// (id da rota, refs, setters de estado, o SELECTION_STYLE e as funções
-// clearPorts/createConnection vindas do módulo de portas e conexões).
+//Recebe tudo relacionado ao salvamento de mapas
 export function createPersistence({
   id,
   canvasInstanceRef,
@@ -21,16 +19,16 @@ export function createPersistence({
     if (!cs) return;
     setSaveStatus('saving');
     try {
-      // 1. Remove portas do canvas antes de serializar
+      //Remove portas do canvas antes de serializar (evitar de salvar com portas erradas)
       clearPorts();
 
-      // 2. Garante _id em todo objeto "de verdade" (não porta, não linha)
+      //Garante id em todo objeto que não seja porta ou linha
       cs.getObjects().forEach((obj) => {
         if (obj._isPort || obj.isLine) return;
         if (!obj._id) obj._id = generateId();
       });
 
-      // 3. Extrai conexões sem duplicar (usa os _id garantidos acima)
+      //Extrai conexões
       const connections = [];
       const seen = new Set();
       cs.getObjects().forEach((obj) => {
@@ -47,15 +45,7 @@ export function createPersistence({
         });
       });
 
-      // 4. Serializa o canvas da forma padrão do Fabric.
-      //    IMPORTANTE: no Fabric 7.x, passar uma lista de propriedades
-      //    customizadas para cs.toJSON(propertiesToInclude) NÃO está
-      //    capturando props atribuídas diretamente na instância
-      //    (obj.blockId = ...) — o campo vinha undefined no JSON gerado.
-      //    Por isso, em vez de confiar nesse mecanismo, serializamos "cru"
-      //    e injetamos os metadados manualmente logo abaixo, por POSIÇÃO,
-      //    já que cs.toJSON().objects preserva exatamente a mesma ordem
-      //    de cs.getObjects().
+      //serializa o canvas pra json :D
       const canvasJson = cs.toJSON();
 
       const liveObjects = cs.getObjects();
@@ -76,6 +66,19 @@ export function createPersistence({
             ? (obj._linkedLabel._id ?? null)
             : null;
 
+        // Dados de mídia (usados pelos cards de imagem/PDF em
+        // useMediaImporter.js). sourceName/isPdf são leves e sempre
+        // salvos quando existem; pdfDataUrl (o base64 do arquivo) só é
+        // incluído quando o bloco de fato é um PDF, pra não inflar o
+        // JSON dos blocos comuns.
+        if (obj._blockType === "media") {
+          json.isPdf = obj._isPdf ?? false;
+          json.sourceName = obj._sourceName ?? null;
+          if (obj._isPdf) {
+            json.pdfDataUrl = obj._pdfDataUrl ?? null;
+          }
+        }
+
         enrichedObjects.push(json);
       });
       canvasJson.objects = enrichedObjects;
@@ -83,12 +86,12 @@ export function createPersistence({
       console.log("SALVANDO connections:", connections);
       console.log("SALVANDO blockIds:", canvasJson.objects.map(o => o.blockId));
 
-      // ── Validação de integridade ANTES de enviar ao backend ─────────────
+      // Validação de INTEGRIDADE ANTES de enviar pro BACKEND
       const savedBlockIds = new Set(canvasJson.objects.map(o => o.blockId));
       connections.forEach(({ sourceId, targetId }) => {
         if (!savedBlockIds.has(sourceId) || !savedBlockIds.has(targetId)) {
           console.error(
-            "[INTEGRIDADE] Conexão referencia bloco que NÃO está sendo salvo!",
+            "Conexão referencia do  bloco que NÃO está sendo salvo!",
             { sourceId, targetId, savedBlockIds: [...savedBlockIds] }
           );
         }
@@ -107,10 +110,10 @@ export function createPersistence({
     }
   }
 
-  // ── CARREGAR MAPA ────────────────────────────────────────────────────────
-  // Recebe `cs` (a instância viva do canvas) e `cancelledRef` (ref booleano
-  // que o efeito do componente marca como true no cleanup) para poder abortar
-  // com segurança, já que essa função é assíncrona.
+  // CARREGAR MAPA 
+  // Recebe `cs` (a instância do canvas) e "cancelledRef" (ref boolean
+  // que o efeito do componente marca como true no clean do canvas) para poder abortar
+  // com segurança sem que tenha problemas como json cortado ao meio sendo mandado pro backend
   async function carregarMapa(cs, cancelledRef) {
     try {
       const { data } = await axios.get(`${API_BASE}/${id}`);
@@ -139,7 +142,7 @@ export function createPersistence({
 
         isLoadingFromJsonRef.current = false;
 
-        // ── Restaura _id de forma robusta (correlação por POSIÇÃO) ─────────
+        // Restaura _id de forma robusta (correlação através da POSIÇÃO) 
         const savedObjects = canvasJson.objects ?? [];
         const loadedObjects = cs.getObjects();
 
@@ -160,6 +163,16 @@ export function createPersistence({
             obj._isLabel = obj.isLabel ?? meta?.isLabel ?? false;
             obj._isBackground = obj.isBackground ?? meta?.isBackground ?? false;
             obj._linkedIdRaw = obj.linkedId ?? meta?.linkedId ?? null;
+
+            // Restaura metadados de mídia (imagem/PDF), na mesma linha do
+            // primeiro
+            // tenta pegar do próprio obj (caso o Fabric já tenha colocado
+            // a prop lá), senão cai pro JSON salvo
+            if (obj._blockType === "media") {
+              obj._isPdf = obj.isPdf ?? meta?.isPdf ?? false;
+              obj._sourceName = obj.sourceName ?? meta?.sourceName ?? null;
+              obj._pdfDataUrl = obj.pdfDataUrl ?? meta?.pdfDataUrl ?? null;
+            }
           } else if (!obj._id && !obj._isPort && !obj.isLine) {
             obj._id = generateId();
           }

@@ -13,14 +13,14 @@ export function addBox(cs) {
   const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
   const box = new fabric.Rect({
     ...SELECTION_STYLE,
-    width: 300,
-    height: 300,
+    width: 180,
+    height: 180,
     fill: "#ffffff",
     stroke: "#cccccc",
     strokeWidth: 2,
     strokeUniform: true,
-    left: centerX - 150,
-    top: centerY - 150,
+    left: centerX - 90,
+    top: centerY - 90,
     lockRotation: true,
     hasRotatingPoint: false,
     _blockType: "rect",
@@ -36,8 +36,8 @@ export function addGroup(cs) {
   const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
   const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
 
-  const PAD_X = 28;
-  const PAD_Y = 16;
+  const PAD_X = 20;
+  const PAD_Y = 10;
 
   const label = new fabric.Textbox("hello", {
     ...SELECTION_STYLE,
@@ -45,9 +45,9 @@ export function addGroup(cs) {
     top: centerY,
     originX: "center",
     originY: "center",
-    width: 200,
+    width: 140,
     fontFamily: "Josefin Sans",
-    fontSize: 20,
+    fontSize: 14,
     textAlign: "center",
     fill: "#000000",
     selectable: true,
@@ -101,9 +101,9 @@ export function addText(cs) {
     top: centerY,
     originX: "center",
     originY: "center",
-    width: 200,
+    width: 140,
     fontFamily: "Josefin Sans",
-    fontSize: 24,
+    fontSize: 16,
     textAlign: "center",
     fill: "#333333",
     splitByGrapheme: false,

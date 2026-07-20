@@ -107,7 +107,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
       borderColor: SELECTION_STYLE.borderColor,
       borderDashArray: SELECTION_STYLE.borderDashArray,
       stroke: "#ffffff",
-      strokeWidth: 5,
+      strokeWidth: 4.25, // 15% mais fina (era 5)
       // ── Agora a linha PODE ser selecionada e deletada, mas não arrastada ──
       selectable: true,
       evented: true,
