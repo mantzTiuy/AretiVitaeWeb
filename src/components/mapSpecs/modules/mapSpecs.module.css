@@ -9,6 +9,8 @@
   --input-bg:   rgba(255, 255, 255, 0.10);
   --white:      #ffffff;
   --btn-dark:   rgb(35, 50, 100);
+  --danger:     rgb(224, 85, 85);
+  --danger-strong: rgb(200, 60, 60);
   --radius:     14px;
   --radius-sm:  10px;
 }
@@ -219,6 +221,12 @@
 .save:hover  { filter: brightness(1.18); }
 .save:active { transform: scale(0.98); }
 
+.save:disabled {
+  background: rgba(35, 50, 100, 0.4);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
 .discard {
   flex: 1;
   height: clamp(2rem, 4.8vh, 3.1rem);
@@ -233,8 +241,38 @@
   font-weight: 600;
 }
 
-.discard:hover  { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.discard:active { transform: scale(0.98); }
+.discard:hover:not(:disabled)  { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.discard:active:not(:disabled) { transform: scale(0.98); }
+
+.discard:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Botão Excluir ── */
+.delete {
+  flex: 0 0 auto;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  padding: 0 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(224, 85, 85, 0.45);
+  background: rgba(224, 85, 85, 0.08);
+  color: rgb(255, 150, 150);
+  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
+}
+
+.delete:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.delete:active { transform: scale(0.98); }
 
 .loadingText {
   font-family: 'Montserrat', sans-serif;
@@ -242,6 +280,108 @@
   color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+/* ── Modal de exclusão ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 26, 48, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modalWindow {
+  width: 420px;
+  max-width: 90vw;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  animation: popIn 0.18s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modalBody {
+  padding: clamp(1.1rem, 2.8vh, 1.6rem) clamp(1.2rem, 3vw, 1.6rem);
+  color: #fff;
+}
+
+.modalText {
+  margin: 0 0 12px;
+  line-height: 1.5;
+  font-size: clamp(0.8rem, 1.3vh, 0.94rem);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.modalText strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.modalInput {
+  width: 100%;
+  box-sizing: border-box;
+  height: clamp(2rem, 4.6vh, 2.7rem);
+  padding: 0 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--input-bg);
+  color: rgba(255, 255, 255, 0.9);
+  outline: none;
+  margin: 4px 0 14px;
+  font-family: 'Josefin Sans', sans-serif;
+  letter-spacing: 0.04em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modalInput::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.modalInput:focus {
+  border-color: rgba(224, 85, 85, 0.6);
+  box-shadow: 0 0 0 2px rgba(224, 85, 85, 0.15);
+}
+
+/* ── Botões dentro do modal ── */
+.deleteConfirm {
+  flex: 1;
+  height: clamp(2rem, 4.6vh, 2.8rem);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--danger-strong);
+  color: #fff;
+  font-size: clamp(0.78rem, 1.3vh, 0.96rem);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.1s, opacity 0.18s;
+}
+
+.deleteConfirm:hover:not(:disabled)  { filter: brightness(1.15); }
+.deleteConfirm:active:not(:disabled) { transform: scale(0.98); }
+
+.deleteConfirm:disabled {
+  background: rgba(200, 60, 60, 0.25);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -252,4 +392,5 @@
 @media (max-width: 480px) {
   .bodyWrapper { padding: 0 14px 28px; }
   .formBody    { padding: 18px 14px; }
+  .modalWindow { width: 92vw; }
 }

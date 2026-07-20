@@ -52,5 +52,65 @@
   -ms-overflow-style: none;
 }
 
+/* ScrollCards.module.css
+   Only styles for elements React renders directly in JSX.
+   Card internals live in Card.module.css. */
+
+/* ── Overlay ── */
+.overlay {
+  --accent: #8ab0ff;
+  --accent-b: #c4b5fd;
+  --text: #dde8ff;
+  --text-desc: #ffffff;
+  --card-bg: rgba(8, 12, 38, 0.72);
+  --card-border: rgba(155, 185, 255, 0.16);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── CTA wrapper ── */
+.ctaWrapper {
+  position: fixed;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%) translateY(18px);
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity  0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ctaWrapperVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 599px) {
+  .ctaWrapper { bottom: 28px; width: 86vw; }
+}
+
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.65); }
+}
+
+:global(::-webkit-scrollbar) {
+  display: none;
+}
+
+:global(html) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
 

@@ -2,6 +2,7 @@ package com.av.Av.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.Objects;
@@ -30,9 +31,9 @@ public class UserMap {
     private String description;
 
     @Column(name = "ativo")
-    private int ativo;
+    private Integer ativo;
 
-    public UserMap(Integer id, User user, String data, String description, String title, int ativo) {
+    public UserMap(Integer id, User user, String data, String description, String title, Integer ativo) {
         this.id = id;
         this.user = user;
         this.data = data;
@@ -45,7 +46,7 @@ public class UserMap {
         return ativo;
     }
 
-    public void setAtivo(int ativo) {
+    public void setAtivo(Integer ativo) {
         this.ativo = ativo;
     }
 

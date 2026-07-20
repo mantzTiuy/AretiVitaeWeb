@@ -15,10 +15,18 @@ export default function MapSpecs() {
   const [erro, setErro] = useState('');
   const [nameTouched, setNameTouched] = useState(false);
 
+  // ── Exclusão (soft delete via ativo) ──
+  const [showDeleteModal, setShowDeleteModal]   = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting]                 = useState(false);
+  const [erroDelete, setErroDelete]             = useState('');
+
   const emptyName   = form.name.trim() === '';
   const nameTooLong = form.name.length > 32;
   const descTooLong = form.description.length > 2000;
   const camposVazios = emptyName || nameTooLong || descTooLong;
+
+  const deleteNameMatches = deleteConfirmText === form.name;
 
   useEffect(() => {
     async function carregarCanvas() {
@@ -56,6 +64,40 @@ export default function MapSpecs() {
       setErro(error.response?.data?.message || 'Erro, resolveremos isso logo');
     } finally {
       setLoading(false);
+    }
+  }
+
+  function abrirModalExclusao() {
+    setDeleteConfirmText('');
+    setErroDelete('');
+    setShowDeleteModal(true);
+  }
+
+  function fecharModalExclusao() {
+    if (deleting) return; // evita fechar no meio de uma requisição
+    setShowDeleteModal(false);
+    setDeleteConfirmText('');
+    setErroDelete('');
+  }
+
+  async function handleExcluir() {
+    if (!deleteNameMatches || deleting) return;
+
+    setDeleting(true);
+    setErroDelete('');
+
+    try {
+      
+      await axios.put(`http://localhost:8081/apiAvMap/update/${id}`, {
+        ativo: 1,
+      });
+
+      navigate('/create');
+    } catch (error) {
+      console.log('ERRO AO EXCLUIR:', error);
+      setErroDelete(error.response?.data?.message || 'Erro, resolveremos isso logo');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -134,11 +176,67 @@ export default function MapSpecs() {
               <button className={styles.discard} onClick={() => navigate('/create')}>
                 Cancelar
               </button>
+              <button className={styles.delete} onClick={abrirModalExclusao}>
+                Excluir
+              </button>
             </div>
 
           </div>
         </div>
       </div>
+
+      {showDeleteModal && (
+        <div className={styles.modalOverlay} onClick={fecharModalExclusao}>
+          <div className={styles.modalWindow} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.titlebar}>
+              <span className={styles.titlebarLabel}>Excluir canvas</span>
+              <div className={styles.dots}>
+                <div className={`${styles.dot} ${styles.dotGray}`} />
+                <div className={`${styles.dot} ${styles.dotYellow}`} />
+                <div className={`${styles.dot} ${styles.dotRed}`} />
+              </div>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalText}>
+                Tem certeza que deseja excluir o canvas <strong>{form.name}</strong>?
+                Essa ação não pode ser desfeita.
+              </p>
+              <p className={styles.modalText}>
+                Para confirmar, digite <strong>{form.name}</strong> abaixo:
+              </p>
+
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={form.name}
+                className={styles.modalInput}
+                autoFocus
+              />
+
+              {erroDelete && <p className={styles.errorMsg}>{erroDelete}</p>}
+
+              <div className={styles.btnRow}>
+                <button
+                  className={styles.deleteConfirm}
+                  onClick={handleExcluir}
+                  disabled={!deleteNameMatches || deleting}
+                >
+                  {deleting ? 'Excluindo...' : 'Excluir definitivamente'}
+                </button>
+                <button
+                  className={styles.discard}
+                  onClick={fecharModalExclusao}
+                  disabled={deleting}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -53,7 +53,7 @@ public class UserMapService {
         userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));
 
-        List<UserMap> maps = mapRepository.findByUser_Username(username);
+        List<UserMap> maps = mapRepository.findByUser_UsernameAndAtivo(username, 0);
 
         if (maps.isEmpty()) {
             throw new RuntimeException("ESSE USUARIO NAO TEM MAPAS CADASTRADOS");
@@ -63,25 +63,29 @@ public class UserMapService {
     }
 
     public UserMap update(int id, UserMap updatedMap){
-        UserMap existingMap = mapRepository.findById((int) id).orElseThrow(() -> new RuntimeException("ID DE MAPA NAO ENCONTRADO"));
-        if(updatedMap.getTitle() != null) {
+        UserMap existingMap = mapRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ID DE MAPA NAO ENCONTRADO"));
+
+        if (updatedMap.getTitle() != null) {
             existingMap.setTitle(updatedMap.getTitle());
         }
-        if(updatedMap.getDescription() != null ){
+        if (updatedMap.getDescription() != null) {
             existingMap.setDescription(updatedMap.getDescription());
         }
-        if(updatedMap.getData() != null) {
+        if (updatedMap.getData() != null) {
             existingMap.setData(updatedMap.getData());
         }
-        int ativo = updatedMap.getAtivo();
-        if (ativo != 0 && ativo != 1) {
-            throw new IllegalArgumentException("ATIVO - 0 / DESATIVO - 1");
+
+        Integer ativo = updatedMap.getAtivo();
+        if (ativo != null) {
+            if (ativo != 0 && ativo != 1) {
+                throw new IllegalArgumentException("ATIVO - 0 / DESATIVO - 1");
+            }
+            existingMap.setAtivo(ativo);
         }
-        existingMap.setAtivo(ativo);
 
         return mapRepository.save(existingMap);
     }
-
 
     public List<UserMap> findActiveMapsByUserId(Integer userId) {
         userRepository.findById(userId)
