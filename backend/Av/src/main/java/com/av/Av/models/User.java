@@ -1,5 +1,6 @@
 package com.av.Av.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -48,8 +49,13 @@ public class User {
 
     /*--CONSTRUTORES--*/
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")//Atributo user da class UserMap
     private List<UserMap> maps;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")//Atributo user da class Compra
+    private List<Compra> compras;
 
     public User(){
 
@@ -137,6 +143,22 @@ public class User {
 
     public void setRegistro(String registro) {
         this.registro = registro;
+    }
+
+    public List<UserMap> getMaps() {
+        return maps;
+    }
+
+    public void setMaps(List<UserMap> maps) {
+        this.maps = maps;
+    }
+
+    public List<Compra> getCompras() {
+        return compras;
+    }
+
+    public void setCompras(List<Compra> compras) {
+        this.compras = compras;
     }
 
     /*Gerado pelo INTELIJ*/

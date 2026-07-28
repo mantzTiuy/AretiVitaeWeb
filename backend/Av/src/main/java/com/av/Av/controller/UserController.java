@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -73,6 +74,12 @@ public class UserController {
     @GetMapping("/email/{email}")
     public User findByEmail(@PathVariable String email){
         return userService.findByEmail(email);
+    }
+
+    //Retorna só o plano (assinatura) do usuário
+    @GetMapping("/plano/{id}")
+    public Map<String, Integer> getPlano(@PathVariable int id) {
+        return Map.of("assinatura", userService.getPlano(id));
     }
 
 

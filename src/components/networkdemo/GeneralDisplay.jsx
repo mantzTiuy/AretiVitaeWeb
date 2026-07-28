@@ -10,9 +10,10 @@ export default function GeneralDisplay() {
         <ScrollCards />  
       </ScrollControls>
 
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[4, 8, 4]} intensity={1.2} castShadow />
-      <directionalLight position={[-4, 2, -2]} intensity={0.3} />
+      <ambientLight intensity={1.0} />
+      <directionalLight position={[4, 8, 4]} intensity={2.0} castShadow />
+      <directionalLight position={[-4, 2, -2]} intensity={0.8} />
+      <directionalLight position={[0, -4, 6]} intensity={0.6} color="#cce0ff" />
     </>
   )
 }

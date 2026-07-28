@@ -1,0 +1,320 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  box-sizing: border-box;
+
+  --accent: #8ab0ff;
+  --accent-b: #7dd4fc;
+  --text: #eef3ff;
+  --text-desc: #b7c6e8;
+  --card-bg: rgba(12, 22, 54, 0.72);
+  --card-border: rgba(138, 176, 255, 0.22);
+}
+
+/* ---------- janela ---------- */
+
+.winWindow {
+  width: 100%;
+  max-width: 440px;
+  border-radius: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.winTitleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(6, 14, 38, 0.65);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.winTitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-desc);
+}
+
+.winControls {
+  display: flex;
+  gap: 7px;
+}
+
+.winBtn {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(138, 176, 255, 0.35);
+}
+
+.winClose {
+  background: rgba(255, 130, 110, 0.55);
+}
+
+.winBody {
+  padding: 32px 32px 36px;
+  box-sizing: border-box;
+}
+
+/* ---------- conteúdo ---------- */
+
+.cancelar {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-desc);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.cancelar:hover {
+  color: #ff8f7a;
+}
+
+.planoHeader {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.simboloWrap {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.titulo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 32px;
+  color: var(--text);
+  margin: 0;
+  padding-bottom: 4px;
+  line-height: 1.12;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-b));
+  margin-bottom: 22px;
+  opacity: 0.75;
+}
+
+.precoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.precoValor {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.precoSub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: rgba(180, 205, 255, 0.6);
+}
+
+/* Botões lado a lado (Cancelar / Assinar ou Cancelar / Gerar novo QR code) */
+.acoesTopo {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.acoesTopo .cancelar,
+.acoesTopo .botaoGerar {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* dentro do .acoesTopo o "cancelar" precisa parecer botão, não link */
+.acoesTopo .cancelar {
+  padding: 14px;
+  border: 1px solid rgba(138, 176, 255, 0.35);
+  border-radius: 12px;
+  color: #cddcff;
+  text-align: center;
+}
+
+.acoesTopo .cancelar:hover {
+  background: rgba(138, 176, 255, 0.1);
+  color: #cddcff;
+}
+
+.botaoGerar {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(130, 200, 255, 0.6);
+  border-radius: 12px;
+  background: rgba(100, 180, 255, 0.18);
+  color: #dff2ff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.botaoGerar:hover:not(:disabled) {
+  background: rgba(100, 180, 255, 0.3);
+  border-color: rgba(160, 220, 255, 0.85);
+  transform: translateY(-2px);
+}
+
+.botaoGerar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qrCard {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 18px;
+  background: rgba(6, 14, 38, 0.6);
+  border: 1px solid var(--card-border);
+  text-align: center;
+}
+
+.qrImagem {
+  width: 220px;
+  height: 220px;
+  max-width: 100%;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+}
+
+.valor {
+  margin: 16px 0 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.botaoCopiar {
+  margin-top: 10px;
+  padding: 9px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.botaoCopiar:hover {
+  background: rgba(138, 176, 255, 0.12);
+}
+
+.statusTexto {
+  margin-top: 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+}
+
+.aguardando {
+  color: var(--text-desc);
+}
+
+.aguardando::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulsar 1.4s ease-in-out infinite;
+}
+
+.expirado {
+  color: #ff8f7a;
+}
+
+/* Container de sucesso / já-assinante, no mesmo azul usado no resto da tela */
+.sucesso {
+  margin-top: 8px;
+  padding: 20px 18px;
+  border-radius: 12px;
+  background: rgba(100, 180, 255, 0.14);
+  border: 1px solid rgba(130, 200, 255, 0.4);
+  color: #dff2ff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.sucesso p {
+  margin: 0;
+}
+
+/* Botão "Voltar" dentro do card de já-assinante: borda azul, sem vermelho */
+.voltarSucesso {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid rgba(138, 176, 255, 0.45);
+  color: #cddcff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.voltarSucesso:hover {
+  background: rgba(138, 176, 255, 0.12);
+  border-color: rgba(138, 176, 255, 0.7);
+}
+
+@keyframes pulsar {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aguardando::before {
+    animation: none;
+  }
+}

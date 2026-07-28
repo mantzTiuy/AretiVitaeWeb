@@ -8,7 +8,7 @@ export const FLOOR_HEIGHT = 9.3;
 export const NB_FLOORS = 3;
 
 export function Model(props) {
-  const { nodes, materials } = useGLTF('models/thetruescruture.glb')
+  const { nodes, materials } = useGLTF('/models/thetruescruture.glb')
   const ref = useRef();
   const tl = useRef();
 
@@ -71,4 +71,4 @@ export function Model(props) {
   )
 }
 
-useGLTF.preload('models/thetruescruture.glb')
+useGLTF.preload('/models/thetruescruture.glb')

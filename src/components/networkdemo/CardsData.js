@@ -1,3 +1,4 @@
+
 // cardsData.js
 export const CARDS = [
   {
@@ -14,51 +15,58 @@ export const CARDS = [
   {
     tag: 'Módulo I',
     title: 'Hécate',
-    symbol: '/symbols/hecate.webp',
-    price: 'R$8.90',
+    model: '/models/hecate.glb',
+    price: '8,90 BRL',
     items: [
-      'Suporte para canvas 1.5x maior que o comum',
-      'Limite aumentado para 4 mapas',
-      '25 espaços para notas',
+      'Suporte para canvas 2x maior que o comum',
+      'Limite aumentado para 10 mapas',
+      '45 espaços para notas',
+      'Personalização de textos através de fontes importadas',
     ],
     side: 'right',
     isList: true,
     ctaLabel: 'Assinar Hécate',
+    ctaHref: '/compra/1',
   },
   {
     tag: 'Módulo II',
     title: 'Artemis',
-    symbol: '/symbols/Artemis.webp',
-    price: 'R$17,90',
+    model: '/models/artemis.glb',
+    modelScale: 0.7,
+    price: '17,90 BRL',
     items: [
-      'Suporte para canvas 2x maior que o comum',
-      'Limite aumentado para 6 mapas',
-      '40 espaços para notas',
+      'Suporte para canvas 4x maior que o comum',
+      'Limite aumentado para 20 mapas',
+      '90 espaços para notas',
+      'Personalização de textos através de fontes importadas',
+      'Cor de fundo personalizada do canvas',
     ],
     side: 'left',
     isList: true,
     ctaLabel: 'Assinar Artemis',
+    ctaHref: '/compra/2',
   },
   {
     tag: 'Módulo III',
     title: 'Selene',
-    symbol: '/symbols/SeleneSymbol.webp',
-    price: 'R$25,90',
+    model: '/models/selene.glb',
+    modelScale: 0.75, 
+    price: '25,90 BRL',
     items: [
-      'Suporte para canvas 2.8x maior que o comum',
-      'Limite aumentado para 10 mapas',
-      '50 espaços para notas',
+      'Suporte para canvas 8x maior que o comum',
+      'Limite aumentado para 40 mapas',
+      '160 espaços para notas',
+      'Personalização de textos através de fontes importadas',
+      'Cor de fundo personalizada no canvas',
       'Exportar em SVG',
     ],
     side: 'right',
     isList: true,
     ctaLabel: 'Assinar Selene',
+    ctaHref: '/compra/3',
   },
 ]
 
-// Título tem tamanho próprio por card/breakpoint — usado como CSS custom
-// property em Card.jsx (ver comentário lá) já que o CSS puro não tem como
-// expressar "tamanho diferente por item da lista".
 export const TITLE_SIZES = {
   MoonModules: { desktop: '58px', tablet: '44px', mobile: '38px' },
   Hécate: { desktop: '52px', tablet: '38px', mobile: '30px' },

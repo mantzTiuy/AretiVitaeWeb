@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cerberus from "./Cerberus";
 
+const API_BASE = "http://localhost:8081";
+
 function Titlebar({ label }) {
   return (
     <div className={styles.titlebar}>
@@ -26,6 +28,12 @@ function SectionTitle({ label }) {
       <span className={styles.sectionLine} />
     </div>
   );
+}
+
+function formatarData(isoDate) {
+  if (!isoDate) return '-';
+  const [ano, mes, dia] = isoDate.split('-');
+  return `${dia}/${mes}/${ano}`;
 }
 
 export default function Account() {
@@ -52,9 +60,35 @@ export default function Account() {
     confirmPassword: '',
   });
 
-  const [membership, setMembership] = useState(1);
-  const [open, setOpen]             = useState(false);
-  const [modalPassword, setModalPassword] = useState('');
+  const [assinatura, setAssinatura] = useState({
+    nomePlano: '...',
+    dayVencimento: null,
+    ativo: false,
+  });
+
+
+  useEffect(() => {
+    const id = getUser()?.id;
+    if (!id) return;
+
+    axios.get(`${API_BASE}/ApiAvCompra/status/${id}`)
+      .then(({ data }) => {
+        if (data.temAcesso) {
+          setAssinatura({
+            nomePlano: data.nomePlano,
+            dayVencimento: data.dayVencimento,
+            ativo: true,
+          });
+        } else {
+          setAssinatura({
+            nomePlano: 'Grátis',
+            dayVencimento: null,
+            ativo: false,
+          });
+        }
+      })
+      .catch((erro) => console.error("Erro ao buscar status da assinatura:", erro));
+  }, []);
 
   useEffect(() => {
     const handleStorage = (e) => {
@@ -106,7 +140,7 @@ export default function Account() {
         body.senha = form.newPassword;
       }
 
-      const { data } = await axios.put(`http://localhost:8081/apiAv/Update/${id}`, body);
+      const { data } = await axios.put(`${API_BASE}/apiAv/Update/${id}`, body);
 
       const { senha: _, ...another } = data;
       const anotherStr = JSON.stringify(another);
@@ -224,20 +258,17 @@ export default function Account() {
                 <div className={styles.subscriptionGrid}>
                   <div className={styles.field}>
                     <label>Plano atual</label>
-                    <input type="text" value="Selene" disabled />
+                    <input type="text" value={assinatura.nomePlano} disabled />
                   </div>
                   <div className={styles.field}>
-                    <label>Próxima cobrança</label>
-                    <input type="text" value="10/05/2026" disabled />
+                    <label>Data de renovação do plano</label>
+                    <input type="text" value={formatarData(assinatura.dayVencimento)} disabled />
                   </div>
                   <div className={styles.field}>
                     <label>Status</label>
-                    <input type="text" value={membership === 1 ? 'Ativo' : 'Desativado'} disabled />
+                    <input type="text" value={assinatura.ativo ? 'Ativo' : 'Desativado'} disabled />
                   </div>
                 </div>
-                <button className={styles.memberShipCancel} onClick={() => setOpen(true)}>
-                  Desativar assinatura
-                </button>
               </div>
             </div>
 
@@ -272,37 +303,6 @@ export default function Account() {
               <button className={styles.logoutConfirm} onClick={handleLogout}>Sim</button>
               <button className={styles.logoutCancel} onClick={() => setOpenLogout(false)}>Cancelar</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* POP-UP CANCEL */}
-      {open && (
-        <div className={styles.overlay}>
-          <div className={styles.modal}>
-            <span onClick={() => setOpen(false)} className={styles.modalClose}>✕</span>
-            <SectionTitle label="Confirmar cancelamento" />
-            <p className={styles.modalSubtitle}>Tem certeza que deseja cancelar sua assinatura?</p>
-            <div className={styles.field} style={{ width: '100%' }}>
-              <label>Confirme sua senha</label>
-              <input
-                type="password"
-                value={modalPassword}
-                onChange={(e) => setModalPassword(e.target.value)}
-                placeholder="••••••••"
-              />
-            </div>
-            <button
-              className={styles.memberShipCancel}
-              onClick={() => {
-                if (modalPassword.trim() === '') return;
-                setOpen(false);
-                setMembership(0);
-                setModalPassword('');
-              }}
-            >
-              Confirmar cancelamento
-            </button>
           </div>
         </div>
       )}

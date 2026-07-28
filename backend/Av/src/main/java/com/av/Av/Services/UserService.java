@@ -80,4 +80,8 @@ public class UserService {
     public User findByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("AvBot: U S U A R I O  N A O  E N C O N T R A D O"));
     }
+
+    public int getPlano(int id) {
+        return findById(id).getAssinatura();
+    }
 }

@@ -116,7 +116,7 @@
 
 .titleRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
   margin: 0 0 14px;
 }
@@ -135,7 +135,7 @@
 }
 
 .title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   color: var(--text);
   line-height: 1.12;
@@ -152,7 +152,7 @@
 }
 
 .divider {
-  width: 44px;
+  width: 100%;
   height: 1px;
   border-radius: 10px;
   background: linear-gradient(90deg, var(--accent), var(--accent-b));
@@ -174,7 +174,7 @@
 .listItem {
   color: var(--text-desc);
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 13px;
   line-height: 1.85;
   letter-spacing: 0.02em;
@@ -202,7 +202,7 @@
 .description {
   color: var(--text-desc);
   font-family: 'Montserrat', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 13px;
   line-height: 1.9;
   letter-spacing: 0.02em;
@@ -227,7 +227,7 @@
 }
 
 .priceValue {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 32px;
   color: var(--text);

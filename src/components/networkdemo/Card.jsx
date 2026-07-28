@@ -1,6 +1,6 @@
-// Card.jsx
 import { forwardRef } from 'react'
 import CardCTA from './CardCTA'
+import PlanSymbol from './PlanSymbol'
 import { TITLE_SIZES } from './cardsData'
 import styles from './modules/Card.module.css'
 
@@ -8,11 +8,6 @@ const Card = forwardRef(function Card({ card }, ref) {
   const isLeft = card.side === 'left'
   const titleSize = TITLE_SIZES[card.title]
 
-  // Único uso de "inline style" que sobra: o tamanho do título varia por
-  // card E por breakpoint (não dá pra expressar isso com uma classe fixa).
-  // Em vez de escrever font-size direto, exportamos como CSS custom
-  // properties e quem decide o valor final por breakpoint é o CSS
-  // (ver .title / media queries no .module.css).
   const titleVars = {
     '--title-desktop': titleSize.desktop,
     '--title-tablet': titleSize.tablet,
@@ -31,8 +26,12 @@ const Card = forwardRef(function Card({ card }, ref) {
         <div className={styles.tag}>{card.tag}</div>
 
         <div className={styles.titleRow}>
-          {card.symbol && (
-            <img className={styles.symbol} src={card.symbol} alt={card.title} />
+          {card.model ? (
+            <PlanSymbol model={card.model} scaleMultiplier={card.modelScale} />
+          ) : (
+            card.symbol && (
+              <img className={styles.symbol} src={card.symbol} alt={card.title} />
+            )
           )}
           <div className={styles.title} style={titleVars}>
             {card.title}
