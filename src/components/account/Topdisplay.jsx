@@ -155,6 +155,7 @@ export default function Topdisplay() {
 
       const delta = clock.getDelta();//Tempo desde a ultima render
 
+      //Movimentação das estrelas
       starsGroup.rotation.y += delta * 0.01;
       starsGroup.rotation.x += delta * 0.003;
 
