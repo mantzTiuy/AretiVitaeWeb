@@ -19,8 +19,6 @@ export const CARDS = [
     price: '8,90 BRL',
     items: [
       'Suporte para canvas 2x maior que o comum',
-      'Limite aumentado para 10 mapas',
-      '45 espaços para notas',
       'Personalização de textos através de fontes importadas',
     ],
     side: 'right',
@@ -36,8 +34,6 @@ export const CARDS = [
     price: '17,90 BRL',
     items: [
       'Suporte para canvas 4x maior que o comum',
-      'Limite aumentado para 20 mapas',
-      '90 espaços para notas',
       'Personalização de textos através de fontes importadas',
       'Cor de fundo personalizada do canvas',
     ],
@@ -54,8 +50,6 @@ export const CARDS = [
     price: '25,90 BRL',
     items: [
       'Suporte para canvas 8x maior que o comum',
-      'Limite aumentado para 40 mapas',
-      '160 espaços para notas',
       'Personalização de textos através de fontes importadas',
       'Cor de fundo personalizada no canvas',
       'Exportar em SVG',

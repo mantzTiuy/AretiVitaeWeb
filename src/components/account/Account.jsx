@@ -45,6 +45,7 @@ export default function Account() {
   const [sucesso, setSucesso] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
 
+  //Objeto do user
   function getUser() {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
@@ -52,6 +53,7 @@ export default function Account() {
 
   const userObj = getUser();
 
+  //Padrão do form
   const [form, setForm] = useState({
     name:            userObj?.username ?? '',
     email:           userObj?.email ?? '',
@@ -66,7 +68,7 @@ export default function Account() {
     ativo: false,
   });
 
-
+  //Status da assinatura
   useEffect(() => {
     const id = getUser()?.id;
     if (!id) return;
@@ -81,7 +83,7 @@ export default function Account() {
           });
         } else {
           setAssinatura({
-            nomePlano: 'Grátis',
+            nomePlano: 'Básico',
             dayVencimento: null,
             ativo: false,
           });
@@ -90,6 +92,8 @@ export default function Account() {
       .catch((erro) => console.error("Erro ao buscar status da assinatura:", erro));
   }, []);
 
+
+  //Registra o objeto user do usuário no localStorage para acessar em outra sessão nas próximas telas, como na home
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === "user") {
@@ -101,16 +105,20 @@ export default function Account() {
         }));
       }
     };
-    window.addEventListener("storage", handleStorage);
+    window.addEventListener("storage", handleStorage);//Só dispara em telas diferentes da tela em que está instaurado, que no caso é account
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
+
+
+  //Função que retorna outra função, chama função curried de acordo com a IA.
   const handleChange = (field) => (e) => {
     setErro('');
     setSucesso(false);
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));//A chamada da função é interna dela mesma, (bizerro :/)
   };
 
+  //Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/");
@@ -119,8 +127,9 @@ export default function Account() {
   const emptyPassword    = passwordTouched && form.currentPassword.trim() === '';
   const passwordMismatch = form.confirmPassword.length > 0 && form.newPassword !== form.confirmPassword;
 
+
   async function handleSave() {
-    setPasswordTouched(true);
+    setPasswordTouched(true);//Pra não ficar disparando o input vermelho ao entrar direto
     if (form.currentPassword.trim() === '' || passwordMismatch || loading) return;
 
     setLoading(true);
@@ -128,7 +137,7 @@ export default function Account() {
     setSucesso(false);
 
     try {
-      const id = getUser()?.id;
+      const id = getUser()?.id;//? serve pra pra verificar se é null primeiro, assim ele dispara o erro ao invés de só aparecer um "null" no input
 
       const body = {
         username: form.name,
@@ -136,22 +145,22 @@ export default function Account() {
         senha:    form.currentPassword,
       };
 
-      if (form.newPassword.trim() !== '') {
+      if (form.newPassword.trim() !== '') {//Evitar que o trim tire tudo (se a senha for só espaço)
         body.senha = form.newPassword;
       }
 
-      const { data } = await axios.put(`${API_BASE}/apiAv/Update/${id}`, body);
+      const { data } = await axios.put(`${API_BASE}/apiAv/Update/${id}`, body);//Body é o corpo da requisição
 
-      const { senha: _, ...another } = data;
+      const { senha: _, ...another } = data;//Não salva senha no localStorage por motivos obvios
       const anotherStr = JSON.stringify(another);
       localStorage.setItem("user", anotherStr);
-      window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));
+      window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));//Faz com que o handleStorage rode na aba atual
 
       setSucesso(true);
       setPasswordTouched(false);
-      setForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
+      setForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));//Volta ao estado original (sem nada)
     } catch (error) {
-      setErro(error.response?.data?.message || 'Erro ao salvar alterações');
+      setErro(error.response?.data?.message /*Tirar caso não queria erros estranhos na tela*/|| 'Erro ao salvar alterações');
     } finally {
       setLoading(false);
     }
@@ -161,7 +170,7 @@ export default function Account() {
     <div className={styles.root}>
 
       <div className={styles.display}>
-        <TopDisplay />
+        <TopDisplay /> {/*TopDisplay é o display na parte de cima que tem a ilustração e as estrelas */}
       </div>
 
       <div className={styles.bodyWrapper}>
@@ -169,7 +178,7 @@ export default function Account() {
 
           <div className={styles.avatarRow}>
             <div className={styles.avatarWrap}>
-              <Cerberus size={88} />
+              <Cerberus size={88} />{/*Passa o size de forma direta, aqui é diretamente proporcional ao tamanho na tela mesmo*/}
             </div>
             <div className={styles.avatarMeta}>
               <h1>{form.name}</h1>
@@ -179,7 +188,7 @@ export default function Account() {
 
           <div className={styles.grid}>
 
-            {/* INFORMAÇÕES */}
+            {/* Informações passadas com as funções que já estão nesse arquivo */}
             <div className={styles.window}>
               <Titlebar label="Informações" />
               <div className={styles.formBody}>
@@ -208,7 +217,7 @@ export default function Account() {
               </div>
             </div>
 
-            {/* SEGURANÇA */}
+            {/* SEGURANÇA e afins */}
             <div className={styles.window}>
               <Titlebar label="Segurança" />
               <div className={styles.formBody}>

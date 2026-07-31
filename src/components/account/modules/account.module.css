@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600&display=swap');
 
+/*Muito css acumulado em um arquivo só, por alguma razão ele quebra quando eu tento separar, foi feito muito no inicio do desenvolvimento do projeto e tem coisa desorganizada*/
+
+
 :root {
   --bg:         rgb(75, 94, 153);
   --bg-deep:    rgb(45, 63, 120);

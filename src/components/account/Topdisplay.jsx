@@ -5,13 +5,13 @@ import styles from './modules/Topdisplay.module.css'
 
 export default function Topdisplay() {
 
-    const mountRef = useRef(null);
+    const mountRef = useRef(null);//Persiste a novas render
 
     useEffect(() => {
    
     const mount = mountRef.current;
     if (!mount) return;
-    if (mount.childElementCount > 0) return;
+    if (mount.childElementCount > 0) return;//Evita de duplicar o conteúdo
 
     const width = mount.clientWidth;
     const height = mount.clientHeight;
@@ -153,7 +153,7 @@ export default function Topdisplay() {
     function animate() {
       animId = requestAnimationFrame(animate);
 
-      const delta = clock.getDelta();
+      const delta = clock.getDelta();//Tempo desde a ultima render
 
       starsGroup.rotation.y += delta * 0.01;
       starsGroup.rotation.x += delta * 0.003;

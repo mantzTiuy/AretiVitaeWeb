@@ -24,15 +24,16 @@ public class UserMapService {
     }
 
     public UserMap cadastro(UserMapRequest request) {
-        User user = userRepository.findById(request.getUserId().intValue())//ENCONTRA O ID PRESENTE NA TABELA DE USUÁRIOS
-                .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));//TROW UMA EXCESSÃO CASO NÃO ACHE
+        User user = userRepository.findById(request.getUserId().intValue())
+                .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));
 
         UserMap userMap = new UserMap();
         userMap.setUser(user);
         userMap.setData(request.getData());
         userMap.setTitle(request.getTitle());
         userMap.setDescription(request.getDescription());
-        //Construtor
+        userMap.setAtivo(0); // 0 = ativo, garante que o ativo nunca fique null
+
         return mapRepository.save(userMap);
     }
 
