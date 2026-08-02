@@ -24,13 +24,13 @@ public class UserMap {
     @Column(name = "data", nullable = false)
     private String data;
 
-    @Column(name = "title")
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "ativo")
+    @Column(name = "ativo", nullable = false)
     private Integer ativo;
 
     public UserMap(Integer id, User user, String data, String description, String title, Integer ativo) {
@@ -42,7 +42,7 @@ public class UserMap {
         this.ativo = ativo;
     }
 
-    public int getAtivo() {
+    public Integer getAtivo() {
         return ativo;
     }
 

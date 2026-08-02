@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Josefin+Sans:wght@300;400;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.page {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  font-family: 'Josefin Sans', sans-serif;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.outerWrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: calc(100vh - clamp(2rem, 5vw, 4rem));
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Window shell (mesmo padrão do NotesPage) ── */
+.winWindow {
+  display: flex;
+  flex-direction: column;
+  background: rgb(100, 122, 200);
+  border-radius: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Body ── */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(1.2rem, 3vh, 2rem) clamp(1.4rem, 3vw, 2.4rem);
+  overflow: hidden;
+}
+
+.titleInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(1.1rem, 2.4vh, 1.5rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 0.03em;
+  padding: 0 0 6px 0;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.titleInput:focus { border-color: rgba(255, 255, 255, 0.70); }
+.titleInput::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+.date {
+  margin: 0 0 6px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(9px, 1vh, 10.5px);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.40);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  resize: none;
+  background: rgba(35, 50, 100, 0.40);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.90);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(0.85rem, 1.7vh, 1rem);
+  line-height: 1.7;
+  padding: 16px 18px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  letter-spacing: 0.02em;
+}
+.textarea:focus { border-color: rgba(255, 255, 255, 0.42); }
+.textarea::placeholder { color: rgba(255, 255, 255, 0.28); }
+
+/* ── Footer ── */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px clamp(1.4rem, 3vw, 2.4rem);
+  background: rgb(38, 54, 108);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.discardBtn,
+.saveBtn {
+  height: 38px;
+  padding: 0 22px;
+  min-width: 140px;
+  background: rgb(35, 50, 100);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(11px, 1.1vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.12s, opacity 0.2s;
+}
+.discardBtn:hover,
+.saveBtn:hover:not(:disabled) { filter: brightness(1.18); }
+.discardBtn:active,
+.saveBtn:active:not(:disabled) { transform: scale(0.98); }
+.saveBtn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .page { padding: 0.6rem; }
+}

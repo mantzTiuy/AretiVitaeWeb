@@ -91,7 +91,7 @@ export function createPersistence({
       connections.forEach(({ sourceId, targetId }) => {
         if (!savedBlockIds.has(sourceId) || !savedBlockIds.has(targetId)) {
           console.error(
-            "Conexão referencia do  bloco que NÃO está sendo salvo!",
+            "Conexão referencia do  bloco que não está sendo salvo!",
             { sourceId, targetId, savedBlockIds: [...savedBlockIds] }
           );
         }

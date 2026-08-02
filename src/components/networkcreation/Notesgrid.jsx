@@ -2,20 +2,24 @@ import { useState } from "react";
 import NoteCard from "./Notescard";
 import ContextMenu from "./ContextMenu";
 import ConfirmModal from "./ConfirmModal";
+import NoteFullscreen from "./NoteFullscreen.jsx";
 import useContextMenu from "./useContextMenu.jsx";
 import styles from "./modules/Notesgrid.module.css";
 
 export default function NotesGrid({ notes, onDelete, onUpdate }) {
   const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [fullscreenId, setFullscreenId] = useState(null);
   const { menu, openMenu, closeMenu, menuRef } = useContextMenu();
 
   const menuItems = [
+    { label: "Abrir em tela cheia", onClick: (id) => setFullscreenId(id) },
     { label: "Editar", onClick: (id) => setEditingId(id) },
     { label: "Excluir", onClick: (id) => setDeleteTarget(id) },
   ];
 
   const targetNote = notes.find((n) => n.id === deleteTarget);
+  const fullscreenNote = notes.find((n) => n.id === fullscreenId);
 
   return (
     <div className={styles.gridWrap}>
@@ -47,6 +51,14 @@ export default function NotesGrid({ notes, onDelete, onUpdate }) {
             setDeleteTarget(null);
           }}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {fullscreenNote && (
+        <NoteFullscreen
+          note={fullscreenNote}
+          onUpdate={onUpdate}
+          onClose={() => setFullscreenId(null)}
         />
       )}
     </div>

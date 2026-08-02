@@ -1,13 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import styles from './modules/About.module.css'
-// ajuste este caminho conforme a pasta onde ficar o mapSpecs/
-// (aqui assumi About.jsx e mapSpecs/ como pastas irmãs)
 import CanvasStarBackground from '../mapSpecs/CanvasStarBackground'
 
-// rótulo local para separar as seções. O SectionTitle do mapSpecs vinha com
-// cor escura hardcoded (provavelmente pensado para um fundo claro) e ficava
-// quase invisível aqui em cima do navy — troquei por este até você decidir
-// se corrige a cor lá na origem ou mantém esse aqui.
+
 function SectionLabel({ children }) {
   return <p className={styles.sectionLabel}>{children}</p>
 }
