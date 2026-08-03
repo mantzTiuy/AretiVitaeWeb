@@ -7,11 +7,11 @@ export default function NoteFullscreen({ note, onUpdate, onClose }) {
   const [title, setTitle] = useState(note.title ?? "");
   const [text, setText] = useState(note.note ?? "");
 
-  // Se a nota selecionada mudar (ex: abrir outra direto), sincroniza os rascunhos
+  // Se a nota selecionada mudar, ele "segue" os arquivos
   useEffect(() => {
-    setTitle(note.title ?? "");
+    setTitle(note.title ?? "");//Ta vermelho nao sei por qual razão
     setText(note.note ?? "");
-  }, [note.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [note.id]);
 
   const dirty = title !== (note.title ?? "") || text !== (note.note ?? "");
 

@@ -14,19 +14,9 @@ export default function ScrollCards() {
   const cardRefs = useRef([])
   const rootRef = useRef(null)
 
-  // Funções de ref estáveis (uma por card). Sem useMemo aqui de propósito
-  // — o projeto usa o React Compiler, que memoiza isso automaticamente;
-  // useMemo manual só atrapalha (ele não consegue mesclar com a própria
-  // memoização e desiste de otimizar o componente inteiro).
   const cardRefSetters = CARDS.map((_, i) => (el) => (cardRefs.current[i] = el))
 
-  // Cria um container real no <body> e uma raiz React própria pra ele.
-  // Necessário porque este componente vive dentro da árvore do R3F (usa
-  // useFrame/useScroll) — o reconciler do Three tentaria interpretar
-  // <div>/<button> como objetos THREE se a gente usasse createPortal do
-  // 'react-dom' aqui dentro. Uma raiz separada (createRoot) escapa
-  // completamente do reconciler do Canvas — mesmo truque que o <Html> do
-  // @react-three/drei usa por baixo dos panos.
+
   useEffect(() => {
     const el = document.createElement('div')
     el.className = styles.overlay
@@ -52,9 +42,7 @@ export default function ScrollCards() {
       document.body.removeChild(el)
     }
   }, [cardRefSetters])
-
-  // Animação ligada ao scroll: roda a cada frame, por isso mexe direto no
-  // style do DOM em vez de disparar re-render do React 60x/s.
+ 
   useFrame(() => {
     const offset = scroll.offset
     const breakpoint = getBreakpoint()

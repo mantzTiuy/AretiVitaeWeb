@@ -15,6 +15,7 @@ import { createPortsAndConnections } from "./usePortsAndConnections";
 import { createPersistence } from "./usePersistence";
 import { addBox as addBoxToCanvas, addGroup as addGroupToCanvas, addText as addTextToCanvas } from "./useBlockFactories";
 import { createCanvasInteractions } from "./useCanvasInteractions";
+import { createClipboard } from "./useClipboard";
 
 export default function Index() {
   const { id } = useParams(); // Informação vinda da url, pega o id DO CANVAS
@@ -126,6 +127,11 @@ export default function Index() {
 
     canvasInstanceRef.current.salvarMapa = salvarMapa;
 
+    // Copiar/colar (Ctrl+C / Ctrl+V) — precisa vir depois de salvarMapa
+    // existir, já que a colagem persiste automaticamente igual às outras
+    // ações do canvas (deletar, conectar, etc.)
+    const clipboard = createClipboard({ cs, salvarMapa });
+
     // Importador de mídias (PDF/imagem) — mesmo padrão dos outros módulos
     mediaImporterRef.current = createMediaImporter({ cs, salvarMapa });
 
@@ -140,6 +146,7 @@ export default function Index() {
       checkAlignmentRef,
       ports,
       salvarMapa,
+      clipboard,
     });
 
     // ── Download de mídia: botão desenhado no card + duplo clique como atalho ──

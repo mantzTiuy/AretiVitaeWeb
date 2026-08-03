@@ -63,8 +63,7 @@ export default function NotesPage() {
 
         const status = er.response?.status;
 
-        // Usuário sem notas ainda: o backend responde 404/400 nesse caso,
-        // então isso não é erro de verdade — é lista vazia.
+   
         if (status === 404 || status === 400) {
           if (!cancel) setNotes([]);
         } else {
@@ -114,8 +113,7 @@ export default function NotesPage() {
     }
   }
 
-  // `updates` agora é um objeto, ex: { title: "novo título", note: "novo texto" }
-  // em vez de uma string solta — o NoteCard manda os dois campos juntos.
+
   const handleUpdate = async (idNota, updates) => {
     const anterior = notes;
     setNotes((prev) =>

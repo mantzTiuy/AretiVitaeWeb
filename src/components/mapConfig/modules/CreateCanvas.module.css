@@ -67,6 +67,7 @@
 }
 
 .window {
+  flex: 1;
   border-radius: var(--radius);/*Var nas primeiras linhas*/
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -119,6 +120,26 @@
   display: flex;
   flex-direction: column;
   gap: clamp(0.9rem, 1.8vh, 1.4rem);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.formBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.formBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formBody::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+}
+
+.formBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .mapsBody {
@@ -224,7 +245,7 @@
 }
 
 .field textarea {
-  min-height: 76px;
+  min-height: 92px;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
   resize: vertical;

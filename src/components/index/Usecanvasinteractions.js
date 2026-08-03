@@ -9,6 +9,7 @@ import { MIN_SIZE, MAX_SIZE } from "./constants";
 //          refreshBlock, refreshActiveSelection, createConnection, deleteConnection,
 //          findConnectionByLine)
 // - salvarMapa: função de persistência
+// - clipboard: objeto retornado por createClipboard (copySelection, pasteClipboard)
 export function createCanvasInteractions({
   cs,
   sourceBlockRef,
@@ -17,6 +18,7 @@ export function createCanvasInteractions({
   checkAlignmentRef,
   ports,
   salvarMapa,
+  clipboard,
 }) {
   const {
     showPorts,
@@ -242,9 +244,35 @@ export function createCanvasInteractions({
   // handler de teclado é global (window) e precisa sempre reler o `cs` atual,
   // igual ao comportamento original.
   const onKeyDown = (e, canvasInstanceRef) => {
-    if (e.key !== "Delete") return;
     const currentCs = canvasInstanceRef.current;
     if (!currentCs) return;
+
+    // ── Ctrl+C / Ctrl+V (Cmd no Mac) ───────────────────────────────────────
+    const isCopy  = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c";
+    const isPaste = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v";
+
+    if (isCopy || isPaste) {
+      const active = currentCs.getActiveObject();
+
+      // Se o usuário estiver digitando (editando um texto do canvas OU
+      // qualquer input da interface, tipo os campos W/H/cor do Settings),
+      // deixa o Ctrl+C/Ctrl+V nativo do navegador funcionar normalmente.
+      const typingElsewhere =
+        ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.isContentEditable;
+
+      if (active?.isEditing || typingElsewhere) return;
+
+      e.preventDefault();
+      if (isCopy) {
+        clipboard?.copySelection();
+      } else {
+        clipboard?.pasteClipboard();
+      }
+      return;
+    }
+
+    if (e.key !== "Delete") return;
 
     const active = currentCs.getActiveObject();
     if (!active || active.isEditing) return;

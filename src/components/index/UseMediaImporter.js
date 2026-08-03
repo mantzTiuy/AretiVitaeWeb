@@ -1,5 +1,5 @@
 import * as fabric from "fabric";
-import { SELECTION_STYLE } from "./constants";
+import { SELECTION_STYLE, noRotate } from "./constants";
 
 //  Aparência do bloquinho
 const CARD = {
@@ -169,6 +169,7 @@ export function createMediaImporter({ cs, salvarMapa }) {
         _pdfDataUrl: meta.pdfDataUrl,
       }
     );
+    noRotate(group);
 
     cs.add(group);
     cs.setActiveObject(group);

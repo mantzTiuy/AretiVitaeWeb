@@ -1,5 +1,5 @@
 import * as fabric from "fabric";
-import { SELECTION_STYLE } from "./constants";
+import { SELECTION_STYLE, noRotate } from "./constants";
 
 // Cada função recebe a instância `cs` já resolvida (não um ref), para não
 // correr o risco de ler `ref.current` durante o render. Quem chama essas
@@ -25,6 +25,7 @@ export function addBox(cs) {
     hasRotatingPoint: false,
     _blockType: "rect",
   });
+  noRotate(box);
   cs.add(box);
   cs.setActiveObject(box);
   cs.requestRenderAll();
@@ -58,6 +59,7 @@ export function addGroup(cs) {
     _blockType: "group",
     _isLabel: true,
   });
+  noRotate(label);
 
   const bw = label.width + PAD_X;
   const bh = label.height + PAD_Y;
@@ -79,6 +81,7 @@ export function addGroup(cs) {
     _isBackground: true,
     _linkedLabel: label,
   });
+  noRotate(bg);
 
   label._linkedBg = bg;
 
@@ -87,6 +90,25 @@ export function addGroup(cs) {
   cs.bringObjectToFront(label);
   cs.setActiveObject(label);
   cs.requestRenderAll();
+}
+
+// Extraído pra fora de addText pra poder ser reaplicado em textos colados
+// via Ctrl+V (useClipboard.js), garantindo que o auto-ajuste de largura
+// continue funcionando depois de uma cópia.
+export function attachTextAutosize(text, cs) {
+  const fitToContent = () => {
+    const lines = text.text.split("\n");
+    const tmpCtx = document.createElement("canvas").getContext("2d");
+    tmpCtx.font = `${text.fontWeight ?? "normal"} ${text.fontSize}px ${text.fontFamily}`;
+    const maxW = Math.max(...lines.map((l) => tmpCtx.measureText(l).width));
+    const padded = Math.ceil(maxW) + text.fontSize;
+    text.set({ width: Math.max(padded, 40) });
+    text.setCoords();
+    cs.requestRenderAll();
+  };
+  text.on("changed", fitToContent);
+  text.on("editing:exited", fitToContent);
+  return fitToContent;
 }
 
 export function addText(cs) {
@@ -109,20 +131,9 @@ export function addText(cs) {
     splitByGrapheme: false,
     _blockType: "text",
   });
+  noRotate(text);
 
-  const fitToContent = () => {
-    const lines = text.text.split("\n");
-    const tmpCtx = document.createElement("canvas").getContext("2d");
-    tmpCtx.font = `${text.fontWeight ?? "normal"} ${text.fontSize}px ${text.fontFamily}`;
-    const maxW = Math.max(...lines.map((l) => tmpCtx.measureText(l).width));
-    const padded = Math.ceil(maxW) + text.fontSize;
-    text.set({ width: Math.max(padded, 40) });
-    text.setCoords();
-    cs.requestRenderAll();
-  };
-
-  text.on("changed", fitToContent);
-  text.on("editing:exited", fitToContent);
+  attachTextAutosize(text, cs);
 
   cs.add(text);
   cs.bringObjectToFront(text);

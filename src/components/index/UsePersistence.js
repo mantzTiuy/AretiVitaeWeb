@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_BASE, generateId } from "./constants";
+import { API_BASE, generateId, noRotate } from "./constants";
 
 //Recebe tudo relacionado ao salvamento de mapas
 export function createPersistence({
@@ -180,6 +180,7 @@ export function createPersistence({
           // ── Reaplica o estilo de seleção/handles (SELECTION_STYLE) ─────────
           if (!obj._isPort && !obj.isLine) {
             obj.set(SELECTION_STYLE);
+            noRotate(obj); // garante que o handle de rotação some também após reload
           }
         });
 
