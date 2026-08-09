@@ -3,25 +3,27 @@ import styles from "./modules/ConfirmModal.module.css";
 export default function ConfirmModal({
   title = "Confirmação",
   message,
-  confirmLabel = "Confirmar",
-  cancelLabel = "Cancelar",
+  confirmLabel = "OK",
   onConfirm,
-  onCancel,
   onClose,
   danger = false,
 }) {
-  const handleCancel = () => {
-    if (onCancel) onCancel();
-    else onClose?.();
+  const handleClose = () => {
+    onClose?.();
+  };
+
+  const handleConfirm = () => {
+    onConfirm?.();
+    onClose?.();
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter")  onConfirm?.();
-    if (e.key === "Escape") handleCancel();
+    if (e.key === "Enter")  handleConfirm();
+    if (e.key === "Escape") handleClose();
   };
 
   return (
-    <div className={styles.overlay} onClick={handleCancel}>
+    <div className={styles.overlay} onClick={handleClose}>
       <div
         className={styles.modal}
         onClick={(e) => e.stopPropagation()}
@@ -34,7 +36,7 @@ export default function ConfirmModal({
           <div className={styles.dots}>
             <div className={`${styles.dot} ${styles.dotGray}`} />
             <div className={`${styles.dot} ${styles.dotYellow}`} />
-            <div className={`${styles.dot} ${styles.dotRed}`} onClick={handleCancel} />
+            <div className={`${styles.dot} ${styles.dotRed}`} onClick={handleClose} />
           </div>
         </div>
 
@@ -43,12 +45,9 @@ export default function ConfirmModal({
           <p className={styles.message}>{message}</p>
 
           <div className={styles.btnRow}>
-            <button className={styles.cancelBtn} onClick={handleCancel}>
-              {cancelLabel}
-            </button>
             <button
               className={`${styles.confirmBtn} ${danger ? styles.confirmBtnDanger : ""}`}
-              onClick={onConfirm}
+              onClick={handleConfirm}
             >
               {confirmLabel}
             </button>

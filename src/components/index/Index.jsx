@@ -21,6 +21,7 @@ import {
 } from "./useBlockFactories";
 import { createCanvasInteractions } from "./useCanvasInteractions";
 import { createClipboard } from "./useClipboard";
+import { exportCanvasAsSVG } from "./useSvgExport";
 
 export default function Index() {
   const { id } = useParams(); // Informação vinda da url, pega o id DO CANVAS
@@ -243,6 +244,13 @@ export default function Index() {
     canvasInstanceRef.current?.salvarMapa?.();
   };
 
+  // Exporta o canvas como SVG, recortado só na área com conteúdo (ver
+  // useSvgExport.js — o canvas de trabalho é 5000x5000, exportar tudo
+  // geraria um arquivo enorme e quase todo vazio).
+  const handleExportSVG = () => {
+    exportCanvasAsSVG(canvasInstanceRef.current, "mapa.svg");
+  };
+
   // Seleção manual de mídia (botão), alternativa ao drag-and-drop 
   const openFilePicker = () => fileInputRef.current?.click();
 
@@ -276,6 +284,7 @@ export default function Index() {
         <button onClick={handleSalvarManual} className={stylestoolbox.button}>
           {saveStatus === 'saving' ? 'Salvando...' : 'Salvar'}
         </button>
+        <button onClick={handleExportSVG}    className={stylestoolbox.button}>SVG</button>
         <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
       </div>
 

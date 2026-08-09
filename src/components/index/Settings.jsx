@@ -10,6 +10,7 @@ import {
   CONTAINER_MAX_HEIGHT,
   CONTAINER_LABEL_MAX_LENGTH,
 } from "./constants";
+import { OUTLINE_EXTRA_WIDTH } from "./usePortsAndConnections";
 
 // Limites de espessura de linha (independentes dos limites de bloco em
 // constants.js, já que a escala visual é bem diferente).
@@ -241,6 +242,10 @@ function Settings({ canvasReady }) {
     if (!obj || !obj.isLine) return;
 
     obj.set({ stroke: value });
+    // O contorno (outline) fica sempre numa cor escura fixa, propositalmente
+    // independente da cor que o usuário escolhe pra linha — ele existe só
+    // pra dar contraste (ver usePortsAndConnections.js), então não precisa
+    // (e não deve) acompanhar lineColor.
     canvas.requestRenderAll();
   };
 
@@ -257,6 +262,13 @@ function Settings({ canvasReady }) {
     if (val !== raw) setLineWidth(val);
 
     obj.set({ strokeWidth: val });
+    // Sincroniza o contorno fino atrás da linha (obj._outline, ver
+    // usePortsAndConnections.js) com a nova espessura. Sem isso, o
+    // contorno ficava "preso" na espessura de quando a conexão foi criada:
+    // ao AUMENTAR a grossura da linha e depois DIMINUIR de novo, o
+    // contorno antigo (mais largo) continuava visível por baixo, sobrando
+    // como uma espécie de sombra ao redor da linha.
+    obj._outline?.set({ strokeWidth: val + OUTLINE_EXTRA_WIDTH * 2 });
     canvas.requestRenderAll();
   };
 

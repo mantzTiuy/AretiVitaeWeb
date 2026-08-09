@@ -45,6 +45,11 @@ export default function Account() {
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  // Marca se o salvamento que acabou de ter sucesso trocou a senha — usado
+  // pra decidir se o modal de sucesso deve mandar o usuário de volta pro
+  // login (a senha antiga fica inválida na sessão atual, então faz sentido
+  // pedir login de novo) em vez de só fechar e continuar na tela.
+  const [passwordChanged, setPasswordChanged] = useState(false);
 
   //Objeto do user
   function getUser() {
@@ -137,6 +142,11 @@ export default function Account() {
     setErro('');
     setSucesso(false);
 
+    // Se essa chamada estiver de fato trocando a senha, guardamos isso
+    // ANTES do reset do form logo abaixo (senão form.newPassword já teria
+    // sido zerado quando o modal de sucesso for renderizado).
+    const isChangingPassword = form.newPassword.trim() !== '';
+
     try {
       const id = getUser()?.id;//? serve pra pra verificar se é null primeiro, assim ele dispara o erro ao invés de só aparecer um "null" no input
 
@@ -146,7 +156,7 @@ export default function Account() {
         senha:    form.currentPassword,
       };
 
-      if (form.newPassword.trim() !== '') {//Evitar que o trim tire tudo (se a senha for só espaço)
+      if (isChangingPassword) {//Evitar que o trim tire tudo (se a senha for só espaço)
         body.senha = form.newPassword;
       }
 
@@ -157,6 +167,7 @@ export default function Account() {
       localStorage.setItem("user", anotherStr);
       window.dispatchEvent(new StorageEvent("storage", { key: "user", newValue: anotherStr }));//Faz com que o handleStorage rode na aba atual
 
+      setPasswordChanged(isChangingPassword);
       setSucesso(true);
       setPasswordTouched(false);
       setForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));//Volta ao estado original (sem nada)
@@ -166,6 +177,19 @@ export default function Account() {
       setLoading(false);
     }
   }
+
+  // Fecha o modal de sucesso. Se a senha foi trocada nessa operação, a
+  // sessão atual não faz mais sentido (a senha antiga ficou pra trás), então
+  // já limpa o localStorage e manda direto pro login em vez de só fechar o
+  // modal e continuar na tela de conta.
+  const handleSuccessClose = () => {
+    setSucesso(false);
+    if (passwordChanged) {
+      setPasswordChanged(false);
+      localStorage.removeItem("user");
+      navigate("/login");
+    }
+  };
 
   return (
     <div className={styles.root}>
@@ -308,7 +332,6 @@ export default function Account() {
           title="Sair da conta"
           message="Você tem certeza que deseja sair?"
           confirmLabel="Sim"
-          cancelLabel="Cancelar"
           onConfirm={handleLogout}
           onClose={() => setOpenLogout(false)}
         />
@@ -318,11 +341,14 @@ export default function Account() {
       {sucesso && (
         <ConfirmModal
           title="Alterações salvas"
-          message="Suas informações foram atualizadas com sucesso!"
+          message={
+            passwordChanged
+              ? "Sua senha foi alterada com sucesso! Faça login novamente."
+              : "Suas informações foram atualizadas com sucesso!"
+          }
           confirmLabel="Ok"
-          cancelLabel="Fechar"
-          onConfirm={() => setSucesso(false)}
-          onClose={() => setSucesso(false)}
+          onConfirm={handleSuccessClose}
+          onClose={handleSuccessClose}
         />
       )}
 

@@ -7,6 +7,18 @@ import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 export const DEFAULT_CONNECTION_COLOR = "#ffffff";
 export const DEFAULT_CONNECTION_WIDTH = 4.25;
 
+// ── Contorno da linha (outline) ─────────────────────────────────────────
+// A cor da linha é livre (o usuário escolhe no Settings, e o padrão é
+// branco). Isso é ótimo dentro do editor (fundo azul claro), mas no SVG
+// exportado (useSvgExport.js) o fundo costuma ser branco/transparente — daí
+// uma linha branca simplesmente some. Pra linha ficar "naturalmente"
+// visível em qualquer fundo, cada conexão ganha um segundo fabric.Line, um
+// pouco mais largo e com uma cor escura semi-transparente, desenhado
+// IMEDIATAMENTE atrás da linha colorida — funciona como um contorno/halo
+// fino, sem alterar a cor que o usuário definiu.
+const OUTLINE_COLOR      = "rgba(20, 24, 34, 0.35)";
+export const OUTLINE_EXTRA_WIDTH = 0.15; // px de canvas adicionados de cada lado da linha real
+
 // Os 4 lados possíveis de um bloco pra portas/conexões — esquerda/direita
 // (como já existia) e agora também cima/baixo.
 const PORT_SIDES = ["left", "right", "top", "bottom"];
@@ -81,10 +93,11 @@ export function createPortsAndConnections(cs, activePortsRef) {
 
   const updateConnectionLines = (block) => {
     if (!block.connections?.length) return;
-    block.connections.forEach(({ line, sourceBlock, targetBlock, fromSide, toSide }) => {
+    block.connections.forEach(({ line, outline, sourceBlock, targetBlock, fromSide, toSide }) => {
       const src = getAbsoluteEdge(sourceBlock, fromSide);
       const dst = getAbsoluteEdge(targetBlock, toSide);
       line.set({ x1: src.x, y1: src.y, x2: dst.x, y2: dst.y });
+      outline?.set({ x1: src.x, y1: src.y, x2: dst.x, y2: dst.y });
     });
   };
 
@@ -144,6 +157,22 @@ export function createPortsAndConnections(cs, activePortsRef) {
     const strokeColor = style.color ?? DEFAULT_CONNECTION_COLOR;
     const strokeWidthVal = style.strokeWidth ?? DEFAULT_CONNECTION_WIDTH;
 
+    // Contorno fino: mesma geometria da linha real, um pouco mais largo e
+    // sempre numa cor escura semi-transparente — não interativo (o clique
+    // e a seleção continuam só na linha colorida por cima).
+    const outline = new fabric.Line([src.x, src.y, dst.x, dst.y], {
+      stroke: OUTLINE_COLOR,
+      strokeWidth: strokeWidthVal + OUTLINE_EXTRA_WIDTH * 2,
+      selectable: false,
+      evented: false,
+      hasControls: false,
+      hasBorders: false,
+      isLine: true,
+      _isConnectionOutline: true,
+      originX: "center",
+      originY: "center",
+    });
+
     const line = new fabric.Line([src.x, src.y, dst.x, dst.y], {
       borderColor: SELECTION_STYLE.borderColor,
       borderDashArray: SELECTION_STYLE.borderDashArray,
@@ -166,17 +195,32 @@ export function createPortsAndConnections(cs, activePortsRef) {
       originY: "center",
     });
 
+    cs.add(outline);
     cs.add(line);
+    // Ordem: linha colorida primeiro pro fundo, depois o contorno — assim o
+    // contorno fica ATRÁS da linha real (a última chamada de sendToBack
+    // "vence" e vai pro índice 0).
     cs.sendObjectToBack(line);
+    cs.sendObjectToBack(outline);
+
+    // Referência direta pra fora: Settings.jsx só tem acesso à linha
+    // colorida (é o objeto ativo do canvas), não ao `conn` inteiro — essa
+    // referência é o que permite reajustar a espessura do contorno junto
+    // sempre que o usuário mudar a espessura da linha (handleLineWidthChange).
+    // Sem isso, o contorno ficava "preso" na espessura de quando a conexão
+    // foi criada e sobrava como uma sombra ao redor da linha depois de
+    // diminuir a grossura.
+    line._outline = outline;
 
     if (!source.connections) source.connections = [];
     if (!dest.connections) dest.connections = [];
-    const conn = { line, sourceBlock: source, targetBlock: dest, fromSide, toSide };
+    const conn = { line, outline, sourceBlock: source, targetBlock: dest, fromSide, toSide };
 
     const updateLine = () => {
       const s = getAbsoluteEdge(source, fromSide);
       const d = getAbsoluteEdge(dest, toSide);
       line.set({ x1: s.x, y1: s.y, x2: d.x, y2: d.y });
+      outline.set({ x1: s.x, y1: s.y, x2: d.x, y2: d.y });
       cs.requestRenderAll();
     };
     // guarda a referência para conseguir remover os listeners depois (deleteConnection)
@@ -199,7 +243,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
   // ── deleteConnection ─────────────────────────────────────────────────────
   const deleteConnection = (conn) => {
     if (!conn) return;
-    const { line, sourceBlock, targetBlock, updateLine } = conn;
+    const { line, outline, sourceBlock, targetBlock, updateLine } = conn;
 
     if (updateLine) {
       sourceBlock?.off("moving", updateLine);
@@ -218,11 +262,14 @@ export function createPortsAndConnections(cs, activePortsRef) {
     }
 
     cs.remove(line);
+    if (outline) cs.remove(outline);
   };
 
   // Dado um objeto de linha, encontra a conexão correspondente vasculhando
   // os arrays `connections` dos blocos (a linha não guarda referência
-  // direta para trás, então precisamos procurar).
+  // direta para trás, então precisamos procurar). Só procura pela linha
+  // "real" (conn.line) — o contorno (conn.outline) não é clicável, então
+  // nunca chega aqui como `line`.
   const findConnectionByLine = (line) => {
     let found = null;
     cs.getObjects().some((obj) => {
