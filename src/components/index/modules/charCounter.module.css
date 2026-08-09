@@ -1,0 +1,16 @@
+.counter {
+  font-size: 11px;
+  font-weight: 400;
+  color: #9aa0ab;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.warning {
+  color: #d68a1f;
+}
+
+.limit {
+  color: #e15555;
+  font-weight: 700;
+}

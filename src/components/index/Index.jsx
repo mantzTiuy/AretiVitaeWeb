@@ -13,7 +13,12 @@ import { createMediaImporter } from "./useMediaImporter";
 import { generateId, SELECTION_STYLE } from "./constants";
 import { createPortsAndConnections } from "./usePortsAndConnections";
 import { createPersistence } from "./usePersistence";
-import { addBox as addBoxToCanvas, addGroup as addGroupToCanvas, addText as addTextToCanvas } from "./useBlockFactories";
+import {
+  addBox as addBoxToCanvas,
+  addGroup as addGroupToCanvas,
+  addText as addTextToCanvas,
+  addContainer as addContainerToCanvas,
+} from "./useBlockFactories";
 import { createCanvasInteractions } from "./useCanvasInteractions";
 import { createClipboard } from "./useClipboard";
 
@@ -248,9 +253,10 @@ export default function Index() {
     e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
   };
 
-  const addBox   = () => addBoxToCanvas(canvasInstanceRef.current);
-  const addGroup = () => addGroupToCanvas(canvasInstanceRef.current);
-  const addText  = () => addTextToCanvas(canvasInstanceRef.current);
+  const addBox       = () => addBoxToCanvas(canvasInstanceRef.current);
+  const addGroup     = () => addGroupToCanvas(canvasInstanceRef.current);
+  const addText      = () => addTextToCanvas(canvasInstanceRef.current);
+  const addContainer = () => addContainerToCanvas(canvasInstanceRef.current);
 
  return (
     <div className="App">
@@ -264,6 +270,7 @@ export default function Index() {
         <button onClick={addGroup}           className={stylestoolbox.button}>addg</button>
         <button onClick={addBox}             className={stylestoolbox.button}>addb</button>
         <button onClick={addText}            className={stylestoolbox.button}>addt</button>
+        <button onClick={addContainer}       className={stylestoolbox.button}>addc</button>
         <button onClick={centerCanvas}       className={stylestoolbox.button}>center</button>
         <button onClick={openFilePicker}     className={stylestoolbox.button}>midia</button>
         <button onClick={handleSalvarManual} className={stylestoolbox.button}>

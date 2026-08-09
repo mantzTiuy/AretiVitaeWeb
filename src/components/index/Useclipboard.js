@@ -1,5 +1,5 @@
 import * as fabric from "fabric";
-import { generateId, SELECTION_STYLE, noRotate } from "./constants";
+import { generateId, SELECTION_STYLE, noRotate, containerBorderOnly } from "./constants";
 
 // Distância (em px do canvas) que cada colagem sucessiva desloca os objetos,
 // pra não empilhar tudo exatamente em cima do original.
@@ -49,9 +49,15 @@ export function createClipboard({ cs, salvarMapa }) {
       // label (Textbox, selecionável) linkado a um bg (Rect, não
       // selecionável) via _linkedBg/_linkedLabel. Precisamos clonar o bg
       // junto, mesmo ele não estando na seleção do usuário.
+      //
+      // Container (addContainer) é o mesmo par bg/label, só que com os
+      // papéis invertidos: o retângulo (_isBackground) é o principal e o
+      // nome (_linkedLabel) é quem precisa ser clonado junto.
       let bgClone = null;
       if (obj._blockType === "group" && obj._isLabel && obj._linkedBg) {
         bgClone = await obj._linkedBg.clone();
+      } else if (obj._blockType === "container" && obj._linkedLabel) {
+        bgClone = await obj._linkedLabel.clone();
       }
 
       if (obj._blockType === "media") {
@@ -87,6 +93,9 @@ export function createClipboard({ cs, salvarMapa }) {
       objCopy._blockType = clone._blockType;
       objCopy._isLabel    = clone._isLabel;
       noRotate(objCopy);
+      // Container clonado perde o override de containsPoint (clone() recria
+      // a instância via toObject/fromObject) — reaplica aqui. Ver constants.js.
+      if (clone._blockType === "container") containerBorderOnly(objCopy);
 
       if (clone._blockType === "media") {
         objCopy._isPdf      = clone._isPdf;
@@ -97,6 +106,7 @@ export function createClipboard({ cs, salvarMapa }) {
       }
 
       cs.add(objCopy);
+      if (objCopy._blockType === "container") cs.sendObjectToBack(objCopy); // mantém o container atrás, igual na criação
 
       // Recria o par label+bg pro blockType "group"
       if (clone._blockType === "group" && clone._isLabel && bgClone) {
@@ -115,6 +125,28 @@ export function createClipboard({ cs, salvarMapa }) {
 
         cs.add(bgCopy);
         cs.sendObjectToBack(bgCopy);
+      }
+
+      // Recria o par retângulo+nome pro blockType "container" (papéis
+      // invertidos em relação ao "group": objCopy aqui já É o retângulo,
+      // e o parceiro clonado (bgClone) é o nome/label).
+      if (clone._blockType === "container" && bgClone) {
+        const labelCopy = await bgClone.clone();
+        labelCopy.set({
+          left: bgClone.left + pasteOffset,
+          top:  bgClone.top  + pasteOffset,
+          selectable: false,
+          evented: false,
+        });
+        labelCopy._id               = generateId();
+        labelCopy._blockType        = "containerLabel";
+        labelCopy._isLabel          = true;
+        labelCopy._isContainerLabel = true;
+        labelCopy._linkedBg         = objCopy;
+        objCopy._linkedLabel        = labelCopy;
+        objCopy._isBackground       = true;
+
+        cs.add(labelCopy);
       }
 
       pasted.push(objCopy);

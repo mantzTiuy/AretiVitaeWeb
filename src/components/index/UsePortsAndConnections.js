@@ -1,5 +1,5 @@
 import * as fabric from "fabric";
-import { PORT_RADIUS_BASE, PORT_FILL, PORT_STROKE, SELECTION_STYLE } from "./constants";
+import { PORT_RADIUS_BASE, PORT_FILL, PORT_STROKE, SELECTION_STYLE, repositionContainerLabel } from "./constants";
 import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 
 // Valores padrão usados quando uma conexão é criada sem estilo customizado
@@ -7,9 +7,13 @@ import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 export const DEFAULT_CONNECTION_COLOR = "#ffffff";
 export const DEFAULT_CONNECTION_WIDTH = 4.25;
 
+// Os 4 lados possíveis de um bloco pra portas/conexões — esquerda/direita
+// (como já existia) e agora também cima/baixo.
+const PORT_SIDES = ["left", "right", "top", "bottom"];
+
 // Fábrica que recebe a instância do canvas (cs) e um ref mutável que guarda
-// as portas ativas no momento (activePortsRef.current é um array de fabric.Circle).
-// Retorna todas as funções de porta + conexão, exatamente como no arquivo original.
+// as portas ativas no momento (activePortsRef.current é um array de fabric.Circle,
+// agora com até 4 por bloco selecionado — uma por lado).
 export function createPortsAndConnections(cs, activePortsRef) {
   const getPortRadius = (block) => {
     const w = block.getScaledWidth();
@@ -26,10 +30,17 @@ export function createPortsAndConnections(cs, activePortsRef) {
 
   const createPort = (block, side) => {
     const center = block.getCenterPoint();
-    const hw = block.getScaledWidth() / 2;
+    const hw = block.getScaledWidth()  / 2;
+    const hh = block.getScaledHeight() / 2;
     const radius = getPortRadius(block);
     const OFFSET = radius + 18;
-    const x = side === "left" ? center.x - hw - OFFSET : center.x + hw + OFFSET;
+
+    let x = center.x;
+    let y = center.y;
+    if (side === "left")   x = center.x - hw - OFFSET;
+    if (side === "right")  x = center.x + hw + OFFSET;
+    if (side === "top")    y = center.y - hh - OFFSET;
+    if (side === "bottom") y = center.y + hh + OFFSET;
 
     const port = new fabric.Circle({
       radius,
@@ -37,7 +48,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
       stroke: PORT_STROKE,
       strokeWidth: 2,
       left: x,
-      top: center.y,
+      top: y,
       originX: "center",
       originY: "center",
       selectable: false,
@@ -53,10 +64,18 @@ export function createPortsAndConnections(cs, activePortsRef) {
     return port;
   };
 
+  // Containers não permitem conexões: nunca ganham portas, então nunca dá
+  // pra iniciar um arrasto de conexão a partir deles.
   const showPorts = (block) => {
     clearPorts();
-    if (!block || block._isPort || block.isLine || block._blockType === "text") return;
-    activePortsRef.current = [createPort(block, "left"), createPort(block, "right")];
+    if (
+      !block ||
+      block._isPort ||
+      block.isLine ||
+      block._blockType === "text" ||
+      block._blockType === "container"
+    ) return;
+    activePortsRef.current = PORT_SIDES.map((side) => createPort(block, side));
     cs.requestRenderAll();
   };
 
@@ -71,13 +90,20 @@ export function createPortsAndConnections(cs, activePortsRef) {
 
   const repositionPorts = (block) => {
     const center = getAbsoluteCenter(block);
-    const hw = block.getScaledWidth() / 2;
+    const hw = block.getScaledWidth()  / 2;
+    const hh = block.getScaledHeight() / 2;
     const radius = getPortRadius(block);
     const OFFSET = radius + 18;
+
     activePortsRef.current.forEach((port) => {
       if (port._block !== block) return;
-      const x = port._side === "left" ? center.x - hw - OFFSET : center.x + hw + OFFSET;
-      port.set({ left: x, top: center.y, radius });
+      let x = center.x;
+      let y = center.y;
+      if (port._side === "left")   x = center.x - hw - OFFSET;
+      if (port._side === "right")  x = center.x + hw + OFFSET;
+      if (port._side === "top")    y = center.y - hh - OFFSET;
+      if (port._side === "bottom") y = center.y + hh + OFFSET;
+      port.set({ left: x, top: y, radius });
       port.setCoords();
     });
   };
@@ -85,6 +111,8 @@ export function createPortsAndConnections(cs, activePortsRef) {
   const refreshBlock = (block) => {
     repositionPorts(block);
     updateConnectionLines(block);
+    // Se for o retângulo de um container, mantém o nome grudado no canto.
+    if (block._isBackground && block._linkedLabel) repositionContainerLabel(block);
     cs.requestRenderAll();
   };
 
@@ -92,6 +120,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
     activeSelection.getObjects().forEach((obj) => {
       if (obj._isPort || obj.isLine) return;
       updateConnectionLines(obj);
+      if (obj._isBackground && obj._linkedLabel) repositionContainerLabel(obj);
     });
     cs.requestRenderAll();
   };

@@ -41,7 +41,8 @@ export default function Axis({ canvasReady, onReady }) {
       cs.getObjects().filter((obj) => {
         if (obj === excludeBlock) return false;//Não compara com nada excluido
         if (obj._isPort || obj.isLine || obj._isGuide) return false;//Ignora o que não é bloco
-        if (obj._isBackground) return false;//Ignora background
+        if (obj._isBackground) return false;//Ignora background (inclui o retângulo dos containers)
+        if (obj._isContainerLabel) return false;//Ignora o nome do container também
         return true;
       });
 

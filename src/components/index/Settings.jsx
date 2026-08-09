@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./modules/settings.module.css";
 import FontSelector from "./FontSelector";
+import CharCounter from "./CharCounter";
 import { loadGoogleFont } from "./loadGoogleFont";
+import {
+  CONTAINER_MIN_WIDTH,
+  CONTAINER_MIN_HEIGHT,
+  CONTAINER_MAX_WIDTH,
+  CONTAINER_MAX_HEIGHT,
+  CONTAINER_LABEL_MAX_LENGTH,
+} from "./constants";
 
 // Limites de espessura de linha (independentes dos limites de bloco em
 // constants.js, já que a escala visual é bem diferente).
@@ -23,6 +31,10 @@ function Settings({ canvasReady }) {
   const [isTextObject, setIsTextObject] = useState(false);
   const [fontFamily, setFontFamily]     = useState("Josefin Sans");
 
+  // ── Estado específico de container (nome) ───────────────────────────────
+  const [isContainer, setIsContainer]     = useState(false);
+  const [containerName, setContainerName] = useState("");
+
   const selectedObjectRef             = useRef(null);
 
   const handleObjectSelection = (object) => {
@@ -33,12 +45,20 @@ function Settings({ canvasReady }) {
     if (object.isLine) {
       setIsLine(true);
       setIsTextObject(false);
+      setIsContainer(false);
       setLineColor(object.stroke ?? "#ffffff");
       setLineWidth(Math.round(object.strokeWidth ?? 4));
       return;
     }
 
     setIsLine(false);
+
+    // Container: type "rect" com _blockType "container". Mostra só nome +
+    // cor da borda (nada de Fill, já que o interior fica sempre transparente
+    // pra permitir clicar "através" dele nos blocos de dentro).
+    const isContainerObj = object._blockType === "container";
+    setIsContainer(isContainerObj);
+    setContainerName(isContainerObj ? (object._linkedLabel?.text ?? "") : "");
 
     // Textbox cobre tanto o bloco "texto solto" (_blockType "text") quanto
     // o label dos blocos "group" (_blockType "group", _isLabel true) —
@@ -67,6 +87,8 @@ function Settings({ canvasReady }) {
     selectedObjectRef.current = null;
     setIsLine(false);
     setIsTextObject(false);
+    setIsContainer(false);
+    setContainerName("");
     setWidth("");
     setHeight("");
     setColor("#ffffff");
@@ -112,6 +134,11 @@ function Settings({ canvasReady }) {
   const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
   const clampLineWidth = (val) => Math.min(Math.max(val, MIN_LINE_WIDTH), MAX_LINE_WIDTH);
 
+  // Clamps de container vêm diretamente de constants.js (largura e altura
+  // mínimas separadas — a largura precisa caber o nome da seção).
+  const clampContainerWidth  = (val) => Math.min(Math.max(val, CONTAINER_MIN_WIDTH),  CONTAINER_MAX_WIDTH);
+  const clampContainerHeight = (val) => Math.min(Math.max(val, CONTAINER_MIN_HEIGHT), CONTAINER_MAX_HEIGHT);
+
   // ── Width ──
   const handleWidthChange = (e) => {
     const canvas = canvasReady;
@@ -121,7 +148,8 @@ function Settings({ canvasReady }) {
     const obj = selectedObjectRef.current;
     if (!obj || isNaN(raw) || raw <= 0) return;
 
-    const val = clamp(raw);
+    const isContainerObj = obj._blockType === "container";
+    const val = isContainerObj ? clampContainerWidth(raw) : clamp(raw);
     if (val !== raw) setWidth(val);
 
     if (obj.type === "group" || obj.type === "rect") {
@@ -141,7 +169,8 @@ function Settings({ canvasReady }) {
     const obj = selectedObjectRef.current;
     if (!obj || isNaN(raw) || raw <= 0) return;
 
-    const val = clamp(raw);
+    const isContainerObj = obj._blockType === "container";
+    const val = isContainerObj ? clampContainerHeight(raw) : clamp(raw);
     if (val !== raw) setHeight(val);
 
     if (obj.type === "group" || obj.type === "rect") {
@@ -170,7 +199,7 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
-  // ── Stroke color ──
+  // ── Stroke color (= "cor da borda" no caso de containers) ──
   const handleStrokeColorChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -193,6 +222,11 @@ function Settings({ canvasReady }) {
       obj.dirty = true;
     } else {
       obj.set({ stroke: value });
+      // Container: o nome acompanha a cor da borda, pra manter a
+      // identidade visual da seção consistente.
+      if (obj._blockType === "container" && obj._linkedLabel) {
+        obj._linkedLabel.set({ fill: value });
+      }
     }
     canvas.requestRenderAll();
   };
@@ -247,6 +281,23 @@ function Settings({ canvasReady }) {
     });
   };
 
+  // ── Container name ──
+  const handleContainerNameChange = (e) => {
+    const canvas = canvasReady;
+    if (!canvas) return;
+    // O maxLength do input já impede digitar além do limite, mas colar
+    // texto (Ctrl+V) ignora maxLength em alguns navegadores — o slice
+    // aqui garante que o corte de 20 caracteres sempre vale.
+    const value = e.target.value.slice(0, CONTAINER_LABEL_MAX_LENGTH);
+    setContainerName(value);
+    const obj = selectedObjectRef.current;
+    if (!obj || obj._blockType !== "container" || !obj._linkedLabel) return;
+
+    obj._linkedLabel.set({ text: value });
+    obj._linkedLabel.setCoords();
+    canvas.requestRenderAll();
+  };
+
   return (
     <div className={styles.div}>
       {isLine ? (
@@ -290,14 +341,37 @@ function Settings({ canvasReady }) {
               <FontSelector value={fontFamily} onChange={handleFontChange} />
             </>
           )}
-          <label className={styles.label}>Fill</label>
-          <input
-            type="color"
-            value={color}
-            onChange={handleColorChange}
-            className={styles.inputColor}
-          />
-          <label className={styles.label}>Stroke</label>
+          {isContainer && (
+            <>
+              <label
+                className={styles.label}
+                style={{ display: "flex", alignItems: "center", gap: 6 }}
+              >
+                Nome
+                <CharCounter current={containerName.length} max={CONTAINER_LABEL_MAX_LENGTH} />
+              </label>
+              <input
+                type="text"
+                placeholder="Nome da seção"
+                value={containerName}
+                onChange={handleContainerNameChange}
+                maxLength={CONTAINER_LABEL_MAX_LENGTH}
+                className={styles.input1}
+              />
+            </>
+          )}
+          {!isContainer && (
+            <>
+              <label className={styles.label}>Fill</label>
+              <input
+                type="color"
+                value={color}
+                onChange={handleColorChange}
+                className={styles.inputColor}
+              />
+            </>
+          )}
+          <label className={styles.label}>{isContainer ? "Cor da borda" : "Stroke"}</label>
           <input
             type="color"
             value={colorStroke}

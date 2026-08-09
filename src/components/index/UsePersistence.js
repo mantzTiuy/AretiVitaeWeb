@@ -1,5 +1,6 @@
 import axios from "axios";
-import { API_BASE, generateId, noRotate } from "./constants";
+import { API_BASE, generateId, noRotate, containerBorderOnly } from "./constants";
+import { loadGoogleFont } from "./loadGoogleFont";
 
 //Recebe tudo relacionado ao salvamento de mapas
 export function createPersistence({
@@ -184,7 +185,21 @@ export function createPersistence({
           if (!obj._isPort && !obj.isLine) {
             obj.set(SELECTION_STYLE);
             noRotate(obj); // garante que o handle de rotação some também após reload
+            // Idem pro hit-test customizado do container (perdido no reload,
+            // já que containsPoint não é serializável) — ver constants.js.
+            if (obj._blockType === "container") containerBorderOnly(obj);
           }
+        });
+
+        // Garante que toda fonte custom usada em textos salvos seja
+        // carregada via Google Fonts — sem isso o texto aparece com a
+        // fonte de fallback até algum reflow do canvas.
+        const usedFonts = new Set();
+        cs.getObjects().forEach((obj) => {
+          if (obj.type === "textbox" && obj.fontFamily) usedFonts.add(obj.fontFamily);
+        });
+        usedFonts.forEach((font) => {
+          loadGoogleFont(font, () => cs.requestRenderAll());
         });
 
         // Índice id → objeto

@@ -1,6 +1,13 @@
 import * as fabric from "fabric";
 import { toCanvasPoint } from "./geometry";
-import { MIN_SIZE, MAX_SIZE } from "./constants";
+import {
+  MIN_SIZE,
+  MAX_SIZE,
+  CONTAINER_MIN_WIDTH,
+  CONTAINER_MIN_HEIGHT,
+  CONTAINER_MAX_WIDTH,
+  CONTAINER_MAX_HEIGHT,
+} from "./constants";
 
 // Recebe:
 // - cs: instância do canvas
@@ -121,10 +128,25 @@ export function createCanvasInteractions({
 
     const target = opt.target;
     if (!target || target.isLine || target._isPort || target === source) return;
+    if (target._blockType === "container") return; // containers não aceitam conexões
 
     const destCenter = target.getCenterPoint();
     const pos = toCanvasPoint(cs, opt.e.clientX, opt.e.clientY);
-    const toSide = pos.x < destCenter.x ? "left" : "right";
+
+    // Descobre em qual dos 4 lados do bloco de destino o mouse foi solto.
+    // A distância ao centro é normalizada pela metade da largura/altura do
+    // bloco (dx/dy vão de -1 a 1 na borda) — sem isso, um bloco bem mais
+    // largo que alto quase nunca "escolheria" top/bottom, mesmo quando
+    // solto perto do topo. O lado com o maior desvio normalizado vence.
+    const hw = target.getScaledWidth()  / 2 || 1;
+    const hh = target.getScaledHeight() / 2 || 1;
+    const dx = (pos.x - destCenter.x) / hw;
+    const dy = (pos.y - destCenter.y) / hh;
+
+    const toSide =
+      Math.abs(dx) > Math.abs(dy)
+        ? (dx < 0 ? "left" : "right")
+        : (dy < 0 ? "top" : "bottom");
 
     createConnection(source, target, fromSide ?? "right", toSide);
     salvarMapa(); // ← salva automaticamente após criar conexão
@@ -156,17 +178,26 @@ export function createCanvasInteractions({
     const target = opt.target;
     if (!target) return;
 
+    const isMultiSelection = target.type === "activeselection";
+
+    // O snap/alinhamento precisa rodar ANTES de reposicionar tudo que está
+    // vinculado ao target (nome do container, bg do "group"), portas e
+    // linhas de conexão — senão eles ficam "atrasados" um frame durante o
+    // arrasto sempre que um snap acontece.
+    if (!isMultiSelection) {
+      checkAlignmentRef.current?.(target);
+    }
+
     if (target._isLabel && target._linkedBg) {
       const center = target.getCenterPoint();
       target._linkedBg.set({ left: center.x, top: center.y });
       target._linkedBg.setCoords();
     }
 
-    if (target.type === "activeselection") {
+    if (isMultiSelection) {
       refreshActiveSelection(target);
     } else {
-      refreshBlock(target);
-      checkAlignmentRef.current?.(target);
+      refreshBlock(target); // já reposiciona o nome do container, se for o caso
     }
   };
 
@@ -175,12 +206,20 @@ export function createCanvasInteractions({
     if (!target) return;
 
     if (target.type !== "activeselection" && target._blockType !== "text") {
+      // Containers são divisores de seção e usam limites próprios, com
+      // largura e altura mínimas independentes (largura precisa caber o
+      // nome da seção — ver CONTAINER_MIN_WIDTH em constants.js).
+      const isContainer = target._blockType === "container";
+      const minW = isContainer ? CONTAINER_MIN_WIDTH  : MIN_SIZE;
+      const minH = isContainer ? CONTAINER_MIN_HEIGHT : MIN_SIZE;
+      const maxW = isContainer ? CONTAINER_MAX_WIDTH  : MAX_SIZE;
+      const maxH = isContainer ? CONTAINER_MAX_HEIGHT : MAX_SIZE;
       const w = target.width * target.scaleX;
       const h = target.height * target.scaleY;
-      if (w < MIN_SIZE) target.scaleX = MIN_SIZE / target.width;
-      if (h < MIN_SIZE) target.scaleY = MIN_SIZE / target.height;
-      if (w > MAX_SIZE) target.scaleX = MAX_SIZE / target.width;
-      if (h > MAX_SIZE) target.scaleY = MAX_SIZE / target.height;
+      if (w < minW) target.scaleX = minW / target.width;
+      if (h < minH) target.scaleY = minH / target.height;
+      if (w > maxW) target.scaleX = maxW / target.width;
+      if (h > maxH) target.scaleY = maxH / target.height;
     }
 
     if (target.type === "activeselection") {
@@ -308,6 +347,11 @@ export function createCanvasInteractions({
         if (obj.connections?.length) {
           [...obj.connections].forEach((conn) => deleteConnection(conn));
         }
+        // Remove o parceiro vinculado junto (label <-> bg/container), nos
+        // dois sentidos — sem isso, deletar um container numa seleção
+        // múltipla deixava o nome (label) órfão no canvas.
+        if (obj._isLabel && obj._linkedBg) currentCs.remove(obj._linkedBg);
+        if (obj._isBackground && obj._linkedLabel) currentCs.remove(obj._linkedLabel);
         currentCs.remove(obj);
       });
       clearPorts();
@@ -321,6 +365,9 @@ export function createCanvasInteractions({
     }
     clearPorts();
     if (active._isLabel && active._linkedBg) currentCs.remove(active._linkedBg);
+    // Container: o objeto principal é o retângulo (_isBackground), então
+    // precisa remover o nome (_linkedLabel) junto, senão ele fica órfão.
+    if (active._isBackground && active._linkedLabel) currentCs.remove(active._linkedLabel);
     currentCs.remove(active);
     currentCs.discardActiveObject();
     currentCs.requestRenderAll();
