@@ -1,16 +1,37 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./modules/settings.module.css";
 
+// Limites de espessura de linha (independentes dos limites de bloco em
+// constants.js, já que a escala visual é bem diferente).
+const MIN_LINE_WIDTH = 1;
+const MAX_LINE_WIDTH = 20;
+
 function Settings({ canvasReady }) {
   const [width, setWidth]             = useState("");
   const [height, setHeight]           = useState("");
   const [color, setColor]             = useState("#ffffff");
   const [colorStroke, setColorStroke] = useState("#efeeee");
+
+  // ── Estado específico de conexões (linhas) ──────────────────────────────
+  const [isLine, setIsLine]           = useState(false);
+  const [lineColor, setLineColor]     = useState("#ffffff");
+  const [lineWidth, setLineWidth]     = useState(4);
+
   const selectedObjectRef             = useRef(null);
 
   const handleObjectSelection = (object) => {
-    if (!object || object._isPort || object.isLine) return;
+    if (!object || object._isPort) return;
     selectedObjectRef.current = object;
+
+    // Conexão selecionada: mostra só os controles de cor/espessura da linha
+    if (object.isLine) {
+      setIsLine(true);
+      setLineColor(object.stroke ?? "#ffffff");
+      setLineWidth(Math.round(object.strokeWidth ?? 4));
+      return;
+    }
+
+    setIsLine(false);
     setWidth(Math.round(object.width  * object.scaleX));
     setHeight(Math.round(object.height * object.scaleY));
 
@@ -29,10 +50,13 @@ function Settings({ canvasReady }) {
 
   const clearSettings = () => {
     selectedObjectRef.current = null;
+    setIsLine(false);
     setWidth("");
     setHeight("");
     setColor("#ffffff");
     setColorStroke("#cccccc");
+    setLineColor("#ffffff");
+    setLineWidth(4);
   };
 
   // Após qualquer mudança dimensional, atualiza coords e dispara modified
@@ -69,6 +93,7 @@ function Settings({ canvasReady }) {
   const MIN_SIZE = 30;
   const MAX_SIZE = 1500;
   const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
+  const clampLineWidth = (val) => Math.min(Math.max(val, MIN_LINE_WIDTH), MAX_LINE_WIDTH);
 
   // ── Width ──
   const handleWidthChange = (e) => {
@@ -155,36 +180,88 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
+  // ── Connection (line) color ──
+  const handleLineColorChange = (e) => {
+    const canvas = canvasReady;
+    if (!canvas) return;
+    const value = e.target.value;
+    setLineColor(value);
+    const obj = selectedObjectRef.current;
+    if (!obj || !obj.isLine) return;
+
+    obj.set({ stroke: value });
+    canvas.requestRenderAll();
+  };
+
+  // ── Connection (line) width ──
+  const handleLineWidthChange = (e) => {
+    const canvas = canvasReady;
+    if (!canvas) return;
+    const raw = parseInt(e.target.value, 10);
+    setLineWidth(isNaN(raw) ? "" : raw);
+    const obj = selectedObjectRef.current;
+    if (!obj || !obj.isLine || isNaN(raw)) return;
+
+    const val = clampLineWidth(raw);
+    if (val !== raw) setLineWidth(val);
+
+    obj.set({ strokeWidth: val });
+    canvas.requestRenderAll();
+  };
+
   return (
     <div className={styles.div}>
-      <input
-        type="text"
-        placeholder="W"
-        onChange={handleWidthChange}
-        value={width}
-        className={styles.input1}
-      />
-      <input
-        type="text"
-        placeholder="H"
-        value={height}
-        onChange={handleHeightChange}
-        className={styles.input2}
-      />
-      <label className={styles.label}>Fill</label>
-      <input
-        type="color"
-        value={color}
-        onChange={handleColorChange}
-        className={styles.inputColor}
-      />
-      <label className={styles.label}>Stroke</label>
-      <input
-        type="color"
-        value={colorStroke}
-        onChange={handleStrokeColorChange}
-        className={styles.inputColor}
-      />
+      {isLine ? (
+        <>
+          <label className={styles.label}>Espessura</label>
+          <input
+            type="number"
+            min={MIN_LINE_WIDTH}
+            max={MAX_LINE_WIDTH}
+            value={lineWidth}
+            onChange={handleLineWidthChange}
+            className={styles.input1}
+          />
+          <label className={styles.label}>Cor</label>
+          <input
+            type="color"
+            value={lineColor}
+            onChange={handleLineColorChange}
+            className={styles.inputColor}
+          />
+        </>
+      ) : (
+        <>
+          <input
+            type="text"
+            placeholder="W"
+            onChange={handleWidthChange}
+            value={width}
+            className={styles.input1}
+          />
+          <input
+            type="text"
+            placeholder="H"
+            value={height}
+            onChange={handleHeightChange}
+            className={styles.input2}
+          />
+          <label className={styles.label}>Fill</label>
+          <input
+            type="color"
+            value={color}
+            onChange={handleColorChange}
+            className={styles.inputColor}
+          />
+          <label className={styles.label}>Stroke</label>
+          <input
+            type="color"
+            value={colorStroke}
+            onChange={handleStrokeColorChange}
+            className={styles.inputColor}
+          />
+        </>
+      )}
     </div>
   );
 }

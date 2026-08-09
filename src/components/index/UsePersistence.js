@@ -28,7 +28,8 @@ export function createPersistence({
         if (!obj._id) obj._id = generateId();
       });
 
-      //Extrai conexões
+      //Extrai conexões (incluindo cor/espessura atuais da linha, que podem
+      //ter sido editadas pelo usuário via Settings)
       const connections = [];
       const seen = new Set();
       cs.getObjects().forEach((obj) => {
@@ -41,6 +42,8 @@ export function createPersistence({
             targetId: conn.targetBlock._id,
             fromSide: conn.fromSide,
             toSide: conn.toSide,
+            color: conn.line?.stroke,
+            strokeWidth: conn.line?.strokeWidth,
           });
         });
       });
@@ -216,14 +219,17 @@ export function createPersistence({
         cs.renderAll();
         cs.getObjects().forEach((obj) => obj.setCoords());
 
-        connections.forEach(({ sourceId, targetId, fromSide, toSide }) => {
+        // Recria as conexões já com a cor/espessura salva (se não houver,
+        // createConnection cai nos valores padrão definidos em
+        // usePortsAndConnections.js).
+        connections.forEach(({ sourceId, targetId, fromSide, toSide, color, strokeWidth }) => {
           const source = objById[sourceId];
           const dest = objById[targetId];
           if (!source || !dest) {
             console.warn("Bloco não encontrado:", sourceId, targetId);
             return;
           }
-          createConnection(source, dest, fromSide, toSide);
+          createConnection(source, dest, fromSide, toSide, { color, strokeWidth });
         });
 
         cs.requestRenderAll();

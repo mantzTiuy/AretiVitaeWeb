@@ -2,6 +2,11 @@ import * as fabric from "fabric";
 import { PORT_RADIUS_BASE, PORT_FILL, PORT_STROKE, SELECTION_STYLE } from "./constants";
 import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 
+// Valores padrão usados quando uma conexão é criada sem estilo customizado
+// (ex: ao arrastar de uma porta pra outra pela primeira vez).
+export const DEFAULT_CONNECTION_COLOR = "#ffffff";
+export const DEFAULT_CONNECTION_WIDTH = 4.25;
+
 // Fábrica que recebe a instância do canvas (cs) e um ref mutável que guarda
 // as portas ativas no momento (activePortsRef.current é um array de fabric.Circle).
 // Retorna todas as funções de porta + conexão, exatamente como no arquivo original.
@@ -92,7 +97,11 @@ export function createPortsAndConnections(cs, activePortsRef) {
   };
 
   // ── createConnection ─────────────────────────────────────────────────────
-  const createConnection = (source, dest, fromSide, toSide) => {
+  // `style` permite customizar a aparência da linha ao criá-la:
+  // { color, strokeWidth }. Usado tanto na criação "a mão" (arrastar porta)
+  // quanto na reconstrução das conexões salvas (usePersistence.js), pra
+  // preservar cor/espessura editadas pelo usuário no Settings.
+  const createConnection = (source, dest, fromSide, toSide, style = {}) => {
     const alreadyConnected = source.connections?.some(
       ({ sourceBlock, targetBlock }) =>
         (sourceBlock === source && targetBlock === dest) ||
@@ -103,11 +112,14 @@ export function createPortsAndConnections(cs, activePortsRef) {
     const src = getAbsoluteEdge(source, fromSide);
     const dst = getAbsoluteEdge(dest, toSide);
 
+    const strokeColor = style.color ?? DEFAULT_CONNECTION_COLOR;
+    const strokeWidthVal = style.strokeWidth ?? DEFAULT_CONNECTION_WIDTH;
+
     const line = new fabric.Line([src.x, src.y, dst.x, dst.y], {
       borderColor: SELECTION_STYLE.borderColor,
       borderDashArray: SELECTION_STYLE.borderDashArray,
-      stroke: "#ffffff",
-      strokeWidth: 4.25, // 15% mais fina (era 5)
+      stroke: strokeColor,
+      strokeWidth: strokeWidthVal,
       // ── Agora a linha PODE ser selecionada e deletada, mas não arrastada ──
       selectable: true,
       evented: true,

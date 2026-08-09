@@ -4,9 +4,13 @@ import { useGLTF, Clone } from '@react-three/drei'
 import { useNavigate } from 'react-router-dom'
 import * as THREE from 'three'
 
-const chosenModel = Math.random() < 0.01
-  ? '/models/cerberus.glb'
-  : '/models/cerberuspose.glb'
+function pickModel() {
+  const roll = Math.random()
+  if (roll < 0.05) return '/models/cerberuspose.glb'      // 5%
+  return '/models/cerberus.glb'                            // 95%
+}
+
+const chosenModel = pickModel()
 
 function CerberusModel({ hovered }) {
   const { scene } = useGLTF(chosenModel)
