@@ -1,0 +1,15 @@
+.select {
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #333333;
+  outline: none;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: #5083ef;
+}

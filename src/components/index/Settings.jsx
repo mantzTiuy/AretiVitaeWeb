@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./modules/settings.module.css";
+import FontSelector from "./FontSelector";
+import { loadGoogleFont } from "./loadGoogleFont";
 
 // Limites de espessura de linha (independentes dos limites de bloco em
 // constants.js, já que a escala visual é bem diferente).
@@ -17,6 +19,10 @@ function Settings({ canvasReady }) {
   const [lineColor, setLineColor]     = useState("#ffffff");
   const [lineWidth, setLineWidth]     = useState(4);
 
+  // ── Estado específico de texto (fonte) ──────────────────────────────────
+  const [isTextObject, setIsTextObject] = useState(false);
+  const [fontFamily, setFontFamily]     = useState("Josefin Sans");
+
   const selectedObjectRef             = useRef(null);
 
   const handleObjectSelection = (object) => {
@@ -26,12 +32,21 @@ function Settings({ canvasReady }) {
     // Conexão selecionada: mostra só os controles de cor/espessura da linha
     if (object.isLine) {
       setIsLine(true);
+      setIsTextObject(false);
       setLineColor(object.stroke ?? "#ffffff");
       setLineWidth(Math.round(object.strokeWidth ?? 4));
       return;
     }
 
     setIsLine(false);
+
+    // Textbox cobre tanto o bloco "texto solto" (_blockType "text") quanto
+    // o label dos blocos "group" (_blockType "group", _isLabel true) —
+    // ambos são fabric.Textbox por baixo.
+    const isTextbox = object.type === "textbox";
+    setIsTextObject(isTextbox);
+    if (isTextbox) setFontFamily(object.fontFamily || "Josefin Sans");
+
     setWidth(Math.round(object.width  * object.scaleX));
     setHeight(Math.round(object.height * object.scaleY));
 
@@ -51,12 +66,14 @@ function Settings({ canvasReady }) {
   const clearSettings = () => {
     selectedObjectRef.current = null;
     setIsLine(false);
+    setIsTextObject(false);
     setWidth("");
     setHeight("");
     setColor("#ffffff");
     setColorStroke("#cccccc");
     setLineColor("#ffffff");
     setLineWidth(4);
+    setFontFamily("Josefin Sans");
   };
 
   // Após qualquer mudança dimensional, atualiza coords e dispara modified
@@ -209,6 +226,27 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
+  // ── Font family (Google Fonts, carregada sob demanda) ──
+  const handleFontChange = (newFont) => {
+    const canvas = canvasReady;
+    const obj    = selectedObjectRef.current;
+    if (!canvas || !obj) return;
+
+    setFontFamily(newFont);
+
+    // Só aplica no bloco depois que a fonte de fato carregou — senão o
+    // fabric desenha com a fonte de fallback até algum reflow manual.
+    loadGoogleFont(newFont, () => {
+      obj.set({ fontFamily: newFont });
+      // Recalcula a largura do texto solto pra nova métrica da fonte
+      // (bloco "group" tem largura fixa, então não se aplica a ele).
+      obj._fitToContent?.();
+      obj.setCoords();
+      canvas.fire("object:modified", { target: obj });
+      canvas.requestRenderAll();
+    });
+  };
+
   return (
     <div className={styles.div}>
       {isLine ? (
@@ -246,6 +284,12 @@ function Settings({ canvasReady }) {
             onChange={handleHeightChange}
             className={styles.input2}
           />
+          {isTextObject && (
+            <>
+              <label className={styles.label}>Fonte</label>
+              <FontSelector value={fontFamily} onChange={handleFontChange} />
+            </>
+          )}
           <label className={styles.label}>Fill</label>
           <input
             type="color"
