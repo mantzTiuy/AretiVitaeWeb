@@ -4,6 +4,7 @@ import TopDisplay from './Topdisplay';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cerberus from "./Cerberus";
+import ConfirmModal from "./ConfirmModal";
 
 const API_BASE = "http://localhost:8081";
 
@@ -303,31 +304,26 @@ export default function Account() {
 
       {/* POP-UP LOGOUT */}
       {openLogout && (
-        <div className={styles.overlay}>
-          <div className={styles.modal}>
-            <span onClick={() => setOpenLogout(false)} className={styles.modalClose}>✕</span>
-            <SectionTitle label="Sair da conta" />
-            <p className={styles.modalSubtitle}>Você tem certeza que deseja sair?</p>
-            <div className={styles.modalBtnRow}>
-              <button className={styles.logoutConfirm} onClick={handleLogout}>Sim</button>
-              <button className={styles.logoutCancel} onClick={() => setOpenLogout(false)}>Cancelar</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Sair da conta"
+          message="Você tem certeza que deseja sair?"
+          confirmLabel="Sim"
+          cancelLabel="Cancelar"
+          onConfirm={handleLogout}
+          onClose={() => setOpenLogout(false)}
+        />
       )}
 
       {/* POP-UP SUCESSO NO UPDATE */}
       {sucesso && (
-        <div className={styles.overlay}>
-          <div className={styles.modal}>
-            <span onClick={() => setSucesso(false)} className={styles.modalClose}>✕</span>
-            <SectionTitle label="Alterações salvas" />
-            <p className={styles.modalSubtitle}>Suas informações foram atualizadas com sucesso!</p>
-            <div className={styles.modalBtnRow}>
-              <button className={styles.logoutConfirm} onClick={() => setSucesso(false)}>Ok</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Alterações salvas"
+          message="Suas informações foram atualizadas com sucesso!"
+          confirmLabel="Ok"
+          cancelLabel="Fechar"
+          onConfirm={() => setSucesso(false)}
+          onClose={() => setSucesso(false)}
+        />
       )}
 
     </div>

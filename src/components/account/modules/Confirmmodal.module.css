@@ -1,0 +1,123 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(30, 45, 110, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  background: rgb(100, 122, 200);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  width: min(90vw, 440px);
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Titlebar ── */
+.titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.titlebarLabel {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: rgba(255, 255, 255, 0.80);
+  text-transform: uppercase;
+}
+
+.dots { display: flex; gap: 6px; }
+.dot  { width: 11px; height: 11px; border-radius: 50%; }
+.dotGray   { background: rgba(255, 255, 255, 0.22); }
+.dotYellow { background: #e5c040; }
+.dotRed    { background: #e05555; cursor: pointer; }
+.dotRed:hover { background: #ff3333; }
+
+/* ── Body ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.9rem, 1.8vh, 1.4rem);
+  padding: clamp(1.4rem, 3vh, 2rem) clamp(1.2rem, 3vw, 2rem);
+}
+
+.message {
+  margin: 0;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: clamp(0.9rem, 1.6vh, 1.05rem);
+  color: rgba(255, 255, 255, 0.90);
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  width: 100%;
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.cancelBtn {
+  flex: 1;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, transform 0.1s;
+}
+.cancelBtn:hover  { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.cancelBtn:active { transform: scale(0.97); }
+
+.confirmBtn {
+  flex: 1;
+  height: clamp(2rem, 4.8vh, 3.1rem);
+  border-radius: 10px;
+  border: none;
+  background: rgb(35, 50, 100);
+  color: #fff;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  cursor: pointer;
+  transition: filter 0.18s, transform 0.1s, opacity 0.2s;
+}
+.confirmBtn:hover:not(:disabled)  { filter: brightness(1.18); }
+.confirmBtn:active:not(:disabled) { transform: scale(0.97); }
+.confirmBtn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+/* Variante para ações destrutivas (ex: excluir) */
+.confirmBtnDanger {
+  background: rgb(150, 55, 60);
+}
