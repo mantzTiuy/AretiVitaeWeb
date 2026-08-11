@@ -1,7 +1,7 @@
 import * as fabric from "fabric";
 import { SELECTION_STYLE, noRotate } from "./constants";
 
-//  Aparência do bloquinho
+
 const CARD = {
   width: 160,
   padding: 10,
@@ -11,14 +11,14 @@ const CARD = {
   stroke: "#e2e4ea",
 };
 
-// Aparência do botão de download
+
 const DOWNLOAD_BTN = {
-  radius: 11, // mantém a área clicável, só que invisível (sem fill)
+  radius: 11, 
   icon: "#f2f3f5",
   iconHover: "#ffffff",
 };
 
-// Aparência do placeholder de PDF (sem preview de conteúdo)
+
 const PDF_PLACEHOLDER = {
   fill: "#eceef3",
   icon: "#7a7f8c",

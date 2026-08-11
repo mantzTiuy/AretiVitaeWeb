@@ -43,6 +43,7 @@ export default function Axis({ canvasReady, onReady }) {
         if (obj._isPort || obj.isLine || obj._isGuide) return false;//Ignora o que não é bloco
         if (obj._isBackground) return false;//Ignora background (inclui o retângulo dos containers)
         if (obj._isContainerLabel) return false;//Ignora o nome do container também
+        if (obj._isDrawing) return false;//Ignora traços de pincel (não são blocos alinháveis)
         return true;
       });
 
@@ -78,6 +79,7 @@ export default function Axis({ canvasReady, onReady }) {
     const checkAlignment = (target) => {
       clearGuides();//Limpa os guias anteriores
       if (!target || target._isPort || target.isLine || target._isGuide) return;
+      if (target._isDrawing) return; // traços de pincel nunca participam do alinhamento
       if (target.type === "activeselection") return; // Selection de vários não funciona
 
       const zoom      = cs.getZoom();

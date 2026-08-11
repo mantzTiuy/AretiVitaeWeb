@@ -1,11 +1,6 @@
-// Carrega fontes do Google Fonts em tempo de execução, sem precisar dar
-// import de arquivo de fonte no bundle. Cada fonte só é buscada uma vez
-// (cache em memória via `loadedFonts`), e o callback só dispara depois que
-// o navegador confirma que ela está pronta pra ser usada — sem isso, o
-// primeiro requestRenderAll do canvas ainda desenharia com a fonte de
-// fallback.
+
 const loadedFonts      = new Set();
-const pendingCallbacks = new Map(); // fontFamily -> callbacks enfileirados enquanto carrega
+const pendingCallbacks = new Map(); 
 
 const toLinkId = (fontFamily) => `gfont-${fontFamily.replace(/\s+/g, "-")}`;
 
@@ -19,8 +14,7 @@ export function loadGoogleFont(fontFamily, onLoaded) {
 
   const linkId = toLinkId(fontFamily);
 
-  // Já tem um <link> pra essa fonte (carregando ou já carregado antes desta
-  // sessão do módulo) — só enfileira o callback em vez de duplicar o link.
+
   if (document.getElementById(linkId)) {
     const queued = pendingCallbacks.get(fontFamily);
     if (queued) {

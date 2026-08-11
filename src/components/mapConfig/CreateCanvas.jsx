@@ -4,14 +4,12 @@ import axios from 'axios';
 import styles from './modules/CreateCanvas.module.css';
 import CanvasTopDisplay from './Canvastopdisplay';
 import SectionTitle from './Sectiontitle';
-import SizeSelector from './Sizeselector';
 import MapCarousel from './Mapcarousel';
 
 export default function CreateCanvas() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ name: '', description: '' });
-  const [size, setSize] = useState('1×');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const [nameTouched, setNameTouched] = useState(false);//Setado para que não abra com "nome obrigatório"
@@ -101,12 +99,7 @@ export default function CreateCanvas() {
                   )}
                 </div>
 
-                <SectionTitle label="Tamanho" />
-
-                <div className={styles.field}>
-                  <label>Escala do canvas</label>
-                  <SizeSelector value={size} onChange={setSize} />
-                </div>
+         
 
                 <SectionTitle label="Descrição" />
 

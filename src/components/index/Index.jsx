@@ -8,9 +8,23 @@ import Settings from "./Settings";
 import GridCanvas from "./GridCanvas";
 import Axis from "./Axis";
 import BackButton from './BackButton';
+import CanvasSettingsPanel from "./CanvasSettingPanel";
 import { createMediaImporter } from "./useMediaImporter";
+import { createBrush } from "./useBrush";
 
-import { generateId, SELECTION_STYLE } from "./constants";
+import {
+  generateId,
+  SELECTION_STYLE,
+  DEFAULT_BRUSH_COLOR,
+  DEFAULT_BRUSH_SIZE,
+  MIN_BRUSH_SIZE,
+  MAX_BRUSH_SIZE,
+  DEFAULT_ERASER_SIZE,
+  MIN_ERASER_SIZE,
+  MAX_ERASER_SIZE,
+  DEFAULT_GRID_BG_COLOR,
+  DEFAULT_GRID_LINE_COLOR,
+} from "./constants";
 import { createPortsAndConnections } from "./usePortsAndConnections";
 import { createPersistence } from "./usePersistence";
 import {
@@ -31,6 +45,7 @@ export default function Index() {
   const canvasInstanceRef = useRef(null);
   const sourceBlockRef    = useRef(null); // Guarda temporariamente o bloco/lado quando existe dragging de porta
   const mediaImporterRef  = useRef(null); // Ref das mídias (importador de PDF/imagem)
+  const brushRef          = useRef(null); // Ref do módulo de desenho (createBrush: pincel/borracha/undo)
   const fileInputRef      = useRef(null); // Input escondido pra seleção manual de PDF/imagem
   const [isDragOver, setIsDragOver] = useState(false); // feedback visual do drop do pdf
   const tempLineRef       = useRef(null); // Linha temporária para definir conexão entre portas
@@ -43,6 +58,26 @@ export default function Index() {
   const [saveStatus, setSaveStatus]   = useState('IDLE');
   const saveTimeoutRef       = useRef(null);
   const isLoadingFromJsonRef = useRef(false);
+
+  // ── Estado do modo pincel/borracha ──────────────────────────────────────
+  // "draw" | "erase" | null — os dois modos são mutuamente exclusivos entre
+  // si e com qualquer outra ferramenta (addBox, addGroup, mídia etc).
+  const [drawMode, setDrawMode]     = useState(null);
+  const [brushColor, setBrushColor] = useState(DEFAULT_BRUSH_COLOR);
+  const [brushSize, setBrushSize]   = useState(DEFAULT_BRUSH_SIZE);
+  const [eraserSize, setEraserSizeState] = useState(DEFAULT_ERASER_SIZE);
+
+  // ── Cores do canvas (fundo + grade) ─────────────────────────────────────
+  // Editável via botão "config" (CanvasSettingsPanel) e persistido no JSON
+  // salvo (usePersistence.js -> gridColors).
+  const [gridBgColor, setGridBgColor]     = useState(DEFAULT_GRID_BG_COLOR);
+  const [gridLineColor, setGridLineColor] = useState(DEFAULT_GRID_LINE_COLOR);
+  const [showCanvasSettings, setShowCanvasSettings] = useState(false);
+  const gridColorsRef = useRef({ bgColor: DEFAULT_GRID_BG_COLOR, lineColor: DEFAULT_GRID_LINE_COLOR });
+
+  useEffect(() => {
+    gridColorsRef.current = { bgColor: gridBgColor, lineColor: gridLineColor };
+  }, [gridBgColor, gridLineColor]);
 
   // Permite que os Axis não sejam reconstruídos no f5, por causa do useCallback
   const handleAxisReady = useCallback((fn) => {
@@ -61,10 +96,20 @@ export default function Index() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    // Reseta pro padrão sempre que troca de mapa (id) — evita herdar cores
+    // de um mapa anterior até carregarMapa terminar (se o novo mapa nem
+    // tiver gridColors salvo, fica no padrão mesmo).
+    setGridBgColor(DEFAULT_GRID_BG_COLOR);
+    setGridLineColor(DEFAULT_GRID_LINE_COLOR);
+
     const cs = new fabric.Canvas(canvasRef.current, {
-      width:           window.innerWidth,
-      height:          window.innerHeight,
-      backgroundColor: "#eaf4fc",
+      width:  window.innerWidth,
+      height: window.innerHeight,
+      // Transparente: quem desenha o fundo/grade visível agora é sempre o
+      // GridCanvas, com cores configuráveis (CanvasSettingsPanel) — a cor
+      // fixa que existia aqui antes não tinha como ser trocada pelo usuário.
+      backgroundColor: "transparent",
     });
 
     const drawGrid = () => {
@@ -86,16 +131,7 @@ export default function Index() {
       cs.bringObjectToFront(obj);
     });
 
-    // CORREÇÃO (qualidade/nitidez): antes esta função escrevia direto em
-    // cs.width e em upperCanvas/lowerCanvas.width/height usando os pixels
-    // CSS (window.innerWidth/innerHeight) crus. O Fabric, por padrão, já usa
-    // retina scaling: o buffer real de pixels é dimensionado em
-    // largura_css * devicePixelRatio, o que é o que garante texto e bordas
-    // nítidas em telas com DPR > 1 (Mac retina, Windows com escala 125%/
-    // 150%, celular etc.). Sobrescrever manualmente esses valores anulava
-    // esse scaling e fazia o canvas voltar a renderizar em 1:1, esticado via
-    // CSS — daí o aspecto borrado nos cards. cs.setDimensions() delega esse
-    // cálculo pro próprio Fabric, preservando a escala retina.
+
     const handleResize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -115,7 +151,7 @@ export default function Index() {
     canvasInstanceRef.current = cs;
     setCanvasReady(cs);
 
-    // ── Módulos ────────────────────────────────────────────────────────────
+
     const ports = createPortsAndConnections(cs, activePortsRef);
 
     const persistence = createPersistence({
@@ -128,18 +164,22 @@ export default function Index() {
       clearPorts: ports.clearPorts,
       createConnection: ports.createConnection,
       SELECTION_STYLE,
+      gridColorsRef,
+      setGridColors: ({ bgColor, lineColor }) => {
+        setGridBgColor(bgColor);
+        setGridLineColor(lineColor);
+      },
     });
     const { salvarMapa, carregarMapa } = persistence;
 
     canvasInstanceRef.current.salvarMapa = salvarMapa;
 
-    // Copiar/colar (Ctrl+C / Ctrl+V) — precisa vir depois de salvarMapa
-    // existir, já que a colagem persiste automaticamente igual às outras
-    // ações do canvas (deletar, conectar, etc.)
     const clipboard = createClipboard({ cs, salvarMapa });
 
-    // Importador de mídias (PDF/imagem) — mesmo padrão dos outros módulos
     mediaImporterRef.current = createMediaImporter({ cs, salvarMapa });
+
+
+    brushRef.current = createBrush(cs, { salvarMapa });
 
     const cancelledRef = { current: false };
     carregarMapa(cs, cancelledRef);
@@ -153,14 +193,10 @@ export default function Index() {
       ports,
       salvarMapa,
       clipboard,
+      brush: brushRef.current, // Ctrl+Z / Ctrl+Shift+Z desfazem/refazem o desenho
     });
 
-    // ── Download de mídia: botão desenhado no card + duplo clique como atalho ──
-    // O botão é detectado via opt.subTargets no "mouse:up" (equivalente a um
-    // click, sem interferir no início de um drag no "mouse:down"
-    // Precisa de subTargetCheck: true no group (já configurado em
-    // buildMediaCard) pra que o fabric preencha subTargets com os objetos
-    // marcados _isDownloadBtn. :D
+
     const onMediaMouseUp = (opt) => {
       const clickedBtn = opt.subTargets?.some((o) => o._isDownloadBtn);
       if (clickedBtn && opt.target?._blockType === "media") {
@@ -168,8 +204,6 @@ export default function Index() {
       }
     };
 
-    // Atalho: duplo clique em qualquer parte do card também baixa,
-    // não só quando acerta o botão em cima. Pra facilitar considerando que o botão pode ser dificil de ver
     const onMediaDoubleClick = (opt) => {
       if (opt.target?._blockType === "media") {
         mediaImporterRef.current?.downloadMediaImage(opt.target);
@@ -215,12 +249,14 @@ export default function Index() {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel",   disableCtrlZoom);
       window.removeEventListener("resize",  handleResize);
+      brushRef.current?.destroy();
+      brushRef.current = null;
       canvasInstanceRef.current = null;
       cs.dispose();
     };
   }, [id]);
 
-  //Drag & drop de PDF ou Imagem
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -244,15 +280,93 @@ export default function Index() {
     canvasInstanceRef.current?.salvarMapa?.();
   };
 
-  // Exporta o canvas como SVG, recortado só na área com conteúdo (ver
-  // useSvgExport.js — o canvas de trabalho é 5000x5000, exportar tudo
-  // geraria um arquivo enorme e quase todo vazio).
+
   const handleExportSVG = () => {
     exportCanvasAsSVG(canvasInstanceRef.current, "mapa.svg");
   };
 
-  // Seleção manual de mídia (botão), alternativa ao drag-and-drop 
-  const openFilePicker = () => fileInputRef.current?.click();
+  const scheduleGridColorSave = () => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      canvasInstanceRef.current?.salvarMapa?.();
+    }, 500);
+  };
+
+  const handleGridBgColorChange = (value) => {
+    setGridBgColor(value);
+    scheduleGridColorSave();
+  };
+
+  const handleGridLineColorChange = (value) => {
+    setGridLineColor(value);
+    scheduleGridColorSave();
+  };
+
+  const handleResetGridColors = () => {
+    setGridBgColor(DEFAULT_GRID_BG_COLOR);
+    setGridLineColor(DEFAULT_GRID_LINE_COLOR);
+    scheduleGridColorSave();
+  };
+
+
+  const stopDrawing = () => {
+    setDrawMode(null);
+    brushRef.current?.disable();
+  };
+
+  const toggleDraw = () => {
+    if (drawMode === "draw") {
+      stopDrawing();
+      return;
+    }
+    setDrawMode("draw");
+    brushRef.current?.enable({ color: brushColor, size: brushSize });
+  };
+
+  const toggleErase = () => {
+    if (drawMode === "erase") {
+      stopDrawing();
+      return;
+    }
+    setDrawMode("erase");
+    brushRef.current?.enableErase({ size: eraserSize });
+  };
+
+  const handleBrushColorChange = (e) => {
+    const value = e.target.value;
+    setBrushColor(value);
+    brushRef.current?.setColor(value);
+  };
+
+  const handleBrushSizeChange = (e) => {
+    const value = Number(e.target.value);
+    setBrushSize(value);
+    brushRef.current?.setSize(value);
+  };
+
+  const handleEraserSizeChange = (e) => {
+    const value = Number(e.target.value);
+    setEraserSizeState(value);
+    brushRef.current?.setEraserSize(value);
+  };
+
+  const handleUndo = () => brushRef.current?.undo();
+  const handleRedo = () => brushRef.current?.redo();
+
+  useEffect(() => {
+    const onEsc = (e) => {
+      if (e.key === "Escape" && drawMode) stopDrawing();
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+
+  }, [drawMode]);
+
+  const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current); };
+  const addGroup     = () => { stopDrawing(); addGroupToCanvas(canvasInstanceRef.current); };
+  const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current); };
+  const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current); };
+  const openFilePicker = () => { stopDrawing(); fileInputRef.current?.click(); };
 
   const handleFileInputChange = (e) => {
     if (e.target.files?.length) {
@@ -260,11 +374,6 @@ export default function Index() {
     }
     e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
   };
-
-  const addBox       = () => addBoxToCanvas(canvasInstanceRef.current);
-  const addGroup     = () => addGroupToCanvas(canvasInstanceRef.current);
-  const addText      = () => addTextToCanvas(canvasInstanceRef.current);
-  const addContainer = () => addContainerToCanvas(canvasInstanceRef.current);
 
  return (
     <div className="App">
@@ -281,10 +390,85 @@ export default function Index() {
         <button onClick={addContainer}       className={stylestoolbox.button}>addc</button>
         <button onClick={centerCanvas}       className={stylestoolbox.button}>center</button>
         <button onClick={openFilePicker}     className={stylestoolbox.button}>midia</button>
+
+        <button
+          onClick={toggleDraw}
+          className={stylestoolbox.button}
+          style={drawMode === "draw" ? { outline: "2px solid #5083ef" } : undefined}
+          title="Pincel (Esc para sair)"
+        >
+          {drawMode === "draw" ? "pincel ✓" : "pincel"}
+        </button>
+        {drawMode === "draw" && (
+          <>
+            <input
+              type="color"
+              value={brushColor}
+              onChange={handleBrushColorChange}
+              title="Cor do pincel"
+              className={stylestoolbox.button}
+            />
+            <input
+              type="range"
+              min={MIN_BRUSH_SIZE}
+              max={MAX_BRUSH_SIZE}
+              value={brushSize}
+              onChange={handleBrushSizeChange}
+              title={`Espessura: ${brushSize}px`}
+            />
+          </>
+        )}
+
+        <button
+          onClick={toggleErase}
+          className={stylestoolbox.button}
+          style={drawMode === "erase" ? { outline: "2px solid #5083ef" } : undefined}
+          title="Borracha (Esc para sair) — apaga só traços de pincel"
+        >
+          {drawMode === "erase" ? "borracha ✓" : "borracha"}
+        </button>
+        {drawMode === "erase" && (
+          <input
+            type="range"
+            min={MIN_ERASER_SIZE}
+            max={MAX_ERASER_SIZE}
+            value={eraserSize}
+            onChange={handleEraserSizeChange}
+            title={`Tamanho da borracha: ${eraserSize}px`}
+          />
+        )}
+
+        <button onClick={handleUndo} className={stylestoolbox.button} title="Desfazer (Ctrl+Z)">
+          desfazer
+        </button>
+        <button onClick={handleRedo} className={stylestoolbox.button} title="Refazer (Ctrl+Shift+Z)">
+          refazer
+        </button>
+
         <button onClick={handleSalvarManual} className={stylestoolbox.button}>
           {saveStatus === 'saving' ? 'Salvando...' : 'Salvar'}
         </button>
         <button onClick={handleExportSVG}    className={stylestoolbox.button}>SVG</button>
+
+        <div style={{ position: "relative", display: "inline-block" }}>
+          <button
+            onClick={() => setShowCanvasSettings((v) => !v)}
+            className={stylestoolbox.button}
+            title="Configurações do canvas (fundo e grade)"
+          >
+            {showCanvasSettings ? "config ✓" : "config"}
+          </button>
+          <CanvasSettingsPanel
+            open={showCanvasSettings}
+            onClose={() => setShowCanvasSettings(false)}
+            bgColor={gridBgColor}
+            lineColor={gridLineColor}
+            onBgColorChange={handleGridBgColorChange}
+            onLineColorChange={handleGridLineColorChange}
+            onReset={handleResetGridColors}
+          />
+        </div>
+
         <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
       </div>
 
@@ -305,7 +489,7 @@ export default function Index() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <GridCanvas ref={gridRef} />
+        <GridCanvas ref={gridRef} bgColor={gridBgColor} lineColor={gridLineColor} />
         <canvas
           id="canvas"
           className={stylescanva.canva}

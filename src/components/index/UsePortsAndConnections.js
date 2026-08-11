@@ -2,30 +2,18 @@ import * as fabric from "fabric";
 import { PORT_RADIUS_BASE, PORT_FILL, PORT_STROKE, SELECTION_STYLE, repositionContainerLabel } from "./constants";
 import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 
-// Valores padrão usados quando uma conexão é criada sem estilo customizado
-// (ex: ao arrastar de uma porta pra outra pela primeira vez).
+
 export const DEFAULT_CONNECTION_COLOR = "#ffffff";
 export const DEFAULT_CONNECTION_WIDTH = 4.25;
 
-// ── Contorno da linha (outline) ─────────────────────────────────────────
-// A cor da linha é livre (o usuário escolhe no Settings, e o padrão é
-// branco). Isso é ótimo dentro do editor (fundo azul claro), mas no SVG
-// exportado (useSvgExport.js) o fundo costuma ser branco/transparente — daí
-// uma linha branca simplesmente some. Pra linha ficar "naturalmente"
-// visível em qualquer fundo, cada conexão ganha um segundo fabric.Line, um
-// pouco mais largo e com uma cor escura semi-transparente, desenhado
-// IMEDIATAMENTE atrás da linha colorida — funciona como um contorno/halo
-// fino, sem alterar a cor que o usuário definiu.
-const OUTLINE_COLOR      = "rgba(20, 24, 34, 0.35)";
-export const OUTLINE_EXTRA_WIDTH = 0.15; // px de canvas adicionados de cada lado da linha real
 
-// Os 4 lados possíveis de um bloco pra portas/conexões — esquerda/direita
-// (como já existia) e agora também cima/baixo.
+const OUTLINE_COLOR      = "rgba(20, 24, 34, 0.35)";
+export const OUTLINE_EXTRA_WIDTH = 0.15;
+
+
 const PORT_SIDES = ["left", "right", "top", "bottom"];
 
-// Fábrica que recebe a instância do canvas (cs) e um ref mutável que guarda
-// as portas ativas no momento (activePortsRef.current é um array de fabric.Circle,
-// agora com até 4 por bloco selecionado — uma por lado).
+
 export function createPortsAndConnections(cs, activePortsRef) {
   const getPortRadius = (block) => {
     const w = block.getScaledWidth();
@@ -76,8 +64,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
     return port;
   };
 
-  // Containers não permitem conexões: nunca ganham portas, então nunca dá
-  // pra iniciar um arrasto de conexão a partir deles.
+
   const showPorts = (block) => {
     clearPorts();
     if (
@@ -124,7 +111,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
   const refreshBlock = (block) => {
     repositionPorts(block);
     updateConnectionLines(block);
-    // Se for o retângulo de um container, mantém o nome grudado no canto.
+   
     if (block._isBackground && block._linkedLabel) repositionContainerLabel(block);
     cs.requestRenderAll();
   };
@@ -138,11 +125,6 @@ export function createPortsAndConnections(cs, activePortsRef) {
     cs.requestRenderAll();
   };
 
-  // ── createConnection ─────────────────────────────────────────────────────
-  // `style` permite customizar a aparência da linha ao criá-la:
-  // { color, strokeWidth }. Usado tanto na criação "a mão" (arrastar porta)
-  // quanto na reconstrução das conexões salvas (usePersistence.js), pra
-  // preservar cor/espessura editadas pelo usuário no Settings.
   const createConnection = (source, dest, fromSide, toSide, style = {}) => {
     const alreadyConnected = source.connections?.some(
       ({ sourceBlock, targetBlock }) =>
@@ -157,9 +139,6 @@ export function createPortsAndConnections(cs, activePortsRef) {
     const strokeColor = style.color ?? DEFAULT_CONNECTION_COLOR;
     const strokeWidthVal = style.strokeWidth ?? DEFAULT_CONNECTION_WIDTH;
 
-    // Contorno fino: mesma geometria da linha real, um pouco mais largo e
-    // sempre numa cor escura semi-transparente — não interativo (o clique
-    // e a seleção continuam só na linha colorida por cima).
     const outline = new fabric.Line([src.x, src.y, dst.x, dst.y], {
       stroke: OUTLINE_COLOR,
       strokeWidth: strokeWidthVal + OUTLINE_EXTRA_WIDTH * 2,
@@ -178,7 +157,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
       borderDashArray: SELECTION_STYLE.borderDashArray,
       stroke: strokeColor,
       strokeWidth: strokeWidthVal,
-      // ── Agora a linha PODE ser selecionada e deletada, mas não arrastada ──
+
       selectable: true,
       evented: true,
       hasControls: false,
@@ -189,7 +168,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
       lockScalingY: true,
       lockRotation: true,
       hoverCursor: "pointer",
-      perPixelTargetFind: true, // clique precisa acertar o traço, não só a bounding box
+      perPixelTargetFind: true, 
       isLine: true,
       originX: "center",
       originY: "center",
@@ -197,19 +176,10 @@ export function createPortsAndConnections(cs, activePortsRef) {
 
     cs.add(outline);
     cs.add(line);
-    // Ordem: linha colorida primeiro pro fundo, depois o contorno — assim o
-    // contorno fica ATRÁS da linha real (a última chamada de sendToBack
-    // "vence" e vai pro índice 0).
+  
     cs.sendObjectToBack(line);
     cs.sendObjectToBack(outline);
 
-    // Referência direta pra fora: Settings.jsx só tem acesso à linha
-    // colorida (é o objeto ativo do canvas), não ao `conn` inteiro — essa
-    // referência é o que permite reajustar a espessura do contorno junto
-    // sempre que o usuário mudar a espessura da linha (handleLineWidthChange).
-    // Sem isso, o contorno ficava "preso" na espessura de quando a conexão
-    // foi criada e sobrava como uma sombra ao redor da linha depois de
-    // diminuir a grossura.
     line._outline = outline;
 
     if (!source.connections) source.connections = [];
@@ -223,7 +193,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
       outline.set({ x1: s.x, y1: s.y, x2: d.x, y2: d.y });
       cs.requestRenderAll();
     };
-    // guarda a referência para conseguir remover os listeners depois (deleteConnection)
+   
     conn.updateLine = updateLine;
 
     source.connections.push(conn);
@@ -240,7 +210,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
     return conn;
   };
 
-  // ── deleteConnection ─────────────────────────────────────────────────────
+
   const deleteConnection = (conn) => {
     if (!conn) return;
     const { line, outline, sourceBlock, targetBlock, updateLine } = conn;
@@ -265,11 +235,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
     if (outline) cs.remove(outline);
   };
 
-  // Dado um objeto de linha, encontra a conexão correspondente vasculhando
-  // os arrays `connections` dos blocos (a linha não guarda referência
-  // direta para trás, então precisamos procurar). Só procura pela linha
-  // "real" (conn.line) — o contorno (conn.outline) não é clicável, então
-  // nunca chega aqui como `line`.
+
   const findConnectionByLine = (line) => {
     let found = null;
     cs.getObjects().some((obj) => {

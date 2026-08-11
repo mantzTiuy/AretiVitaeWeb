@@ -1,9 +1,6 @@
 import styles from "./modules/charCounter.module.css";
 
-// Indicador pequeno e reutilizável de "atual/limite" de caracteres. Hoje só
-// é usado no nome dos containers (Settings.jsx), mas é genérico o
-// bastante pra qualquer outro campo com limite de texto que apareça no
-// futuro (ex: se o label de blocos "group" ganhar um limite parecido).
+
 function CharCounter({ current, max }) {
   const remaining   = max - current;
   const isAtLimit   = remaining <= 0;

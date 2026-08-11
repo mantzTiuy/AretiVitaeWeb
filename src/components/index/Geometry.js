@@ -4,7 +4,7 @@ export function getAbsoluteCenter(obj) {
   return { x: m[4], y: m[5] };
 }
 
-// side: "left" | "right" | "top" | "bottom"
+
 export function getAbsoluteEdge(obj, side) {
   const center = getAbsoluteCenter(obj);
   const hw = obj.getScaledWidth()  / 2;

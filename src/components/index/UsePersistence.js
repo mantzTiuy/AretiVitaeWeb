@@ -1,8 +1,16 @@
 import axios from "axios";
-import { API_BASE, generateId, noRotate, containerBorderOnly } from "./constants";
+import {
+  API_BASE,
+  generateId,
+  noRotate,
+  containerBorderOnly,
+  tagDrawing,
+  DEFAULT_GRID_BG_COLOR,
+  DEFAULT_GRID_LINE_COLOR,
+} from "./constants";
 import { loadGoogleFont } from "./loadGoogleFont";
 
-//Recebe tudo relacionado ao salvamento de mapas
+
 export function createPersistence({
   id,
   canvasInstanceRef,
@@ -13,24 +21,25 @@ export function createPersistence({
   clearPorts,
   createConnection,
   SELECTION_STYLE,
+  gridColorsRef,
+  setGridColors,
 }) {
-  // ── SALVAR MAPA ──────────────────────────────────────────────────────────
+ 
   async function salvarMapa() {
     const cs = canvasInstanceRef.current;
     if (!cs) return;
     setSaveStatus('saving');
     try {
-      //Remove portas do canvas antes de serializar (evitar de salvar com portas erradas)
+     
       clearPorts();
 
-      //Garante id em todo objeto que não seja porta ou linha
+   
       cs.getObjects().forEach((obj) => {
         if (obj._isPort || obj.isLine) return;
         if (!obj._id) obj._id = generateId();
       });
 
-      //Extrai conexões (incluindo cor/espessura atuais da linha, que podem
-      //ter sido editadas pelo usuário via Settings)
+   
       const connections = [];
       const seen = new Set();
       cs.getObjects().forEach((obj) => {
@@ -55,7 +64,7 @@ export function createPersistence({
       const liveObjects = cs.getObjects();
       const enrichedObjects = [];
       liveObjects.forEach((obj, i) => {
-        if (obj._isPort || obj.isLine) return; // não persiste portas/linhas
+        if (obj._isPort || obj.isLine) return;
         const json = canvasJson.objects[i];
         if (!json) return;
 
@@ -70,11 +79,6 @@ export function createPersistence({
             ? (obj._linkedLabel._id ?? null)
             : null;
 
-        // Dados de mídia (usados pelos cards de imagem/PDF em
-        // useMediaImporter.js). sourceName/isPdf são leves e sempre
-        // salvos quando existem; pdfDataUrl (o base64 do arquivo) só é
-        // incluído quando o bloco de fato é um PDF, pra não inflar o
-        // JSON dos blocos comuns.
         if (obj._blockType === "media") {
           json.isPdf = obj._isPdf ?? false;
           json.sourceName = obj._sourceName ?? null;
@@ -90,7 +94,7 @@ export function createPersistence({
       console.log("SALVANDO connections:", connections);
       console.log("SALVANDO blockIds:", canvasJson.objects.map(o => o.blockId));
 
-      // Validação de INTEGRIDADE ANTES de enviar pro BACKEND
+    
       const savedBlockIds = new Set(canvasJson.objects.map(o => o.blockId));
       connections.forEach(({ sourceId, targetId }) => {
         if (!savedBlockIds.has(sourceId) || !savedBlockIds.has(targetId)) {
@@ -101,7 +105,12 @@ export function createPersistence({
         }
       });
 
-      const dataAtual = JSON.stringify({ canvasJson, connections });
+      const dataAtual = JSON.stringify({
+        canvasJson,
+        connections,
+   
+        gridColors: gridColorsRef?.current ?? null,
+      });
 
       await axios.put(`${API_BASE}/update/${id}`, {
         data: dataAtual,
@@ -114,10 +123,7 @@ export function createPersistence({
     }
   }
 
-  // CARREGAR MAPA 
-  // Recebe `cs` (a instância do canvas) e "cancelledRef" (ref boolean
-  // que o efeito do componente marca como true no clean do canvas) para poder abortar
-  // com segurança sem que tenha problemas como json cortado ao meio sendo mandado pro backend
+
   async function carregarMapa(cs, cancelledRef) {
     try {
       const { data } = await axios.get(`${API_BASE}/${id}`);
@@ -134,6 +140,14 @@ export function createPersistence({
 
         const canvasJson = parsed?.canvasJson ?? data.data;
         const connections = parsed?.connections ?? [];
+        const gridColors = parsed?.gridColors ?? null;
+
+        if (gridColors) {
+          setGridColors?.({
+            bgColor:   gridColors.bgColor   ?? DEFAULT_GRID_BG_COLOR,
+            lineColor: gridColors.lineColor ?? DEFAULT_GRID_LINE_COLOR,
+          });
+        }
 
         isLoadingFromJsonRef.current = true;
 
@@ -146,7 +160,7 @@ export function createPersistence({
 
         isLoadingFromJsonRef.current = false;
 
-        // Restaura _id de forma robusta (correlação através da POSIÇÃO) 
+  
         const savedObjects = canvasJson.objects ?? [];
         const loadedObjects = cs.getObjects();
 
@@ -168,10 +182,6 @@ export function createPersistence({
             obj._isBackground = obj.isBackground ?? meta?.isBackground ?? false;
             obj._linkedIdRaw = obj.linkedId ?? meta?.linkedId ?? null;
 
-            // Restaura metadados de mídia (imagem/PDF), na mesma linha do
-            // primeiro
-            // tenta pegar do próprio obj (caso o Fabric já tenha colocado
-            // a prop lá), senão cai pro JSON salvo
             if (obj._blockType === "media") {
               obj._isPdf = obj.isPdf ?? meta?.isPdf ?? false;
               obj._sourceName = obj.sourceName ?? meta?.sourceName ?? null;
@@ -181,19 +191,22 @@ export function createPersistence({
             obj._id = generateId();
           }
 
-          // ── Reaplica o estilo de seleção/handles (SELECTION_STYLE) ─────────
+          
           if (!obj._isPort && !obj.isLine) {
-            obj.set(SELECTION_STYLE);
-            noRotate(obj); // garante que o handle de rotação some também após reload
-            // Idem pro hit-test customizado do container (perdido no reload,
-            // já que containsPoint não é serializável) — ver constants.js.
-            if (obj._blockType === "container") containerBorderOnly(obj);
+            if (obj._blockType === "drawing") {
+             
+              tagDrawing(obj);
+              cs.sendObjectToBack(obj);
+            } else {
+              obj.set(SELECTION_STYLE);
+              noRotate(obj); 
+        
+              if (obj._blockType === "container") containerBorderOnly(obj);
+            }
           }
         });
 
-        // Garante que toda fonte custom usada em textos salvos seja
-        // carregada via Google Fonts — sem isso o texto aparece com a
-        // fonte de fallback até algum reflow do canvas.
+        
         const usedFonts = new Set();
         cs.getObjects().forEach((obj) => {
           if (obj.type === "textbox" && obj.fontFamily) usedFonts.add(obj.fontFamily);
@@ -202,7 +215,7 @@ export function createPersistence({
           loadGoogleFont(font, () => cs.requestRenderAll());
         });
 
-        // Índice id → objeto
+
         const objById = {};
         cs.getObjects().forEach((obj) => {
           if (obj._id) objById[obj._id] = obj;
@@ -210,8 +223,7 @@ export function createPersistence({
 
         console.log("CARREGANDO objById keys:", Object.keys(objById));
         console.log("CARREGANDO connections:", connections);
-
-        // Reconecta _linkedBg  _isLabel usando linkedId (por ID, não por referência)
+ 
         cs.getObjects().forEach((obj) => {
           if (!obj._linkedIdRaw) return;
           const other = objById[obj._linkedIdRaw];
@@ -225,18 +237,16 @@ export function createPersistence({
           }
         });
 
-        // Remove linhas fantasma restauradas pelo Fabric
+  
         cs.getObjects()
           .filter((o) => o.isLine)
           .forEach((l) => cs.remove(l));
 
-        // Força cálculo de coordenadas antes de criar as linhas
+  
         cs.renderAll();
         cs.getObjects().forEach((obj) => obj.setCoords());
 
-        // Recria as conexões já com a cor/espessura salva (se não houver,
-        // createConnection cai nos valores padrão definidos em
-        // usePortsAndConnections.js).
+ 
         connections.forEach(({ sourceId, targetId, fromSide, toSide, color, strokeWidth }) => {
           const source = objById[sourceId];
           const dest = objById[targetId];

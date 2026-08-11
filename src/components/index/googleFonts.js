@@ -1,8 +1,4 @@
-// Lista curada de fontes do Google Fonts disponíveis no seletor. Não é o
-// catálogo inteiro (são ~1800 fontes, não faz sentido listar tudo) — é só
-// adicionar o nome exato da fonte (igual aparece no Google Fonts) em
-// qualquer categoria abaixo que ela já funciona, o carregamento é
-// dinâmico via loadGoogleFont.js.
+
 export const GOOGLE_FONTS = {
   "Sem serifa": [
     "Roboto",

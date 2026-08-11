@@ -12,8 +12,7 @@ import {
 } from "./constants";
 import { OUTLINE_EXTRA_WIDTH } from "./usePortsAndConnections";
 
-// Limites de espessura de linha (independentes dos limites de bloco em
-// constants.js, já que a escala visual é bem diferente).
+
 const MIN_LINE_WIDTH = 1;
 const MAX_LINE_WIDTH = 20;
 
@@ -23,16 +22,15 @@ function Settings({ canvasReady }) {
   const [color, setColor]             = useState("#ffffff");
   const [colorStroke, setColorStroke] = useState("#efeeee");
 
-  // ── Estado específico de conexões (linhas) ──────────────────────────────
   const [isLine, setIsLine]           = useState(false);
   const [lineColor, setLineColor]     = useState("#ffffff");
   const [lineWidth, setLineWidth]     = useState(4);
 
-  // ── Estado específico de texto (fonte) ──────────────────────────────────
+
   const [isTextObject, setIsTextObject] = useState(false);
   const [fontFamily, setFontFamily]     = useState("Josefin Sans");
 
-  // ── Estado específico de container (nome) ───────────────────────────────
+
   const [isContainer, setIsContainer]     = useState(false);
   const [containerName, setContainerName] = useState("");
 
@@ -42,7 +40,6 @@ function Settings({ canvasReady }) {
     if (!object || object._isPort) return;
     selectedObjectRef.current = object;
 
-    // Conexão selecionada: mostra só os controles de cor/espessura da linha
     if (object.isLine) {
       setIsLine(true);
       setIsTextObject(false);
@@ -54,16 +51,11 @@ function Settings({ canvasReady }) {
 
     setIsLine(false);
 
-    // Container: type "rect" com _blockType "container". Mostra só nome +
-    // cor da borda (nada de Fill, já que o interior fica sempre transparente
-    // pra permitir clicar "através" dele nos blocos de dentro).
+   
     const isContainerObj = object._blockType === "container";
     setIsContainer(isContainerObj);
     setContainerName(isContainerObj ? (object._linkedLabel?.text ?? "") : "");
 
-    // Textbox cobre tanto o bloco "texto solto" (_blockType "text") quanto
-    // o label dos blocos "group" (_blockType "group", _isLabel true) —
-    // ambos são fabric.Textbox por baixo.
     const isTextbox = object.type === "textbox";
     setIsTextObject(isTextbox);
     if (isTextbox) setFontFamily(object.fontFamily || "Josefin Sans");
@@ -74,9 +66,7 @@ function Settings({ canvasReady }) {
     if (object.type === "group") {
       const bg = object.getObjects().find((o) => o._isBackground);
       setColor(bg?.fill ?? "#ffffff");
-      // A borda "real" de um group (blocos normais ou cards de mídia)
-      // fica no Rect filho marcado _isBackground, não no stroke do
-      // próprio group — por isso lemos daí primeiro.
+  
       setColorStroke(bg?.stroke ?? object.stroke ?? "#efeeee");
     } else {
       setColor(object.fill   ?? "#ffffff");
@@ -99,8 +89,6 @@ function Settings({ canvasReady }) {
     setFontFamily("Josefin Sans");
   };
 
-  // Após qualquer mudança dimensional, atualiza coords e dispara modified
-  // para que Index.jsx atualize linhas e portas corretamente.
   const commitResize = () => {
     const canvas = canvasReady;
     const obj    = selectedObjectRef.current;
@@ -129,18 +117,15 @@ function Settings({ canvasReady }) {
     };
   }, [canvasReady]);
 
-  // Mantido em sincronia com MIN_SIZE/MAX_SIZE de constants.js (mapEditor)
+
   const MIN_SIZE = 30;
   const MAX_SIZE = 1500;
   const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
   const clampLineWidth = (val) => Math.min(Math.max(val, MIN_LINE_WIDTH), MAX_LINE_WIDTH);
 
-  // Clamps de container vêm diretamente de constants.js (largura e altura
-  // mínimas separadas — a largura precisa caber o nome da seção).
   const clampContainerWidth  = (val) => Math.min(Math.max(val, CONTAINER_MIN_WIDTH),  CONTAINER_MAX_WIDTH);
   const clampContainerHeight = (val) => Math.min(Math.max(val, CONTAINER_MIN_HEIGHT), CONTAINER_MAX_HEIGHT);
 
-  // ── Width ──
   const handleWidthChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -161,7 +146,7 @@ function Settings({ canvasReady }) {
     commitResize();
   };
 
-  // ── Height ──
+
   const handleHeightChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -180,7 +165,7 @@ function Settings({ canvasReady }) {
     commitResize();
   };
 
-  // ── Fill color ──
+
   const handleColorChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -200,7 +185,7 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
-  // ── Stroke color (= "cor da borda" no caso de containers) ──
+
   const handleStrokeColorChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -210,10 +195,7 @@ function Settings({ canvasReady }) {
     if (!obj) return;
 
     if (obj.type === "group") {
-      // Mesma lógica do fill: a borda visível de um group (inclusive
-      // os cards de mídia/PDF vindos do useMediaImporter) está no Rect
-      // filho _isBackground, então é nele que o stroke precisa ser
-      // aplicado para ter efeito visual.
+     
       const bg = obj.getObjects().find((o) => o._isBackground);
       if (bg) {
         bg.set({ stroke: value });
@@ -223,8 +205,7 @@ function Settings({ canvasReady }) {
       obj.dirty = true;
     } else {
       obj.set({ stroke: value });
-      // Container: o nome acompanha a cor da borda, pra manter a
-      // identidade visual da seção consistente.
+   
       if (obj._blockType === "container" && obj._linkedLabel) {
         obj._linkedLabel.set({ fill: value });
       }
@@ -232,7 +213,7 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
-  // ── Connection (line) color ──
+
   const handleLineColorChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -242,14 +223,11 @@ function Settings({ canvasReady }) {
     if (!obj || !obj.isLine) return;
 
     obj.set({ stroke: value });
-    // O contorno (outline) fica sempre numa cor escura fixa, propositalmente
-    // independente da cor que o usuário escolhe pra linha — ele existe só
-    // pra dar contraste (ver usePortsAndConnections.js), então não precisa
-    // (e não deve) acompanhar lineColor.
+
     canvas.requestRenderAll();
   };
 
-  // ── Connection (line) width ──
+
   const handleLineWidthChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -262,17 +240,12 @@ function Settings({ canvasReady }) {
     if (val !== raw) setLineWidth(val);
 
     obj.set({ strokeWidth: val });
-    // Sincroniza o contorno fino atrás da linha (obj._outline, ver
-    // usePortsAndConnections.js) com a nova espessura. Sem isso, o
-    // contorno ficava "preso" na espessura de quando a conexão foi criada:
-    // ao AUMENTAR a grossura da linha e depois DIMINUIR de novo, o
-    // contorno antigo (mais largo) continuava visível por baixo, sobrando
-    // como uma espécie de sombra ao redor da linha.
+   
     obj._outline?.set({ strokeWidth: val + OUTLINE_EXTRA_WIDTH * 2 });
     canvas.requestRenderAll();
   };
 
-  // ── Font family (Google Fonts, carregada sob demanda) ──
+
   const handleFontChange = (newFont) => {
     const canvas = canvasReady;
     const obj    = selectedObjectRef.current;
@@ -280,12 +253,9 @@ function Settings({ canvasReady }) {
 
     setFontFamily(newFont);
 
-    // Só aplica no bloco depois que a fonte de fato carregou — senão o
-    // fabric desenha com a fonte de fallback até algum reflow manual.
     loadGoogleFont(newFont, () => {
       obj.set({ fontFamily: newFont });
-      // Recalcula a largura do texto solto pra nova métrica da fonte
-      // (bloco "group" tem largura fixa, então não se aplica a ele).
+  
       obj._fitToContent?.();
       obj.setCoords();
       canvas.fire("object:modified", { target: obj });
@@ -293,13 +263,11 @@ function Settings({ canvasReady }) {
     });
   };
 
-  // ── Container name ──
+
   const handleContainerNameChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
-    // O maxLength do input já impede digitar além do limite, mas colar
-    // texto (Ctrl+V) ignora maxLength em alguns navegadores — o slice
-    // aqui garante que o corte de 20 caracteres sempre vale.
+
     const value = e.target.value.slice(0, CONTAINER_LABEL_MAX_LENGTH);
     setContainerName(value);
     const obj = selectedObjectRef.current;

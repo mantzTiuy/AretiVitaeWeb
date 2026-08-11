@@ -6,10 +6,7 @@ import {
   containerBorderOnly,
 } from "./constants";
 
-// Cada função recebe a instância `cs` já resolvida (não um ref), para não
-// correr o risco de ler `ref.current` durante o render. Quem chama essas
-// funções (index.jsx) deve fazer `canvasInstanceRef.current` dentro do
-// próprio handler de clique e passar o resultado aqui.
+
 
 export function addBox(cs) {
   if (!cs) return;
@@ -97,9 +94,6 @@ export function addGroup(cs) {
   cs.requestRenderAll();
 }
 
-// Extraído pra fora de addText pra poder ser reaplicado em textos colados
-// via Ctrl+V (useClipboard.js), garantindo que o auto-ajuste de largura
-// continue funcionando depois de uma cópia.
 export function attachTextAutosize(text, cs) {
   const fitToContent = () => {
     const lines = text.text.split("\n");
@@ -113,7 +107,7 @@ export function attachTextAutosize(text, cs) {
   };
   text.on("changed", fitToContent);
   text.on("editing:exited", fitToContent);
-  text._fitToContent = fitToContent; // exposto pra recalcular de fora (ex: troca de fonte no Settings)
+  text._fitToContent = fitToContent; 
   return fitToContent;
 }
 
@@ -149,20 +143,7 @@ export function addText(cs) {
   cs.requestRenderAll();
 }
 
-// ── Container (divisor de seção) ────────────────────────────────────────
-// Aparência: só uma borda colorida (fill transparente) + um nome no canto
-// superior-esquerdo. Diferente do blockType "group" (onde o texto é o
-// objeto principal/selecionável e o fundo é decorativo), aqui é o INVERSO:
-// o retângulo é o objeto principal (selecionável, arrastável,
-// redimensionável — é ele que o usuário usa pra desenhar a "seção"), e o
-// nome é só decorativo (selectable: false, evented: false).
-//
-// A área interna (transparente) do container não é clicável: containerBorderOnly
-// (constants.js) sobrescreve o containsPoint do retângulo pra só considerar
-// "hit" cliques perto de uma das 4 bordas — clicar no meio passa direto pro
-// que estiver "dentro" do container (outro bloco, por exemplo) ou pro canvas
-// vazio. Isso é o que permite ele funcionar como divisor sem atrapalhar
-// blocos colocados dentro dele.
+
 const CONTAINER_DEFAULT_WIDTH  = 500;
 const CONTAINER_DEFAULT_HEIGHT = 350;
 const CONTAINER_DEFAULT_COLOR  = "#5083ef";
@@ -189,16 +170,11 @@ export function addContainer(cs) {
     lockRotation: true,
     hasRotatingPoint: false,
     _blockType: "container",
-    // Reaproveita a mesma infra de vínculo bg/label já usada pelo blockType
-    // "group" (persistência, delete em cascata, copiar/colar) — só que com
-    // os papéis invertidos: aqui o "_isBackground" é o objeto PRINCIPAL.
-    // Como bônus, isso também faz o Axis.jsx (snap) e o showPorts ignorarem
-    // o container automaticamente, já que ambos já excluem _isBackground.
+   
     _isBackground: true,
   });
   noRotate(rect);
-  // Só seleciona perto da borda — clique no miolo passa direto pro que tiver
-  // dentro do container (ou pro canvas vazio). Ver constants.js.
+ 
   containerBorderOnly(rect);
 
   const label = new fabric.Text(CONTAINER_DEFAULT_NAME, {
@@ -214,7 +190,7 @@ export function addContainer(cs) {
     evented: false,
     _blockType: "containerLabel",
     _isLabel: true,
-    _isContainerLabel: true, // marca extra pro Axis.jsx ignorar esse texto nos candidatos de alinhamento
+    _isContainerLabel: true, 
   });
 
   rect._linkedLabel = label;
@@ -222,7 +198,7 @@ export function addContainer(cs) {
 
   cs.add(rect);
   cs.add(label);
-  cs.sendObjectToBack(rect); // container fica atrás de tudo que já existe no canvas
+  cs.sendObjectToBack(rect); 
   cs.setActiveObject(rect);
   cs.requestRenderAll();
 

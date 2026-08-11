@@ -1,21 +1,27 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { DEFAULT_GRID_BG_COLOR, DEFAULT_GRID_LINE_COLOR } from "./constants";
 
-const GRID_SIZE  = 40; 
-const BG_COLOR   = "#cce6fe";
-const LINE_COLOR = "#89bce8";
+const GRID_SIZE = 40;
 
-// Expõe `redraw(viewportTransform, zoom)` via ref para o Index.jsx chamar
-const GridCanvas = forwardRef(function GridCanvas(_, ref) {
+
+const GridCanvas = forwardRef(function GridCanvas(
+  { bgColor = DEFAULT_GRID_BG_COLOR, lineColor = DEFAULT_GRID_LINE_COLOR },
+  ref
+) {
   const canvasRef = useRef(null);
+
+  const lastTransformRef = useRef(null);
 
   const draw = (vpt, zoom) => {
     const gc = canvasRef.current;
     if (!gc || !vpt) return;
-    const ctx = gc.getContext("2d");
-    const w   = gc.width;
-    const h   = gc.height;
+    lastTransformRef.current = { vpt, zoom };
 
-    ctx.fillStyle = BG_COLOR;
+    const ctx = gc.getContext("2d");
+    const w = gc.width;
+    const h = gc.height;
+
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
 
     const step    = GRID_SIZE * zoom;
@@ -23,7 +29,7 @@ const GridCanvas = forwardRef(function GridCanvas(_, ref) {
     const offsetY = vpt[5] % step;
 
     ctx.save();
-    ctx.strokeStyle = LINE_COLOR;
+    ctx.strokeStyle = lineColor;
     ctx.lineWidth   = 1;
     ctx.globalAlpha = 0.6;
 
@@ -37,7 +43,15 @@ const GridCanvas = forwardRef(function GridCanvas(_, ref) {
     ctx.restore();
   };
 
-  // Resize interno
+
+  useEffect(() => {
+    if (lastTransformRef.current) {
+      draw(lastTransformRef.current.vpt, lastTransformRef.current.zoom);
+    }
+
+  }, [bgColor, lineColor]);
+
+
   useEffect(() => {
     const gc = canvasRef.current;
     if (!gc) return;
@@ -49,7 +63,7 @@ const GridCanvas = forwardRef(function GridCanvas(_, ref) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // API exposta ao pai via ref
+
   useImperativeHandle(ref, () => ({
     redraw: (vpt, zoom) => draw(vpt, zoom),
     resize: () => {

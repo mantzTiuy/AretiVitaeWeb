@@ -9,14 +9,7 @@ import {
   CONTAINER_MAX_HEIGHT,
 } from "./constants";
 
-// Recebe:
-// - cs: instância do canvas
-// - sourceBlockRef, tempLineRef, isDraggingPort, checkAlignmentRef: refs vindos do componente
-// - ports: objeto retornado por createPortsAndConnections (showPorts, clearPorts,
-//          refreshBlock, refreshActiveSelection, createConnection, deleteConnection,
-//          findConnectionByLine)
-// - salvarMapa: função de persistência
-// - clipboard: objeto retornado por createClipboard (copySelection, pasteClipboard)
+
 export function createCanvasInteractions({
   cs,
   sourceBlockRef,
@@ -26,6 +19,7 @@ export function createCanvasInteractions({
   ports,
   salvarMapa,
   clipboard,
+  brush,
 }) {
   const {
     showPorts,
@@ -37,7 +31,7 @@ export function createCanvasInteractions({
     findConnectionByLine,
   } = ports;
 
-  // ── Linha temporária (drag de porta) ─────────────────────────────────────
+ 
   const startTempLine = (x, y) => {
     const line = new fabric.Line([x, y, x, y], {
       stroke: "#5083ef",
@@ -65,7 +59,7 @@ export function createCanvasInteractions({
     }
   };
 
-  // ── Eventos do canvas ─────────────────────────────────────────────────────
+
   const onMouseDown = (opt) => {
     const target = opt.target;
 
@@ -128,16 +122,11 @@ export function createCanvasInteractions({
 
     const target = opt.target;
     if (!target || target.isLine || target._isPort || target === source) return;
-    if (target._blockType === "container") return; // containers não aceitam conexões
+    if (target._blockType === "container") return; 
 
     const destCenter = target.getCenterPoint();
     const pos = toCanvasPoint(cs, opt.e.clientX, opt.e.clientY);
 
-    // Descobre em qual dos 4 lados do bloco de destino o mouse foi solto.
-    // A distância ao centro é normalizada pela metade da largura/altura do
-    // bloco (dx/dy vão de -1 a 1 na borda) — sem isso, um bloco bem mais
-    // largo que alto quase nunca "escolheria" top/bottom, mesmo quando
-    // solto perto do topo. O lado com o maior desvio normalizado vence.
     const hw = target.getScaledWidth()  / 2 || 1;
     const hh = target.getScaledHeight() / 2 || 1;
     const dx = (pos.x - destCenter.x) / hw;
@@ -149,7 +138,7 @@ export function createCanvasInteractions({
         : (dy < 0 ? "top" : "bottom");
 
     createConnection(source, target, fromSide ?? "right", toSide);
-    salvarMapa(); // ← salva automaticamente após criar conexão
+    salvarMapa(); 
   };
 
   const onSelected = (opt) => {
@@ -180,10 +169,7 @@ export function createCanvasInteractions({
 
     const isMultiSelection = target.type === "activeselection";
 
-    // O snap/alinhamento precisa rodar ANTES de reposicionar tudo que está
-    // vinculado ao target (nome do container, bg do "group"), portas e
-    // linhas de conexão — senão eles ficam "atrasados" um frame durante o
-    // arrasto sempre que um snap acontece.
+   
     if (!isMultiSelection) {
       checkAlignmentRef.current?.(target);
     }
@@ -197,7 +183,7 @@ export function createCanvasInteractions({
     if (isMultiSelection) {
       refreshActiveSelection(target);
     } else {
-      refreshBlock(target); // já reposiciona o nome do container, se for o caso
+      refreshBlock(target);
     }
   };
 
@@ -206,9 +192,7 @@ export function createCanvasInteractions({
     if (!target) return;
 
     if (target.type !== "activeselection" && target._blockType !== "text") {
-      // Containers são divisores de seção e usam limites próprios, com
-      // largura e altura mínimas independentes (largura precisa caber o
-      // nome da seção — ver CONTAINER_MIN_WIDTH em constants.js).
+  
       const isContainer = target._blockType === "container";
       const minW = isContainer ? CONTAINER_MIN_WIDTH  : MIN_SIZE;
       const minH = isContainer ? CONTAINER_MIN_HEIGHT : MIN_SIZE;
@@ -242,7 +226,7 @@ export function createCanvasInteractions({
   const onWheel = (opt) => {
     opt.e.preventDefault();
     let zoom = cs.getZoom() * (0.999 ** opt.e.deltaY);
-    zoom = Math.min(Math.max(zoom, 0.5), 4.05); // zoom máximo aumentado de 2.25 para 4.05 (+80%)
+    zoom = Math.min(Math.max(zoom, 0.5), 4.05); 
     cs.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
   };
 
@@ -279,23 +263,18 @@ export function createCanvasInteractions({
     });
   };
 
-  // canvasInstanceRef é passado aqui (e não capturado por closure) porque o
-  // handler de teclado é global (window) e precisa sempre reler o `cs` atual,
-  // igual ao comportamento original.
+
   const onKeyDown = (e, canvasInstanceRef) => {
     const currentCs = canvasInstanceRef.current;
     if (!currentCs) return;
 
-    // ── Ctrl+C / Ctrl+V (Cmd no Mac) ───────────────────────────────────────
     const isCopy  = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c";
     const isPaste = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v";
 
     if (isCopy || isPaste) {
       const active = currentCs.getActiveObject();
 
-      // Se o usuário estiver digitando (editando um texto do canvas OU
-      // qualquer input da interface, tipo os campos W/H/cor do Settings),
-      // deixa o Ctrl+C/Ctrl+V nativo do navegador funcionar normalmente.
+  
       const typingElsewhere =
         ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
         document.activeElement?.isContentEditable;
@@ -311,22 +290,46 @@ export function createCanvasInteractions({
       return;
     }
 
+
+    const key = e.key.toLowerCase();
+    const isUndo = (e.ctrlKey || e.metaKey) && !e.shiftKey && key === "z";
+    const isRedo =
+      ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "z") ||
+      ((e.ctrlKey || e.metaKey) && key === "y");
+
+    if (isUndo || isRedo) {
+      const active = currentCs.getActiveObject();
+      const typingElsewhere =
+        ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.isContentEditable;
+
+      if (active?.isEditing || typingElsewhere) return;
+
+      e.preventDefault();
+      if (isUndo) {
+        brush?.undo();
+      } else {
+        brush?.redo();
+      }
+      return;
+    }
+
     if (e.key !== "Delete") return;
 
     const active = currentCs.getActiveObject();
     if (!active || active.isEditing) return;
 
-    // ── Deletar apenas uma linha/conexão selecionada ──────────────────────
+  
     if (active.isLine) {
       const conn = findConnectionByLine(active);
       if (conn) {
         deleteConnection(conn);
       } else {
-        currentCs.remove(active); // linha órfã (sem conexão associada), remove direto
+        currentCs.remove(active);
       }
       currentCs.discardActiveObject();
       currentCs.requestRenderAll();
-      salvarMapa(); // ← salva após deletar a conexão
+      salvarMapa(); 
       return;
     }
 
@@ -347,16 +350,14 @@ export function createCanvasInteractions({
         if (obj.connections?.length) {
           [...obj.connections].forEach((conn) => deleteConnection(conn));
         }
-        // Remove o parceiro vinculado junto (label <-> bg/container), nos
-        // dois sentidos — sem isso, deletar um container numa seleção
-        // múltipla deixava o nome (label) órfão no canvas.
+     
         if (obj._isLabel && obj._linkedBg) currentCs.remove(obj._linkedBg);
         if (obj._isBackground && obj._linkedLabel) currentCs.remove(obj._linkedLabel);
         currentCs.remove(obj);
       });
       clearPorts();
       currentCs.requestRenderAll();
-      salvarMapa(); // ← salva após deletar seleção múltipla
+      salvarMapa();
       return;
     }
 
@@ -365,13 +366,12 @@ export function createCanvasInteractions({
     }
     clearPorts();
     if (active._isLabel && active._linkedBg) currentCs.remove(active._linkedBg);
-    // Container: o objeto principal é o retângulo (_isBackground), então
-    // precisa remover o nome (_linkedLabel) junto, senão ele fica órfão.
+ 
     if (active._isBackground && active._linkedLabel) currentCs.remove(active._linkedLabel);
     currentCs.remove(active);
     currentCs.discardActiveObject();
     currentCs.requestRenderAll();
-    salvarMapa(); // ← salva após deletar objeto único
+    salvarMapa();
   };
 
   return {

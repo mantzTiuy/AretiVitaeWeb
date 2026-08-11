@@ -245,7 +245,7 @@
 }
 
 .field textarea {
-  min-height: 92px;
+  min-height: 220px;
   padding-top: 0.7rem;
   padding-bottom: 0.7rem;
   resize: vertical;

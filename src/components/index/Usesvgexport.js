@@ -1,19 +1,9 @@
-// Exporta o canvas como SVG, recortado só na área que tem conteúdo — o
-// canvas de trabalho é gigante (5000x5000, ver PAN_LIMIT em
-// useCanvasInteractions.js), então exportar do jeito que o Fabric faz por
-// padrão (viewBox = dimensões inteiras do canvas) gerava um SVG enorme,
-// quase todo vazio.
-//
-// Estratégia: calcula o bounding box ABSOLUTO (sem viewportTransform, ou
-// seja, ignorando o pan/zoom atual da tela) de todos os objetos "reais" do
-// canvas, e usa isso como viewBox/width/height do toSVG — em vez do
-// tamanho default do canvas inteiro.
 
-const EXPORT_PADDING = 40; // margem (px do canvas) ao redor do conteúdo
+
+const EXPORT_PADDING = 40; 
 
 function getContentBounds(cs) {
-  // Portas (_isPort) e guias de alinhamento (_isGuide) são artefatos de
-  // interação, nunca deveriam entrar no SVG nem no cálculo do recorte.
+
   const objects = cs.getObjects().filter((o) => !o._isPort && !o._isGuide);
   if (!objects.length) return null;
 
@@ -21,10 +11,7 @@ function getContentBounds(cs) {
 
   objects.forEach((obj) => {
     obj.setCoords();
-    // absolute=true → ignora viewportTransform (pan/zoom da tela no
-    // momento do clique), pega a posição "real" no espaço do canvas, que
-    // é o mesmo espaço de coordenadas que o toSVG usa.
-    // calculate=true → força recálculo, não usa cache antigo.
+  
     const rect = obj.getBoundingRect(true, true);
     minX = Math.min(minX, rect.left);
     minY = Math.min(minY, rect.top);
@@ -38,10 +25,7 @@ function getContentBounds(cs) {
 export function exportCanvasAsSVG(cs, filename = "mapa.svg") {
   if (!cs) return;
 
-  // Descarta seleção ativa antes de medir/exportar: isso já dispara
-  // selection:cleared, que por sua vez limpa as portas (usePortsAndConnections)
-  // e as guias de alinhamento (Axis.jsx) — garantindo que nenhuma sobre pro
-  // SVG mesmo que o usuário clique em "exportar" com algo selecionado.
+
   cs.discardActiveObject();
   cs.requestRenderAll();
 
