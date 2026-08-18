@@ -354,7 +354,7 @@ function Settings({
 
           {!isContainer && (
             <div className={styles.fieldGroup}>
-              <span className={styles.label}>Fill</span>
+              <span className={styles.label}>Cor</span>
               <input
                 type="color"
                 value={color}
@@ -365,7 +365,7 @@ function Settings({
           )}
 
           <div className={styles.fieldGroup}>
-            <span className={styles.label}>{isContainer ? "Borda" : "Stroke"}</span>
+            <span className={styles.label}>{"Borda"}</span>
             <input
               type="color"
               value={colorStroke}
