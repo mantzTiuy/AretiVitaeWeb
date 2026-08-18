@@ -5,20 +5,26 @@ import com.av.Av.models.Note;
 import com.av.Av.models.User;
 import com.av.Av.repository.NoteRepository;
 import com.av.Av.repository.UserRepository;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class NoteService {
+
+    private static final int PLANO_BUILDER = 4;
+    private static final int LIMITE_NOTAS = 100;
 
     @Autowired
     private NoteRepository noteRepository;
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CompraService compraService;
 
     public Note findById(int id){
         return noteRepository.findById(id).orElseThrow(() -> new RuntimeException("NOTE NAO ENCONTRADA"));
@@ -29,8 +35,20 @@ public class NoteService {
             throw new IllegalArgumentException("DIGITE ALGUM ID");
         }
 
-        User user = userRepository.findById(request.getUserId().intValue())
+        Integer userId = request.getUserId().intValue();
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));
+
+        Map<String, Object> status = compraService.statusAtivo(userId);
+        Integer plano = Boolean.TRUE.equals(status.get("temAcesso")) ? (Integer) status.get("plano") : 0;
+
+        if (plano != PLANO_BUILDER) {
+            long totalNotas = noteRepository.countByUser_Id(userId);
+            if (totalNotas >= LIMITE_NOTAS) {
+                throw new RuntimeException("Voce atingiu o limite de " + LIMITE_NOTAS + " notas");
+            }
+        }
 
         Note note = new Note();
         note.setUser(user);
@@ -63,7 +81,5 @@ public class NoteService {
 
         return noteRepository.save(existingNote);
     }
-
-
 
 }

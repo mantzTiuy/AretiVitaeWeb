@@ -11,6 +11,9 @@ import BackButton from './BackButton';
 import CanvasSettingsPanel from "./CanvasSettingPanel";
 import { createMediaImporter } from "./useMediaImporter";
 import { createBrush } from "./useBrush";
+import ToolButton from "./ToolButton";
+import { MODEL_PATHS } from "./models";
+import { TOOLBOX_BTN_SIZE, TOOLBOX_RADIUS, TOOLBOX_GAP, TOOLBOX_PADDING_X } from "./toolboxConfig";
 
 import {
   generateId,
@@ -29,7 +32,6 @@ import { createPortsAndConnections } from "./usePortsAndConnections";
 import { createPersistence } from "./usePersistence";
 import {
   addBox as addBoxToCanvas,
-  addGroup as addGroupToCanvas,
   addText as addTextToCanvas,
   addContainer as addContainerToCanvas,
 } from "./useBlockFactories";
@@ -38,38 +40,32 @@ import { createClipboard } from "./useClipboard";
 import { exportCanvasAsSVG } from "./useSvgExport";
 
 export default function Index() {
-  const { id } = useParams(); // Informação vinda da url, pega o id DO CANVAS
+  const { id } = useParams();
 
   const canvasRef         = useRef(null);
   const gridRef           = useRef(null);
   const canvasInstanceRef = useRef(null);
-  const sourceBlockRef    = useRef(null); // Guarda temporariamente o bloco/lado quando existe dragging de porta
-  const mediaImporterRef  = useRef(null); // Ref das mídias (importador de PDF/imagem)
-  const brushRef          = useRef(null); // Ref do módulo de desenho (createBrush: pincel/borracha/undo)
-  const fileInputRef      = useRef(null); // Input escondido pra seleção manual de PDF/imagem
-  const [isDragOver, setIsDragOver] = useState(false); // feedback visual do drop do pdf
-  const tempLineRef       = useRef(null); // Linha temporária para definir conexão entre portas
-  const isDraggingPort    = useRef(false); // Define se está ou não em um "estado de arrasto"
-  const activePortsRef    = useRef([]); // Array com as portas selecionadas
-  const checkAlignmentRef = useRef(null); // Checa o alinhamento referente ao componente Axis.jsx
-  const [canvasReady, setCanvasReady] = useState(null); // State porque precisa renderizar várias vezes
+  const sourceBlockRef    = useRef(null);
+  const mediaImporterRef  = useRef(null);
+  const brushRef          = useRef(null);
+  const fileInputRef      = useRef(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const tempLineRef       = useRef(null);
+  const isDraggingPort    = useRef(false);
+  const activePortsRef    = useRef([]);
+  const checkAlignmentRef = useRef(null);
+  const [canvasReady, setCanvasReady] = useState(null);
   const [_loadingMap, setLoadingMap]  = useState(true);
   const [erroMap, setErroMap]         = useState('');
   const [saveStatus, setSaveStatus]   = useState('IDLE');
   const saveTimeoutRef       = useRef(null);
   const isLoadingFromJsonRef = useRef(false);
 
-  // ── Estado do modo pincel/borracha ──────────────────────────────────────
-  // "draw" | "erase" | null — os dois modos são mutuamente exclusivos entre
-  // si e com qualquer outra ferramenta (addBox, addGroup, mídia etc).
   const [drawMode, setDrawMode]     = useState(null);
   const [brushColor, setBrushColor] = useState(DEFAULT_BRUSH_COLOR);
   const [brushSize, setBrushSize]   = useState(DEFAULT_BRUSH_SIZE);
   const [eraserSize, setEraserSizeState] = useState(DEFAULT_ERASER_SIZE);
 
-  // ── Cores do canvas (fundo + grade) ─────────────────────────────────────
-  // Editável via botão "config" (CanvasSettingsPanel) e persistido no JSON
-  // salvo (usePersistence.js -> gridColors).
   const [gridBgColor, setGridBgColor]     = useState(DEFAULT_GRID_BG_COLOR);
   const [gridLineColor, setGridLineColor] = useState(DEFAULT_GRID_LINE_COLOR);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
@@ -79,7 +75,6 @@ export default function Index() {
     gridColorsRef.current = { bgColor: gridBgColor, lineColor: gridLineColor };
   }, [gridBgColor, gridLineColor]);
 
-  // Permite que os Axis não sejam reconstruídos no f5, por causa do useCallback
   const handleAxisReady = useCallback((fn) => {
     checkAlignmentRef.current = fn;
   }, []);
@@ -97,18 +92,12 @@ export default function Index() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Reseta pro padrão sempre que troca de mapa (id) — evita herdar cores
-    // de um mapa anterior até carregarMapa terminar (se o novo mapa nem
-    // tiver gridColors salvo, fica no padrão mesmo).
     setGridBgColor(DEFAULT_GRID_BG_COLOR);
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
 
     const cs = new fabric.Canvas(canvasRef.current, {
       width:  window.innerWidth,
       height: window.innerHeight,
-      // Transparente: quem desenha o fundo/grade visível agora é sempre o
-      // GridCanvas, com cores configuráveis (CanvasSettingsPanel) — a cor
-      // fixa que existia aqui antes não tinha como ser trocada pelo usuário.
       backgroundColor: "transparent",
     });
 
@@ -117,7 +106,6 @@ export default function Index() {
     };
     cs.on("after:render", drawGrid);
 
-    // Instaura um id para cada objeto, garantindo integridade das conexões no reload
     cs.on("object:added", (opt) => {
       const obj = opt.target;
       if (!obj._isPort && !obj.isLine) {
@@ -130,7 +118,6 @@ export default function Index() {
       if (obj._blockType !== "text") return;
       cs.bringObjectToFront(obj);
     });
-
 
     const handleResize = () => {
       const w = window.innerWidth;
@@ -150,7 +137,6 @@ export default function Index() {
 
     canvasInstanceRef.current = cs;
     setCanvasReady(cs);
-
 
     const ports = createPortsAndConnections(cs, activePortsRef);
 
@@ -178,7 +164,6 @@ export default function Index() {
 
     mediaImporterRef.current = createMediaImporter({ cs, salvarMapa });
 
-
     brushRef.current = createBrush(cs, { salvarMapa });
 
     const cancelledRef = { current: false };
@@ -193,9 +178,8 @@ export default function Index() {
       ports,
       salvarMapa,
       clipboard,
-      brush: brushRef.current, // Ctrl+Z / Ctrl+Shift+Z desfazem/refazem o desenho
+      brush: brushRef.current,
     });
-
 
     const onMediaMouseUp = (opt) => {
       const clickedBtn = opt.subTargets?.some((o) => o._isDownloadBtn);
@@ -213,6 +197,51 @@ export default function Index() {
     const onKeyDown = (e) => interactions.onKeyDown(e, canvasInstanceRef);
     const disableCtrlZoom = (e) => { if (e.ctrlKey) e.preventDefault(); };
 
+    // Impede que o pincel comece um traço quando o pan é ativado pelo
+    // botão do meio (ou Ctrl+clique). O Fabric processa o mousedown do
+    // modo de desenho internamente ANTES de disparar o evento sintético
+    // "mouse:down" que os handlers de pan escutam — por isso a
+    // interceptação precisa acontecer na fase de captura, num
+    // ancestral do canvas, antes do listener interno do Fabric (que
+    // fica no upperCanvasEl) rodar. A borracha é tratada à parte, em
+    // useBrush.js, pois já roda via evento sintético e não precisa
+    // dessa interceptação em fase de captura.
+    const wrapperEl = canvasRef.current.parentElement;
+    let suspendedDrawMode = false;
+    const isPanTrigger = (e) => e.button === 1 || e.ctrlKey;
+
+    const onWrapperMouseDown = (e) => {
+      if (!isPanTrigger(e)) return;
+      if (cs.isDrawingMode) {
+        // Se já havia um traço em andamento (botão esquerdo pressionado
+        // antes do botão do meio), finaliza esse traço agora do jeito
+        // que o próprio Fabric faria num mouseup normal. Sem isso,
+        // `_isCurrentlyDrawing` fica preso em `true` e o próximo
+        // mousemove retoma o traço antigo do ponto onde ele parou,
+        // gerando aquele "salto"/rabisco estranho quando o pan termina.
+        if (cs._isCurrentlyDrawing) {
+          cs._onMouseUpInDrawingMode(e);
+        }
+        suspendedDrawMode = true;
+        cs.isDrawingMode = false;
+      }
+    };
+
+    // Só restaura o modo de desenho quando TODOS os botões do mouse
+    // foram soltos (e.buttons === 0). Antes, isso disparava no primeiro
+    // "mouseup" que chegasse — se um dos dois botões (esquerdo/meio)
+    // fosse solto antes do outro, o isDrawingMode voltava no meio do
+    // pan ou do desenho, e os dois modos passavam a competir pelos
+    // mesmos eventos de mousemove.
+    const onWindowMouseUpRestoreDraw = (e) => {
+      if (suspendedDrawMode && e.buttons === 0) {
+        suspendedDrawMode = false;
+        if (brushRef.current?.getMode() === "draw") {
+          cs.isDrawingMode = true;
+        }
+      }
+    };
+
     cs.on("mouse:down",        interactions.onMouseDown);
     cs.on("mouse:up",          interactions.onMouseUp);
     cs.on("mouse:up",          onMediaMouseUp);
@@ -226,8 +255,10 @@ export default function Index() {
     cs.on("object:moving",     interactions.onMoving);
     cs.on("object:scaling",    interactions.onScaling);
     cs.on("object:modified",   interactions.onModified);
+    wrapperEl?.addEventListener("mousedown", onWrapperMouseDown, true);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel",   disableCtrlZoom, { passive: false });
+    window.addEventListener("mouseup", onWindowMouseUpRestoreDraw);
 
     return () => {
       cancelledRef.current = true;
@@ -246,8 +277,10 @@ export default function Index() {
       cs.off("object:scaling",    interactions.onScaling);
       cs.off("object:modified",   interactions.onModified);
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      wrapperEl?.removeEventListener("mousedown", onWrapperMouseDown, true);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel",   disableCtrlZoom);
+      window.removeEventListener("mouseup", onWindowMouseUpRestoreDraw);
       window.removeEventListener("resize",  handleResize);
       brushRef.current?.destroy();
       brushRef.current = null;
@@ -255,7 +288,6 @@ export default function Index() {
       cs.dispose();
     };
   }, [id]);
-
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -279,7 +311,6 @@ export default function Index() {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     canvasInstanceRef.current?.salvarMapa?.();
   };
-
 
   const handleExportSVG = () => {
     exportCanvasAsSVG(canvasInstanceRef.current, "mapa.svg");
@@ -307,7 +338,6 @@ export default function Index() {
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
     scheduleGridColorSave();
   };
-
 
   const stopDrawing = () => {
     setDrawMode(null);
@@ -338,14 +368,21 @@ export default function Index() {
     brushRef.current?.setColor(value);
   };
 
+  const clampBrushSize  = (val) => Math.min(Math.max(val, MIN_BRUSH_SIZE),  MAX_BRUSH_SIZE);
+  const clampEraserSize = (val) => Math.min(Math.max(val, MIN_ERASER_SIZE), MAX_ERASER_SIZE);
+
   const handleBrushSizeChange = (e) => {
-    const value = Number(e.target.value);
+    const raw = parseInt(e.target.value, 10);
+    if (isNaN(raw)) { setBrushSize(""); return; }
+    const value = clampBrushSize(raw);
     setBrushSize(value);
     brushRef.current?.setSize(value);
   };
 
   const handleEraserSizeChange = (e) => {
-    const value = Number(e.target.value);
+    const raw = parseInt(e.target.value, 10);
+    if (isNaN(raw)) { setEraserSizeState(""); return; }
+    const value = clampEraserSize(raw);
     setEraserSizeState(value);
     brushRef.current?.setEraserSize(value);
   };
@@ -359,11 +396,9 @@ export default function Index() {
     };
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
-
   }, [drawMode]);
 
   const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current); };
-  const addGroup     = () => { stopDrawing(); addGroupToCanvas(canvasInstanceRef.current); };
   const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current); };
   const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current); };
   const openFilePicker = () => { stopDrawing(); fileInputRef.current?.click(); };
@@ -372,10 +407,15 @@ export default function Index() {
     if (e.target.files?.length) {
       mediaImporterRef.current?.handleFiles(e.target.files);
     }
-    e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
+    e.target.value = '';
   };
 
- return (
+  const saveStatusLabel =
+    saveStatus === "saving" ? "Salvando..." :
+    saveStatus === "error"  ? "Erro ao salvar" :
+    "Salvar";
+
+return (
     <div className="App">
       {erroMap && (
         <div className={stylescanva.errorMessage}>
@@ -383,94 +423,114 @@ export default function Index() {
         </div>
       )}
 
-      <div className={stylestoolbox.toolbox}>
-        <button onClick={addGroup}           className={stylestoolbox.button}>addg</button>
-        <button onClick={addBox}             className={stylestoolbox.button}>addb</button>
-        <button onClick={addText}            className={stylestoolbox.button}>addt</button>
-        <button onClick={addContainer}       className={stylestoolbox.button}>addc</button>
-        <button onClick={centerCanvas}       className={stylestoolbox.button}>center</button>
-        <button onClick={openFilePicker}     className={stylestoolbox.button}>midia</button>
+      <div
+        className={stylestoolbox.toolbox}
+        style={{
+          "--toolbox-btn-size": `${TOOLBOX_BTN_SIZE}px`,
+          "--toolbox-radius": `${TOOLBOX_RADIUS}px`,
+          "--toolbox-gap": `${TOOLBOX_GAP}px`,
+          "--toolbox-padding-x": `${TOOLBOX_PADDING_X}px`,
+        }}
+      >
+        <div className={stylestoolbox.group}>
+          <ToolButton path={MODEL_PATHS.addBox}       modelKey="addBox"       label="Adicionar bloco" onClick={addBox} />
+          <ToolButton path={MODEL_PATHS.addText}      modelKey="addText"      label="Adicionar texto" onClick={addText} />
+          <ToolButton path={MODEL_PATHS.addContainer} modelKey="addContainer" label="Adicionar seção" onClick={addContainer} />
+        </div>
 
-        <button
-          onClick={toggleDraw}
-          className={stylestoolbox.button}
-          style={drawMode === "draw" ? { outline: "2px solid #5083ef" } : undefined}
-          title="Pincel (Esc para sair)"
-        >
-          {drawMode === "draw" ? "pincel ✓" : "pincel"}
-        </button>
-        {drawMode === "draw" && (
-          <>
-            <input
-              type="color"
-              value={brushColor}
-              onChange={handleBrushColorChange}
-              title="Cor do pincel"
-              className={stylestoolbox.button}
-            />
-            <input
-              type="range"
-              min={MIN_BRUSH_SIZE}
-              max={MAX_BRUSH_SIZE}
-              value={brushSize}
-              onChange={handleBrushSizeChange}
-              title={`Espessura: ${brushSize}px`}
-            />
-          </>
-        )}
+        <div className={stylestoolbox.divider} />
 
-        <button
-          onClick={toggleErase}
-          className={stylestoolbox.button}
-          style={drawMode === "erase" ? { outline: "2px solid #5083ef" } : undefined}
-          title="Borracha (Esc para sair) — apaga só traços de pincel"
-        >
-          {drawMode === "erase" ? "borracha ✓" : "borracha"}
-        </button>
-        {drawMode === "erase" && (
-          <input
-            type="range"
-            min={MIN_ERASER_SIZE}
-            max={MAX_ERASER_SIZE}
-            value={eraserSize}
-            onChange={handleEraserSizeChange}
-            title={`Tamanho da borracha: ${eraserSize}px`}
+        <div className={stylestoolbox.group}>
+          <ToolButton path={MODEL_PATHS.center} modelKey="center" label="Centralizar"    onClick={centerCanvas} />
+          <ToolButton path={MODEL_PATHS.media}  modelKey="media"  label="Importar mídia" onClick={openFilePicker} />
+        </div>
+
+        <div className={stylestoolbox.divider} />
+
+        <div className={stylestoolbox.group}>
+          <ToolButton
+            path={MODEL_PATHS.brush}
+            modelKey="brush"
+            label="Pincel (Esc para sair)"
+            active={drawMode === "draw"}
+            onClick={toggleDraw}
           />
-        )}
-
-        <button onClick={handleUndo} className={stylestoolbox.button} title="Desfazer (Ctrl+Z)">
-          desfazer
-        </button>
-        <button onClick={handleRedo} className={stylestoolbox.button} title="Refazer (Ctrl+Shift+Z)">
-          refazer
-        </button>
-
-        <button onClick={handleSalvarManual} className={stylestoolbox.button}>
-          {saveStatus === 'saving' ? 'Salvando...' : 'Salvar'}
-        </button>
-        <button onClick={handleExportSVG}    className={stylestoolbox.button}>SVG</button>
-
-        <div style={{ position: "relative", display: "inline-block" }}>
-          <button
-            onClick={() => setShowCanvasSettings((v) => !v)}
-            className={stylestoolbox.button}
-            title="Configurações do canvas (fundo e grade)"
-          >
-            {showCanvasSettings ? "config ✓" : "config"}
-          </button>
-          <CanvasSettingsPanel
-            open={showCanvasSettings}
-            onClose={() => setShowCanvasSettings(false)}
-            bgColor={gridBgColor}
-            lineColor={gridLineColor}
-            onBgColorChange={handleGridBgColorChange}
-            onLineColorChange={handleGridLineColorChange}
-            onReset={handleResetGridColors}
+          <ToolButton
+            path={MODEL_PATHS.eraser}
+            modelKey="eraser"
+            label="Borracha (Esc para sair)"
+            active={drawMode === "erase"}
+            onClick={toggleErase}
           />
         </div>
 
-        <Settings canvasRef={canvasInstanceRef} canvasReady={canvasReady} />
+        <div className={stylestoolbox.divider} />
+
+        <div className={stylestoolbox.group}>
+          <ToolButton path={MODEL_PATHS.undo} modelKey="undo" label="Desfazer (Ctrl+Z)"      onClick={handleUndo} />
+          <ToolButton path={MODEL_PATHS.redo} modelKey="redo" label="Refazer (Ctrl+Shift+Z)" onClick={handleRedo} />
+        </div>
       </div>
+
+      {/* Barra inferior: salvar, exportar SVG e configurações, tudo junto no canto.
+          tooltipPosition="top" faz o tooltip abrir pra cima, já que aqui os botões
+          ficam lado a lado e um tooltip pro lado tamparia o botão vizinho. */}
+      <div className={stylestoolbox.bottomToolbar}>
+        <ToolButton
+          path={MODEL_PATHS.save}
+          modelKey="save"
+          label="Salvar"
+          statusLabel={saveStatusLabel}
+          onClick={handleSalvarManual}
+          tooltipPosition="top"
+        />
+        <ToolButton
+          path={MODEL_PATHS.exportSvg}
+          modelKey="exportSvg"
+          label="Exportar SVG"
+          onClick={handleExportSVG}
+          tooltipPosition="top"
+        />
+        <ToolButton
+          path={MODEL_PATHS.settings}
+          modelKey="settings"
+          label="Configurações do canvas"
+          active={showCanvasSettings}
+          onClick={() => setShowCanvasSettings((v) => !v)}
+          tooltipPosition="top"
+        />
+      </div>
+
+      {/* Modal centralizado na tela — não depende de onde o botão está,
+          então nunca fica cortado nas bordas. */}
+      <CanvasSettingsPanel
+        open={showCanvasSettings}
+        onClose={() => setShowCanvasSettings(false)}
+        bgColor={gridBgColor}
+        lineColor={gridLineColor}
+        onBgColorChange={handleGridBgColorChange}
+        onLineColorChange={handleGridLineColorChange}
+        onReset={handleResetGridColors}
+      />
+
+      {/* Fora da .toolbox de propósito: .toolbox tem `transform`, o que faria
+          um filho com position:fixed se posicionar relativo a ela, e não à tela.
+          Fica sempre visível no topo — controles de pincel e borracha (numéricos,
+          1 a 100) ficam aqui, sem abrir nenhum painel flutuante. */}
+      <Settings
+        canvasRef={canvasInstanceRef}
+        canvasReady={canvasReady}
+        brushColor={brushColor}
+        brushSize={brushSize}
+        onBrushColorChange={handleBrushColorChange}
+        onBrushSizeChange={handleBrushSizeChange}
+        minBrushSize={MIN_BRUSH_SIZE}
+        maxBrushSize={MAX_BRUSH_SIZE}
+        eraserSize={eraserSize}
+        onEraserSizeChange={handleEraserSizeChange}
+        minEraserSize={MIN_ERASER_SIZE}
+        maxEraserSize={MAX_ERASER_SIZE}
+      />
 
       <input
         type="file"
@@ -505,4 +565,5 @@ export default function Index() {
       <Navbar />
     </div>
   );
+
 }

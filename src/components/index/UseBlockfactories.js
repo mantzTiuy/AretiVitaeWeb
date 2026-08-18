@@ -6,8 +6,6 @@ import {
   containerBorderOnly,
 } from "./constants";
 
-
-
 export function addBox(cs) {
   if (!cs) return;
   const vpt = cs.viewportTransform;
@@ -33,67 +31,6 @@ export function addBox(cs) {
   cs.requestRenderAll();
 }
 
-export function addGroup(cs) {
-  if (!cs) return;
-  const vpt = cs.viewportTransform;
-  const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
-  const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
-
-  const PAD_X = 20;
-  const PAD_Y = 10;
-
-  const label = new fabric.Textbox("hello", {
-    ...SELECTION_STYLE,
-    left: centerX,
-    top: centerY,
-    originX: "center",
-    originY: "center",
-    width: 140,
-    fontFamily: "Josefin Sans",
-    fontSize: 14,
-    textAlign: "center",
-    fill: "#000000",
-    selectable: true,
-    evented: true,
-    lockRotation: true,
-    hasRotatingPoint: false,
-    splitByGrapheme: false,
-    _blockType: "group",
-    _isLabel: true,
-  });
-  noRotate(label);
-
-  const bw = label.width + PAD_X;
-  const bh = label.height + PAD_Y;
-
-  const bg = new fabric.Rect({
-    left: centerX,
-    top: centerY,
-    originX: "center",
-    originY: "center",
-    width: bw,
-    height: bh,
-    fill: "#ffffff",
-    stroke: "#cccccc",
-    strokeWidth: 2,
-    strokeUniform: true,
-    selectable: false,
-    evented: false,
-    lockRotation: true,
-    _isBackground: true,
-    _linkedLabel: label,
-  });
-  noRotate(bg);
-
-  label._linkedBg = bg;
-
-  cs.add(bg);
-  cs.add(label);
-  cs.bringObjectToFront(label);
-  cs.setActiveObject(label);
-  cs.requestRenderAll();
-}
-
 export function attachTextAutosize(text, cs) {
   const fitToContent = () => {
     const lines = text.text.split("\n");
@@ -107,7 +44,7 @@ export function attachTextAutosize(text, cs) {
   };
   text.on("changed", fitToContent);
   text.on("editing:exited", fitToContent);
-  text._fitToContent = fitToContent; 
+  text._fitToContent = fitToContent;
   return fitToContent;
 }
 
@@ -143,7 +80,6 @@ export function addText(cs) {
   cs.requestRenderAll();
 }
 
-
 const CONTAINER_DEFAULT_WIDTH  = 500;
 const CONTAINER_DEFAULT_HEIGHT = 350;
 const CONTAINER_DEFAULT_COLOR  = "#5083ef";
@@ -170,11 +106,10 @@ export function addContainer(cs) {
     lockRotation: true,
     hasRotatingPoint: false,
     _blockType: "container",
-   
     _isBackground: true,
   });
   noRotate(rect);
- 
+
   containerBorderOnly(rect);
 
   const label = new fabric.Text(CONTAINER_DEFAULT_NAME, {
@@ -190,7 +125,7 @@ export function addContainer(cs) {
     evented: false,
     _blockType: "containerLabel",
     _isLabel: true,
-    _isContainerLabel: true, 
+    _isContainerLabel: true,
   });
 
   rect._linkedLabel = label;
@@ -198,7 +133,7 @@ export function addContainer(cs) {
 
   cs.add(rect);
   cs.add(label);
-  cs.sendObjectToBack(rect); 
+  cs.sendObjectToBack(rect);
   cs.setActiveObject(rect);
   cs.requestRenderAll();
 

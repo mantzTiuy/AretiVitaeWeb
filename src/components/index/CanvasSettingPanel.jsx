@@ -1,29 +1,4 @@
-import stylestoolbox from "./modules/toolbox.module.css";
-
-const PANEL_STYLE = {
-  position:      "absolute",
-  top:           "calc(100% + 6px)",
-  left:          0,
-  background:    "#ffffff",
-  border:        "1px solid #e2e4ea",
-  borderRadius:  "8px",
-  padding:       "12px",
-  boxShadow:     "0 4px 12px rgba(0,0,0,0.18)",
-  display:       "flex",
-  flexDirection: "column",
-  gap:           "10px",
-  zIndex:        20,
-  minWidth:      "190px",
-};
-
-const ROW_STYLE = {
-  display:        "flex",
-  alignItems:     "center",
-  justifyContent: "space-between",
-  gap:            "10px",
-  fontSize:       "13px",
-};
-
+import styles from "./modules/canvasSettingsPanel.module.css"
 
 export default function CanvasSettingsPanel({
   open,
@@ -36,36 +11,63 @@ export default function CanvasSettingsPanel({
 }) {
   if (!open) return null;
 
+  const handleKey = (e) => {
+    if (e.key === "Enter")  onClose?.();
+    if (e.key === "Escape") onClose?.();
+  };
+
   return (
-    <div style={PANEL_STYLE}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <strong style={{ fontSize: 13 }}>Canvas</strong>
-        <button onClick={onClose} className={stylestoolbox.button} style={{ padding: "2px 8px" }}>
-          X
-        </button>
+    <div className={styles.overlay} onClick={onClose}>
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKey}
+        tabIndex={-1}
+      >
+        {/* ── Titlebar ── */}
+        <div className={styles.titlebar}>
+          <span className={styles.titlebarLabel}>Configurações do canvas</span>
+          <div className={styles.dots}>
+            <div className={`${styles.dot} ${styles.dotGray}`} />
+            <div className={`${styles.dot} ${styles.dotYellow}`} />
+            <div className={`${styles.dot} ${styles.dotRed}`} onClick={onClose} />
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div className={styles.body}>
+          <div className={styles.row}>
+            <span className={styles.label}>Cor de fundo</span>
+            <input
+              type="color"
+              value={bgColor}
+              onChange={(e) => onBgColorChange(e.target.value)}
+              className={styles.colorInput}
+            />
+          </div>
+
+          <div className={styles.row}>
+            <span className={styles.label}>Cor das linhas</span>
+            <input
+              type="color"
+              value={lineColor}
+              onChange={(e) => onLineColorChange(e.target.value)}
+              className={styles.colorInput}
+            />
+          </div>
+
+          <div className={styles.divider} />
+
+          <div className={styles.btnRow}>
+            <button className={styles.resetBtn} onClick={onReset}>
+              Restaurar padrão
+            </button>
+            <button className={styles.confirmBtn} onClick={onClose}>
+              OK
+            </button>
+          </div>
+        </div>
       </div>
-
-      <label style={ROW_STYLE}>
-        Cor de fundo
-        <input
-          type="color"
-          value={bgColor}
-          onChange={(e) => onBgColorChange(e.target.value)}
-        />
-      </label>
-
-      <label style={ROW_STYLE}>
-        Cor da grade
-        <input
-          type="color"
-          value={lineColor}
-          onChange={(e) => onLineColorChange(e.target.value)}
-        />
-      </label>
-
-      <button onClick={onReset} className={stylestoolbox.button}>
-        Restaurar padrão
-      </button>
     </div>
   );
 }

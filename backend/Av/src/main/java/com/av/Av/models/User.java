@@ -35,9 +35,6 @@ public class User {
     @Column(name = "senha", nullable = false)
     private String senha;
 
-    @Column(name = "assinatura")
-    private int assinatura;
-
     @Column(name = "ativo")
     private int ativo;
 
@@ -61,13 +58,12 @@ public class User {
 
     }
 
-    public User(Integer id, String username, int idade, String email, String senha, int assinatura, int ativo) {
+    public User(Integer id, String username, int idade, String email, String senha,  int ativo) {
         this.id = id;
         this.username = username;
         this.idade = idade;
         this.email = email;
         this.senha = senha;
-        this.assinatura = assinatura;
         this.ativo = ativo;
     }
 
@@ -121,13 +117,6 @@ public class User {
         this.senha = senha;
     }
 
-    public int getAssinatura() {
-        return assinatura;
-    }
-
-    public void setAssinatura(int assinatura) {
-        this.assinatura = assinatura;
-    }
 
     public String getTipoRegistro() {
         return tipoRegistro;
@@ -162,12 +151,7 @@ public class User {
     }
 
     /*Gerado pelo INTELIJ*/
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        User user = (User) obj;
-        return idade == user.idade && assinatura == user.assinatura && Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(email, user.email) && Objects.equals(senha, user.senha);
-    }
+
 
     /*Feito na mão*/
     @Override

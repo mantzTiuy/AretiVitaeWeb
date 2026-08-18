@@ -9,9 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 //eu amo minha vida
 @Service
 public class UserMapService {
+
+    private static final int PLANO_BUILDER = 4;
+    private static final int LIMITE_MAPAS = 50;
 
     @Autowired
     private UserMapRepository mapRepository;
@@ -19,13 +23,28 @@ public class UserMapService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CompraService compraService;
+
     public UserMap findById(int id){
         return mapRepository.findById(id).orElseThrow(() -> new RuntimeException("MAPA NAO ENCONTRADO"));
     }
 
     public UserMap cadastro(UserMapRequest request) {
-        User user = userRepository.findById(request.getUserId().intValue())
+        Integer userId = request.getUserId().intValue();
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("USUARIO NAO ENCONTRADO"));
+
+        Map<String, Object> status = compraService.statusAtivo(userId);
+        Integer plano = Boolean.TRUE.equals(status.get("temAcesso")/*Chave de verificacao de ativacao de alguma compra*/) ? (Integer) status.get("plano") : 0;
+
+        if (plano != PLANO_BUILDER) {
+            long totalMapas = mapRepository.countByUser_Id(userId);
+            if (totalMapas >= LIMITE_MAPAS) {
+                throw new RuntimeException("Você atingiu o limite de " + LIMITE_MAPAS + " mapas");
+            }
+        }
 
         UserMap userMap = new UserMap();
         userMap.setUser(user);

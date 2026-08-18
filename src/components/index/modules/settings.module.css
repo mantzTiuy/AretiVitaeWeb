@@ -1,57 +1,166 @@
-/* ── Settings panel ── */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Josefin+Sans:wght@400;500;600&display=swap');
+
 .div {
-  background-color: rgb(104, 137, 255);
-  width: 160px;           /* largura fixa, não depende do viewport */
-  border-radius: 16px;
-  padding: 14px 12px 18px;
+  position: fixed;
+  top: 0;
+  right: 0;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
   align-items: center;
-  /* Remove position: fixed e margin-left — deixa o toolbox pai controlar o layout */
+  gap: 10px;
+  max-width: min(640px, calc(100vw - 20px));
+  padding: 8px 14px;
+  background: rgb(100, 122, 200);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0 0 0 8px;
+  z-index: 29;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}
+
+.div::-webkit-scrollbar {
+  height: 4px;
+}
+
+.div::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+}
+
+.fieldGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .label {
-  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sizeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sizeField {
+  display: flex;
+  align-items: center;
+  width: 76px;
+  flex-shrink: 0;
+  height: 26px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  background: #ffffff;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sizeField:focus-within {
+  border-color: #93c5fd;
+}
+
+.sizeTag {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 8px;
+  color: rgb(75, 94, 153);
+  padding: 0 3px 0 5px;
+  user-select: none;
+}
+
+.sizeInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0 5px 0 2px;
+  font-family: 'Josefin Sans', sans-serif;
   font-size: 11px;
-  font-family: "Josefin Sans", sans-serif;
-  align-self: flex-start;
-  margin-bottom: -6px;
-  opacity: 0.85;
-}
-
-.input1 {
-  width: 100%;
-  height: 32px;
-  padding: 0 10px;
-  box-sizing: border-box;
+  font-weight: 500;
+  color: rgb(45, 63, 120);
   outline: none;
-  border: none;
-  border-radius: 8px;
-  font-family: "Josefin Sans", sans-serif;
-  font-size: 13px;
+  box-sizing: border-box;
 }
 
+.input1,
 .input2 {
-  width: 100%;
-  height: 32px;
-  padding: 0 10px;
-  box-sizing: border-box;
+  width: 130px;
+  height: 26px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  padding: 0 7px;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgb(45, 63, 120);
+  background: #ffffff;
   outline: none;
-  border: none;
-  border-radius: 8px;
-  font-family: "Josefin Sans", sans-serif;
-  font-size: 13px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.input1:focus,
+.input2:focus {
+  border-color: #93c5fd;
 }
 
 .inputColor {
-  width: 100%;
-  height: 36px;
-  padding: 2px 4px;
-  box-sizing: border-box;
-  outline: none;
-  border: none;
-  border-radius: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  padding: 0;
   cursor: pointer;
-  background: #fff;
+  background: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.inputColor::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 4px;
+}
+
+.inputColor::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.inputColor::-moz-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.rangeInput {
+  width: 90px;
+  accent-color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
 }

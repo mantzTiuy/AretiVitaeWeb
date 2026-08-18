@@ -42,9 +42,6 @@ public class UserService {
         if (updatedUser.getIdade() != 0) {
             existingUser.setIdade(updatedUser.getIdade());
         }
-        if (updatedUser.getAssinatura() != 0) {
-            existingUser.setAssinatura(updatedUser.getAssinatura());
-        }
         if (updatedUser.getAtivo() != 0) {
             existingUser.setAtivo(updatedUser.getAtivo());
         }
@@ -81,7 +78,5 @@ public class UserService {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("AvBot: U S U A R I O  N A O  E N C O N T R A D O"));
     }
 
-    public int getPlano(int id) {
-        return findById(id).getAssinatura();
-    }
+
 }

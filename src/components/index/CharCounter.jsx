@@ -1,6 +1,5 @@
 import styles from "./modules/charCounter.module.css";
 
-
 function CharCounter({ current, max }) {
   const remaining   = max - current;
   const isAtLimit   = remaining <= 0;

@@ -5,14 +5,6 @@ import styles from './modules/home.module.css'
 
 const API_BASE = "http://localhost:8081";
 
-const PLANOS_NOME = {
-  0: "Básico",
-  1: "Hécate",
-  2: "Artemis",
-  3: "Selene",
-  4: "Builder",
-};
-
 function getUsuarioLogado() {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
@@ -21,13 +13,22 @@ function getUsuarioLogado() {
 export default function UserBlock() {
   const [username, setUsername] = useState(() => getUsuarioLogado()?.username ?? null);
   const [plano, setPlano] = useState(null);
+  const [nomePlano, setNomePlano] = useState(null);
 
   useEffect(() => {
     const usuario = getUsuarioLogado();
     if (!usuario?.id) return;
 
-    axios.get(`${API_BASE}/apiAv/plano/${usuario.id}`)
-      .then((res) => setPlano(res.data.assinatura))
+    axios.get(`${API_BASE}/ApiAvCompra/status/${usuario.id}`)
+      .then((res) => {
+        if (res.data.temAcesso) {
+          setPlano(res.data.plano);
+          setNomePlano(res.data.nomePlano);
+        } else {
+          setPlano(0);
+          setNomePlano("Básico");
+        }
+      })
       .catch((erro) => console.error("Erro ao buscar plano do usuário:", erro));
   }, []);
 
@@ -43,8 +44,6 @@ export default function UserBlock() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const nomePlano = plano !== null ? PLANOS_NOME[plano] ?? "Desconhecido" : "...";
-
   return (
     <div className={styles.userBlock}>
       <div className={styles.avatarSlot}>
@@ -52,7 +51,7 @@ export default function UserBlock() {
       </div>
       <div>
         <p className={styles.greeting}>Olá, {username || 'AretiVitae'}</p>
-        <p className={styles.sub}>{nomePlano}</p>
+        <p className={styles.sub}>{nomePlano ?? "..."}</p>
       </div>
     </div>
   )

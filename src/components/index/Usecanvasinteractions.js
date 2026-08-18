@@ -9,7 +9,6 @@ import {
   CONTAINER_MAX_HEIGHT,
 } from "./constants";
 
-
 export function createCanvasInteractions({
   cs,
   sourceBlockRef,
@@ -31,7 +30,6 @@ export function createCanvasInteractions({
     findConnectionByLine,
   } = ports;
 
- 
   const startTempLine = (x, y) => {
     const line = new fabric.Line([x, y, x, y], {
       stroke: "#5083ef",
@@ -58,7 +56,6 @@ export function createCanvasInteractions({
       tempLineRef.current = null;
     }
   };
-
 
   const onMouseDown = (opt) => {
     const target = opt.target;
@@ -107,8 +104,15 @@ export function createCanvasInteractions({
   };
 
   const onMouseUp = (opt) => {
-    onMouseDown._panActive = false;
-    cs.selection = true;
+    const e = opt.e;
+    // Só encerra o pan quando nenhum botão do mouse mais está pressionado.
+    // Antes, o mouseup de QUALQUER botão desligava o pan — se você
+    // soltasse o botão esquerdo enquanto ainda segurava o botão do meio
+    // (pan em andamento), o pan parava no meio do gesto sem motivo.
+    if (!onMouseDown._panActive || e.buttons === 0) {
+      onMouseDown._panActive = false;
+      cs.selection = true;
+    }
 
     if (!isDraggingPort.current) return;
     isDraggingPort.current = false;
@@ -122,7 +126,7 @@ export function createCanvasInteractions({
 
     const target = opt.target;
     if (!target || target.isLine || target._isPort || target === source) return;
-    if (target._blockType === "container") return; 
+    if (target._blockType === "container") return;
 
     const destCenter = target.getCenterPoint();
     const pos = toCanvasPoint(cs, opt.e.clientX, opt.e.clientY);
@@ -138,7 +142,7 @@ export function createCanvasInteractions({
         : (dy < 0 ? "top" : "bottom");
 
     createConnection(source, target, fromSide ?? "right", toSide);
-    salvarMapa(); 
+    salvarMapa();
   };
 
   const onSelected = (opt) => {
@@ -169,7 +173,6 @@ export function createCanvasInteractions({
 
     const isMultiSelection = target.type === "activeselection";
 
-   
     if (!isMultiSelection) {
       checkAlignmentRef.current?.(target);
     }
@@ -192,7 +195,6 @@ export function createCanvasInteractions({
     if (!target) return;
 
     if (target.type !== "activeselection" && target._blockType !== "text") {
-  
       const isContainer = target._blockType === "container";
       const minW = isContainer ? CONTAINER_MIN_WIDTH  : MIN_SIZE;
       const minH = isContainer ? CONTAINER_MIN_HEIGHT : MIN_SIZE;
@@ -226,7 +228,7 @@ export function createCanvasInteractions({
   const onWheel = (opt) => {
     opt.e.preventDefault();
     let zoom = cs.getZoom() * (0.999 ** opt.e.deltaY);
-    zoom = Math.min(Math.max(zoom, 0.5), 4.05); 
+    zoom = Math.min(Math.max(zoom, 0.5), 4.05);
     cs.zoomToPoint(new fabric.Point(opt.e.offsetX, opt.e.offsetY), zoom);
   };
 
@@ -263,7 +265,6 @@ export function createCanvasInteractions({
     });
   };
 
-
   const onKeyDown = (e, canvasInstanceRef) => {
     const currentCs = canvasInstanceRef.current;
     if (!currentCs) return;
@@ -274,7 +275,6 @@ export function createCanvasInteractions({
     if (isCopy || isPaste) {
       const active = currentCs.getActiveObject();
 
-  
       const typingElsewhere =
         ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
         document.activeElement?.isContentEditable;
@@ -289,7 +289,6 @@ export function createCanvasInteractions({
       }
       return;
     }
-
 
     const key = e.key.toLowerCase();
     const isUndo = (e.ctrlKey || e.metaKey) && !e.shiftKey && key === "z";
@@ -319,7 +318,6 @@ export function createCanvasInteractions({
     const active = currentCs.getActiveObject();
     if (!active || active.isEditing) return;
 
-  
     if (active.isLine) {
       const conn = findConnectionByLine(active);
       if (conn) {
@@ -329,7 +327,7 @@ export function createCanvasInteractions({
       }
       currentCs.discardActiveObject();
       currentCs.requestRenderAll();
-      salvarMapa(); 
+      salvarMapa();
       return;
     }
 
@@ -350,7 +348,7 @@ export function createCanvasInteractions({
         if (obj.connections?.length) {
           [...obj.connections].forEach((conn) => deleteConnection(conn));
         }
-     
+
         if (obj._isLabel && obj._linkedBg) currentCs.remove(obj._linkedBg);
         if (obj._isBackground && obj._linkedLabel) currentCs.remove(obj._linkedLabel);
         currentCs.remove(obj);
@@ -366,7 +364,7 @@ export function createCanvasInteractions({
     }
     clearPorts();
     if (active._isLabel && active._linkedBg) currentCs.remove(active._linkedBg);
- 
+
     if (active._isBackground && active._linkedLabel) currentCs.remove(active._linkedLabel);
     currentCs.remove(active);
     currentCs.discardActiveObject();

@@ -12,11 +12,22 @@ import {
 } from "./constants";
 import { OUTLINE_EXTRA_WIDTH } from "./usePortsAndConnections";
 
-
 const MIN_LINE_WIDTH = 1;
 const MAX_LINE_WIDTH = 20;
 
-function Settings({ canvasReady }) {
+function Settings({
+  canvasReady,
+  brushColor,
+  brushSize,
+  onBrushColorChange,
+  onBrushSizeChange,
+  minBrushSize = 1,
+  maxBrushSize = 100,
+  eraserSize,
+  onEraserSizeChange,
+  minEraserSize = 1,
+  maxEraserSize = 100,
+}) {
   const [width, setWidth]             = useState("");
   const [height, setHeight]           = useState("");
   const [color, setColor]             = useState("#ffffff");
@@ -26,10 +37,8 @@ function Settings({ canvasReady }) {
   const [lineColor, setLineColor]     = useState("#ffffff");
   const [lineWidth, setLineWidth]     = useState(4);
 
-
   const [isTextObject, setIsTextObject] = useState(false);
   const [fontFamily, setFontFamily]     = useState("Josefin Sans");
-
 
   const [isContainer, setIsContainer]     = useState(false);
   const [containerName, setContainerName] = useState("");
@@ -51,7 +60,6 @@ function Settings({ canvasReady }) {
 
     setIsLine(false);
 
-   
     const isContainerObj = object._blockType === "container";
     setIsContainer(isContainerObj);
     setContainerName(isContainerObj ? (object._linkedLabel?.text ?? "") : "");
@@ -66,7 +74,7 @@ function Settings({ canvasReady }) {
     if (object.type === "group") {
       const bg = object.getObjects().find((o) => o._isBackground);
       setColor(bg?.fill ?? "#ffffff");
-  
+
       setColorStroke(bg?.stroke ?? object.stroke ?? "#efeeee");
     } else {
       setColor(object.fill   ?? "#ffffff");
@@ -117,7 +125,6 @@ function Settings({ canvasReady }) {
     };
   }, [canvasReady]);
 
-
   const MIN_SIZE = 30;
   const MAX_SIZE = 1500;
   const clamp = (val) => Math.min(Math.max(val, MIN_SIZE), MAX_SIZE);
@@ -146,7 +153,6 @@ function Settings({ canvasReady }) {
     commitResize();
   };
 
-
   const handleHeightChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -164,7 +170,6 @@ function Settings({ canvasReady }) {
     }
     commitResize();
   };
-
 
   const handleColorChange = (e) => {
     const canvas = canvasReady;
@@ -185,7 +190,6 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
-
   const handleStrokeColorChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -195,7 +199,6 @@ function Settings({ canvasReady }) {
     if (!obj) return;
 
     if (obj.type === "group") {
-     
       const bg = obj.getObjects().find((o) => o._isBackground);
       if (bg) {
         bg.set({ stroke: value });
@@ -205,14 +208,13 @@ function Settings({ canvasReady }) {
       obj.dirty = true;
     } else {
       obj.set({ stroke: value });
-   
+
       if (obj._blockType === "container" && obj._linkedLabel) {
         obj._linkedLabel.set({ fill: value });
       }
     }
     canvas.requestRenderAll();
   };
-
 
   const handleLineColorChange = (e) => {
     const canvas = canvasReady;
@@ -227,7 +229,6 @@ function Settings({ canvasReady }) {
     canvas.requestRenderAll();
   };
 
-
   const handleLineWidthChange = (e) => {
     const canvas = canvasReady;
     if (!canvas) return;
@@ -240,11 +241,10 @@ function Settings({ canvasReady }) {
     if (val !== raw) setLineWidth(val);
 
     obj.set({ strokeWidth: val });
-   
+
     obj._outline?.set({ strokeWidth: val + OUTLINE_EXTRA_WIDTH * 2 });
     canvas.requestRenderAll();
   };
-
 
   const handleFontChange = (newFont) => {
     const canvas = canvasReady;
@@ -255,14 +255,13 @@ function Settings({ canvasReady }) {
 
     loadGoogleFont(newFont, () => {
       obj.set({ fontFamily: newFont });
-  
+
       obj._fitToContent?.();
       obj.setCoords();
       canvas.fire("object:modified", { target: obj });
       canvas.requestRenderAll();
     });
   };
-
 
   const handleContainerNameChange = (e) => {
     const canvas = canvasReady;
@@ -281,55 +280,67 @@ function Settings({ canvasReady }) {
   return (
     <div className={styles.div}>
       {isLine ? (
-        <>
-          <label className={styles.label}>Espessura</label>
+        <div className={styles.fieldGroup}>
+          <span className={styles.label}>Espessura</span>
           <input
             type="number"
             min={MIN_LINE_WIDTH}
             max={MAX_LINE_WIDTH}
             value={lineWidth}
             onChange={handleLineWidthChange}
-            className={styles.input1}
+            className={styles.input2}
+            style={{ width: 60 }}
           />
-          <label className={styles.label}>Cor</label>
+          <span className={styles.label}>Cor</span>
           <input
             type="color"
             value={lineColor}
             onChange={handleLineColorChange}
             className={styles.inputColor}
           />
-        </>
+        </div>
       ) : (
         <>
-          <input
-            type="text"
-            placeholder="W"
-            onChange={handleWidthChange}
-            value={width}
-            className={styles.input1}
-          />
-          <input
-            type="text"
-            placeholder="H"
-            value={height}
-            onChange={handleHeightChange}
-            className={styles.input2}
-          />
+          <div className={styles.sizeRow}>
+            <label className={styles.sizeField}>
+              <span className={styles.sizeTag}>W</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="—"
+                onChange={handleWidthChange}
+                value={width}
+                className={styles.sizeInput}
+              />
+            </label>
+            <label className={styles.sizeField}>
+              <span className={styles.sizeTag}>H</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="—"
+                value={height}
+                onChange={handleHeightChange}
+                className={styles.sizeInput}
+              />
+            </label>
+          </div>
+
           {isTextObject && (
-            <>
-              <label className={styles.label}>Fonte</label>
-              <FontSelector value={fontFamily} onChange={handleFontChange} />
-            </>
+            <div className={styles.fieldGroup}>
+              <span className={styles.label}>Fonte</span>
+              <div style={{ width: 150 }}>
+                <FontSelector value={fontFamily} onChange={handleFontChange} />
+              </div>
+            </div>
           )}
+
           {isContainer && (
-            <>
-              <label
-                className={styles.label}
-                style={{ display: "flex", alignItems: "center", gap: 6 }}
-              >
+            <div className={styles.fieldGroup}>
+              <span className={styles.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 Nome
                 <CharCounter current={containerName.length} max={CONTAINER_LABEL_MAX_LENGTH} />
-              </label>
+              </span>
               <input
                 type="text"
                 placeholder="Nome da seção"
@@ -338,28 +349,69 @@ function Settings({ canvasReady }) {
                 maxLength={CONTAINER_LABEL_MAX_LENGTH}
                 className={styles.input1}
               />
-            </>
+            </div>
           )}
+
           {!isContainer && (
-            <>
-              <label className={styles.label}>Fill</label>
+            <div className={styles.fieldGroup}>
+              <span className={styles.label}>Fill</span>
               <input
                 type="color"
                 value={color}
                 onChange={handleColorChange}
                 className={styles.inputColor}
               />
-            </>
+            </div>
           )}
-          <label className={styles.label}>{isContainer ? "Cor da borda" : "Stroke"}</label>
-          <input
-            type="color"
-            value={colorStroke}
-            onChange={handleStrokeColorChange}
-            className={styles.inputColor}
-          />
+
+          <div className={styles.fieldGroup}>
+            <span className={styles.label}>{isContainer ? "Borda" : "Stroke"}</span>
+            <input
+              type="color"
+              value={colorStroke}
+              onChange={handleStrokeColorChange}
+              className={styles.inputColor}
+            />
+          </div>
         </>
       )}
+
+      <div className={styles.divider} />
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.label}>Pincel</span>
+        <input
+          type="color"
+          value={brushColor}
+          onChange={onBrushColorChange}
+          title="Cor do pincel"
+          className={styles.inputColor}
+        />
+        <input
+          type="number"
+          min={minBrushSize}
+          max={maxBrushSize}
+          value={brushSize}
+          onChange={onBrushSizeChange}
+          title={`Tamanho do pincel: ${brushSize}px`}
+          className={styles.input2}
+          style={{ width: 60 }}
+        />
+      </div>
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.label}>Borracha</span>
+        <input
+          type="number"
+          min={minEraserSize}
+          max={maxEraserSize}
+          value={eraserSize}
+          onChange={onEraserSizeChange}
+          title={`Tamanho da borracha: ${eraserSize}px`}
+          className={styles.input2}
+          style={{ width: 60 }}
+        />
+      </div>
     </div>
   );
 }

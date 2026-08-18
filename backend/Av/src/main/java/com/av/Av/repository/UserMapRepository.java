@@ -12,4 +12,5 @@ public interface UserMapRepository extends JpaRepository<UserMap, Integer> {
     List<UserMap> findByUser_Username(String username);
     List<UserMap> findByUser_IdAndAtivo(Integer userId, int ativo);
     List<UserMap> findByUser_UsernameAndAtivo(String username, int ativo);
+    long countByUser_Id(Integer userId);
 }

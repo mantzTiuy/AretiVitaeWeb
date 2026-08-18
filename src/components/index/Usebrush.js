@@ -7,9 +7,6 @@ import {
   DEFAULT_ERASER_SIZE,
 } from "./constants";
 
-// Testa se um círculo (cx, cy, r) — o "cursor" da borracha, em coordenadas
-// de canvas — encosta no retângulo absoluto de um objeto. Usado pra decidir
-// se um traço de pincel deve ser apagado durante o arrasto da borracha.
 function circleIntersectsRect(cx, cy, r, rect) {
   const closestX = Math.max(rect.left, Math.min(cx, rect.left + rect.width));
   const closestY = Math.max(rect.top,  Math.min(cy, rect.top  + rect.height));
@@ -21,7 +18,7 @@ function circleIntersectsRect(cx, cy, r, rect) {
 export function createBrush(cs, { salvarMapa } = {}) {
   if (!cs) return null;
 
-  let mode = null; 
+  let mode = null;
   let eraserSize = DEFAULT_ERASER_SIZE;
   let isErasing = false;
   let eraseBatch = null;
@@ -40,7 +37,6 @@ export function createBrush(cs, { salvarMapa } = {}) {
   const setSize  = (size)  => { ensureBrush().width = size; };
   const setEraserSize = (size) => { eraserSize = size; };
 
-
   const onPathCreated = (opt) => {
     const path = opt.path;
     if (!path) return;
@@ -57,7 +53,7 @@ export function createBrush(cs, { salvarMapa } = {}) {
     const r = eraserSize / 2;
     const hit = cs.getObjects().filter((obj) => {
       if (!obj._isDrawing) return false;
-      if (eraseBatch.includes(obj)) return false; 
+      if (eraseBatch.includes(obj)) return false;
       const rect = obj.getBoundingRect(true, true);
       return circleIntersectsRect(pt.x, pt.y, r, rect);
     });
@@ -70,6 +66,18 @@ export function createBrush(cs, { salvarMapa } = {}) {
   };
 
   const onEraseMouseDown = (opt) => {
+    // Botão do meio (pan) ou Ctrl+clique (pan) não devem apagar nada —
+    // deixa o evento passar direto pro handler de pan do canvas.
+    if (opt.e.button === 1 || opt.e.ctrlKey) return;
+
+    // O clique pegou um objeto de verdade (bloco, texto, seção, mídia...)?
+    // Então a intenção é mover esse objeto, não apagar. `cs.selection = false`
+    // só desativa a seleção em grupo — o Fabric ainda deixa arrastar um
+    // objeto individual clicado diretamente nele. Sem essa checagem, cada
+    // mousemove do arraste chamava eraseAt() na posição do cursor e apagava
+    // qualquer desenho que ficasse escondido atrás do objeto sendo movido.
+    if (opt.target) return;
+
     isErasing = true;
     eraseBatch = [];
     eraseAt(toCanvasPoint(cs, opt.e.clientX, opt.e.clientY));
@@ -77,6 +85,9 @@ export function createBrush(cs, { salvarMapa } = {}) {
 
   const onEraseMouseMove = (opt) => {
     if (!isErasing) return;
+    // Rede de segurança: se por algum motivo um objeto estiver "ativo"
+    // (sendo arrastado) nesse meio-tempo, não apaga nada até ele ser solto.
+    if (cs.getActiveObject()) return;
     eraseAt(toCanvasPoint(cs, opt.e.clientX, opt.e.clientY));
   };
 
@@ -89,7 +100,6 @@ export function createBrush(cs, { salvarMapa } = {}) {
     }
     eraseBatch = null;
   };
-
 
   const disable = () => {
     if (mode === "draw") {
@@ -121,7 +131,6 @@ export function createBrush(cs, { salvarMapa } = {}) {
     mode = "draw";
   };
 
-
   const enableErase = ({ size = eraserSize } = {}) => {
     disable();
     cs.discardActiveObject();
@@ -139,14 +148,12 @@ export function createBrush(cs, { salvarMapa } = {}) {
 
   const getMode = () => mode;
 
-
   const undo = () => {
     const action = undoStack.pop();
     if (!action) return;
     if (action.type === "add") {
       action.objects.forEach((obj) => cs.remove(obj));
     } else {
-
       action.objects.forEach((obj) => {
         cs.add(obj);
         cs.sendObjectToBack(obj);

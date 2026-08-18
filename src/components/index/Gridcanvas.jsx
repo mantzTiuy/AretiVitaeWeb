@@ -3,7 +3,6 @@ import { DEFAULT_GRID_BG_COLOR, DEFAULT_GRID_LINE_COLOR } from "./constants";
 
 const GRID_SIZE = 40;
 
-
 const GridCanvas = forwardRef(function GridCanvas(
   { bgColor = DEFAULT_GRID_BG_COLOR, lineColor = DEFAULT_GRID_LINE_COLOR },
   ref
@@ -43,14 +42,11 @@ const GridCanvas = forwardRef(function GridCanvas(
     ctx.restore();
   };
 
-
   useEffect(() => {
     if (lastTransformRef.current) {
       draw(lastTransformRef.current.vpt, lastTransformRef.current.zoom);
     }
-
   }, [bgColor, lineColor]);
-
 
   useEffect(() => {
     const gc = canvasRef.current;
@@ -62,7 +58,6 @@ const GridCanvas = forwardRef(function GridCanvas(
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
 
   useImperativeHandle(ref, () => ({
     redraw: (vpt, zoom) => draw(vpt, zoom),

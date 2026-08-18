@@ -136,12 +136,7 @@ public class CompraService {
         compra.setTxid(txid);
         compra.setCriadoEm(LocalDateTime.now());
 
-        Compra salva = compraRepository.save(compra);
-
-        user.setAssinatura(PLANO_ADMIN);
-        userRepository.save(user);
-
-        return salva;
+        return compraRepository.save(compra);
     }
 
 
@@ -175,13 +170,7 @@ public class CompraService {
         compra.setDataCompra(now);
         compra.setDayVencimento(now.plusMonths(1));
         compra.setAtivo(ATIVO);
-        Compra salva = compraRepository.save(compra);
-
-        User user = compra.getUser();
-        user.setAssinatura(compra.getPlano());
-        userRepository.save(user);
-
-        return salva;
+        return compraRepository.save(compra);
     }
 
     /**
@@ -199,7 +188,7 @@ public class CompraService {
 
     /**
      * Roda a cada 15 minutos: marca como vencida (ativo = 0) qualquer compra
-     * ATIVA no qual o dayVencimento já passou, e zera a assinatura do usuário (0 = sem plano).
+     * ATIVA no qual o dayVencimento já passou.
      * O PLANO_ADMIN tem dayVencimento definido 100 anos no futuro, então nunca
      * cai nessa lista
      */
@@ -208,14 +197,7 @@ public class CompraService {
         LocalDate hoje = LocalDate.now();
         List<Compra> vencidas = compraRepository.findByAtivoAndDayVencimentoBefore(ATIVO, hoje);
 
-        for (Compra compra : vencidas) {
-            compra.setAtivo(0);
-
-            User user = compra.getUser();
-            user.setAssinatura(0);
-            userRepository.save(user);
-        }
-
+        vencidas.forEach(c -> c.setAtivo(0));
         compraRepository.saveAll(vencidas);
     }
 

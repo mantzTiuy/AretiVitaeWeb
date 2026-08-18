@@ -1,6 +1,5 @@
-
 const loadedFonts      = new Set();
-const pendingCallbacks = new Map(); 
+const pendingCallbacks = new Map();
 
 const toLinkId = (fontFamily) => `gfont-${fontFamily.replace(/\s+/g, "-")}`;
 
@@ -13,7 +12,6 @@ export function loadGoogleFont(fontFamily, onLoaded) {
   }
 
   const linkId = toLinkId(fontFamily);
-
 
   if (document.getElementById(linkId)) {
     const queued = pendingCallbacks.get(fontFamily);
@@ -44,7 +42,7 @@ export function loadGoogleFont(fontFamily, onLoaded) {
     Promise.all([
       document.fonts.load(`400 16px "${fontFamily}"`),
       document.fonts.load(`700 16px "${fontFamily}"`),
-    ]).then(finish).catch(finish); // mesmo se o load() falhar, não trava a UI
+    ]).then(finish).catch(finish);
   };
   link.onerror = finish;
 

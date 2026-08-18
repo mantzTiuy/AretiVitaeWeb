@@ -11,5 +11,6 @@ public interface NoteRepository extends JpaRepository<Note, Integer> {
     List<Note> findByUser_Id(Integer userId);
     List<Note> findByUser_Username(String username);
     List<Note> findByUser_IdAndAtivo(Integer userId, int ativo);
+    long countByUser_Id(Integer userId);
 
 }
