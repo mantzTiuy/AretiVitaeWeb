@@ -7,7 +7,7 @@ import styles from "./modules/Notespage.module.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const TITLE_LIMIT = 55;
+const TITLE_LIMIT = 45;
 const DESC_LIMIT  = 2500;
 
 export default function NotesPage() {

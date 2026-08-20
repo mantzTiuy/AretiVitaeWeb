@@ -103,6 +103,22 @@
 .newBtn:hover  { filter: brightness(1.18); }
 .newBtn:active { transform: scale(0.97); }
 
+/* ── Mensagem de erro ── */
+.errorMsg {
+  margin: 10px clamp(16px, 3vw, 40px) 0;
+  padding: 10px 14px;
+  background: rgba(255, 99, 99, 0.18);
+  border: 1px solid rgba(255, 99, 99, 0.45);
+  border-radius: 10px;
+  color: #ffb3b3;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 /* ── Rodapé com botões ── */
 .winFooter {
   display: flex;

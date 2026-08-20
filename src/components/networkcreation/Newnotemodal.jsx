@@ -27,7 +27,7 @@ export default function NewNoteModal({
           </div>
         </div>
 
-        {/* ── Body ── */}
+   
         <div className={styles.body}>
           <div className={styles.sectionTitle}>
             <span className={styles.sectionLine} />
@@ -40,7 +40,7 @@ export default function NewNoteModal({
           <input
             className={styles.input}
             type="text"
-            placeholder="Título da nota…"
+            placeholder="Título da nota"
             value={titulo}
             onChange={(e) => onTituloChange(e.target.value)}
             onKeyDown={handleKey}

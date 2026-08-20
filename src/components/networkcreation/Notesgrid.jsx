@@ -7,14 +7,12 @@ import useContextMenu from "./useContextMenu.jsx";
 import styles from "./modules/Notesgrid.module.css";
 
 export default function NotesGrid({ notes, onDelete, onUpdate }) {
-  const [editingId, setEditingId] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [fullscreenId, setFullscreenId] = useState(null);
   const { menu, openMenu, closeMenu, menuRef } = useContextMenu();
 
   const menuItems = [
-    { label: "Abrir em tela cheia", onClick: (id) => setFullscreenId(id) },
-    { label: "Editar", onClick: (id) => setEditingId(id) },
+    { label: "Editar", onClick: (id) => setFullscreenId(id) },
     { label: "Excluir", onClick: (id) => setDeleteTarget(id) },
   ];
 
@@ -28,10 +26,7 @@ export default function NotesGrid({ notes, onDelete, onUpdate }) {
           <NoteCard
             key={note.id}
             note={note}
-            onUpdate={onUpdate}
-            editing={editingId === note.id}
-            onRequestEdit={() => setEditingId(note.id)}
-            onStopEdit={() => setEditingId(null)}
+            onOpenFullscreen={() => setFullscreenId(note.id)}
             onRequestDelete={() => setDeleteTarget(note.id)}
             onContextMenu={(e) => openMenu(e, note.id)}
           />
