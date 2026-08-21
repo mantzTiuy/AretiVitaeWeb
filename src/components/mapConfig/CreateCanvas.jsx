@@ -88,7 +88,7 @@ export default function CreateCanvas() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form/*LEVA O NOME PRO OBJETO FORM */, name: e.target.value })}
                     onBlur={() => setNameTouched(true)}
-                    placeholder="Ex.: AretiVitae"
+                    placeholder="Criatividade"
                     className={nameTooLong ? styles.inputError : ''}
                   />
                   {nameTouched && emptyName && (

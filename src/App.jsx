@@ -11,6 +11,8 @@ import NetConfig from "./components/networkcreation/Notespage.jsx"
 import CreateCanvas from "./components/mapConfig/CreateCanvas.jsx";
 import MapSpecs from "./components/mapSpecs/mapSpecs.jsx";
 import AssinaturaQrCode from "./components/compra/AssinaturaQrCode.jsx";
+import MobileGuard from "./components/mobileGuard/MobileGuard.jsx";
+import AcessoMobile from "./components/mobileGuard/AcessoMobile.jsx";
 
 function App() {
 
@@ -43,17 +45,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/"             element={<Login />} />
-        <Route path="/login"        element={<Login />} />
-        <Route path="/home"         element={<Home />} />
-        <Route path="/canvas/:id"/*Key do canvas*/   element={<Index />} />
-        <Route path="/account"      element={<Account />} />
-        <Route path="/networkdemo"  element={<NetworkDemo />} />
-        <Route path="/sobre"        element={<About />} />
-        <Route path="/notes" element={<NetConfig />} />
-        <Route path="/create" element={<CreateCanvas/>}/>
-        <Route path="/canvas/:id/editar" element={<MapSpecs/>}/>
-        <Route path="/compra/:planoId" element={<AssinaturaQrCode/>}/>
+        {/* rota livre, sem guarda — senão vira loop de redirect */}
+        <Route path="/acesso-mobile" element={<AcessoMobile />} />
+
+        {/* tudo aqui dentro passa pela checagem de mobile primeiro */}
+        <Route element={<MobileGuard />}>
+          <Route path="/"                  element={<Login />} />
+          <Route path="/login"             element={<Login />} />
+          <Route path="/home"              element={<Home />} />
+          <Route path="/canvas/:id"        element={<Index />} />
+          <Route path="/account"           element={<Account />} />
+          <Route path="/networkdemo"       element={<NetworkDemo />} />
+          <Route path="/sobre"             element={<About />} />
+          <Route path="/notes"             element={<NetConfig />} />
+          <Route path="/create"            element={<CreateCanvas />} />
+          <Route path="/canvas/:id/editar" element={<MapSpecs />} />
+          <Route path="/compra/:planoId"   element={<AssinaturaQrCode />} />
+        </Route>
       </Routes>
     </Router>
   );
