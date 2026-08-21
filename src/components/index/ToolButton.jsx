@@ -3,6 +3,8 @@ import ModelIcon from "./ModelIcon";
 import styles from "./modules/toolbox.module.css";
 import { getIconSize, getIconRotation } from "./toolboxConfig";
 
+const LOCKED_STYLE = { opacity: 0.35, filter: "grayscale(0.7)" };
+
 export default function ToolButton({
   path,
   modelKey,
@@ -11,6 +13,7 @@ export default function ToolButton({
   label,
   onClick,
   active = false,
+  locked = false,
   statusLabel = null,
   indicatorClass = null,
   title,
@@ -35,13 +38,21 @@ export default function ToolButton({
       onClick={onClick}
       title={title ?? label}
     >
-      <span className={styles.iconGlow} aria-hidden="true" />
-      <span className={styles.iconStage}>
+      <span
+        className={styles.iconGlow}
+        style={locked ? LOCKED_STYLE : undefined}
+        aria-hidden="true"
+      />
+      <span
+        className={styles.iconStage}
+        style={locked ? LOCKED_STYLE : undefined}
+      >
         <ModelIcon path={path} size={size} active={active} rotation={rotation} />
       </span>
 
       {indicatorClass && <span className={indicatorClass} />}
 
+      {/* Tooltip fica FORA do ofuscamento: sempre legível, mesmo com o ícone trancado */}
       <span className={tooltipClass}>
         {statusLabel ?? label}
       </span>

@@ -27,6 +27,7 @@ function Settings({
   onEraserSizeChange,
   minEraserSize = 1,
   maxEraserSize = 100,
+  fontsByCategory,
 }) {
   const [width, setWidth]             = useState("");
   const [height, setHeight]           = useState("");
@@ -330,7 +331,11 @@ function Settings({
             <div className={styles.fieldGroup}>
               <span className={styles.label}>Fonte</span>
               <div style={{ width: 150 }}>
-                <FontSelector value={fontFamily} onChange={handleFontChange} />
+                <FontSelector
+                  value={fontFamily}
+                  onChange={handleFontChange}
+                  fontsByCategory={fontsByCategory}
+                />
               </div>
             </div>
           )}

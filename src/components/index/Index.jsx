@@ -14,6 +14,8 @@ import { createBrush } from "./useBrush";
 import ToolButton from "./ToolButton";
 import { MODEL_PATHS } from "./models";
 import { TOOLBOX_BTN_SIZE, TOOLBOX_RADIUS, TOOLBOX_GAP, TOOLBOX_PADDING_X } from "./toolboxConfig";
+import { useUserPlano } from "./useUserPlano";
+import { useFontSelection } from "./useFontSelection";
 
 import {
   generateId,
@@ -38,6 +40,13 @@ import {
 import { createCanvasInteractions } from "./useCanvasInteractions";
 import { createClipboard } from "./useClipboard";
 import { exportCanvasAsSVG } from "./useSvgExport";
+
+// Nível mínimo de plano exigido por funcionalidade (0 = sem plano, 4 = Builder).
+// Baseado no que cardsData.js anuncia por módulo.
+const MIN_PLANO_BRUSH           = 1; // Hécate: "Ferramenta de desenho"
+const MIN_PLANO_MEDIA           = 2; // Artemis: "Importar mídia"
+const MIN_PLANO_EXPORT_SVG      = 3; // Selene: "Exportar em SVG"
+const MIN_PLANO_CANVAS_SETTINGS = 1; // Hécate: "Personalização do fundo do canvas"
 
 export default function Index() {
   const { id } = useParams();
@@ -70,6 +79,23 @@ export default function Index() {
   const [gridLineColor, setGridLineColor] = useState(DEFAULT_GRID_LINE_COLOR);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const gridColorsRef = useRef({ bgColor: DEFAULT_GRID_BG_COLOR, lineColor: DEFAULT_GRID_LINE_COLOR });
+
+  // ── Gating por plano ──
+  const { plano } = useUserPlano();
+
+  // ── Fontes ──
+  // Sem painel dedicado: o catálogo já vem filtrado pelo plano e é usado
+  // diretamente pelo seletor de fonte dentro de Settings.jsx.
+  const { fontsByCategory } = useFontSelection(plano);
+
+  const canUseBrush        = plano >= MIN_PLANO_BRUSH;
+  const canImportMedia     = plano >= MIN_PLANO_MEDIA;
+  const canExportSvg       = plano >= MIN_PLANO_EXPORT_SVG;
+  const canCustomizeCanvas = plano >= MIN_PLANO_CANVAS_SETTINGS;
+
+  // Antes mostrava um aviso em vermelho quando o plano não permitia a ação;
+  // agora só bloqueia o clique, sem exibir mensagem nenhuma.
+  const requirePlano = (allowed) => allowed;
 
   useEffect(() => {
     gridColorsRef.current = { bgColor: gridBgColor, lineColor: gridLineColor };
@@ -302,6 +328,7 @@ export default function Index() {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragOver(false);
+    if (!requirePlano(canImportMedia)) return;
     if (e.dataTransfer?.files?.length) {
       mediaImporterRef.current?.handleFiles(e.dataTransfer.files);
     }
@@ -313,6 +340,7 @@ export default function Index() {
   };
 
   const handleExportSVG = () => {
+    if (!requirePlano(canExportSvg)) return;
     exportCanvasAsSVG(canvasInstanceRef.current, "mapa.svg");
   };
 
@@ -339,6 +367,13 @@ export default function Index() {
     scheduleGridColorSave();
   };
 
+  const toggleCanvasSettings = () => {
+    if (!showCanvasSettings) {
+      if (!requirePlano(canCustomizeCanvas)) return;
+    }
+    setShowCanvasSettings((v) => !v);
+  };
+
   const stopDrawing = () => {
     setDrawMode(null);
     brushRef.current?.disable();
@@ -349,6 +384,7 @@ export default function Index() {
       stopDrawing();
       return;
     }
+    if (!requirePlano(canUseBrush)) return;
     setDrawMode("draw");
     brushRef.current?.enable({ color: brushColor, size: brushSize });
   };
@@ -358,6 +394,7 @@ export default function Index() {
       stopDrawing();
       return;
     }
+    if (!requirePlano(canUseBrush)) return;
     setDrawMode("erase");
     brushRef.current?.enableErase({ size: eraserSize });
   };
@@ -401,7 +438,11 @@ export default function Index() {
   const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current); };
   const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current); };
   const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current); };
-  const openFilePicker = () => { stopDrawing(); fileInputRef.current?.click(); };
+  const openFilePicker = () => {
+    if (!requirePlano(canImportMedia)) return;
+    stopDrawing();
+    fileInputRef.current?.click();
+  };
 
   const handleFileInputChange = (e) => {
     if (e.target.files?.length) {
@@ -442,7 +483,13 @@ return (
 
         <div className={stylestoolbox.group}>
           <ToolButton path={MODEL_PATHS.center} modelKey="center" label="Centralizar"    onClick={centerCanvas} />
-          <ToolButton path={MODEL_PATHS.media}  modelKey="media"  label="Importar mídia" onClick={openFilePicker} />
+          <ToolButton
+            path={MODEL_PATHS.media}
+            modelKey="media"
+            label="Importar mídia"
+            locked={!canImportMedia}
+            onClick={openFilePicker}
+          />
         </div>
 
         <div className={stylestoolbox.divider} />
@@ -453,6 +500,7 @@ return (
             modelKey="brush"
             label="Pincel (Esc para sair)"
             active={drawMode === "draw"}
+            locked={!canUseBrush}
             onClick={toggleDraw}
           />
           <ToolButton
@@ -460,6 +508,7 @@ return (
             modelKey="eraser"
             label="Borracha (Esc para sair)"
             active={drawMode === "erase"}
+            locked={!canUseBrush}
             onClick={toggleErase}
           />
         </div>
@@ -488,6 +537,7 @@ return (
           path={MODEL_PATHS.exportSvg}
           modelKey="exportSvg"
           label="Exportar SVG"
+          locked={!canExportSvg}
           onClick={handleExportSVG}
           tooltipPosition="top"
         />
@@ -496,7 +546,8 @@ return (
           modelKey="settings"
           label="Configurações do canvas"
           active={showCanvasSettings}
-          onClick={() => setShowCanvasSettings((v) => !v)}
+          locked={!canCustomizeCanvas}
+          onClick={toggleCanvasSettings}
           tooltipPosition="top"
         />
       </div>
@@ -516,7 +567,8 @@ return (
       {/* Fora da .toolbox de propósito: .toolbox tem `transform`, o que faria
           um filho com position:fixed se posicionar relativo a ela, e não à tela.
           Fica sempre visível no topo — controles de pincel e borracha (numéricos,
-          1 a 100) ficam aqui, sem abrir nenhum painel flutuante. */}
+          1 a 100) e o seletor de fonte (quando um texto está selecionado)
+          ficam aqui, sem abrir nenhum painel flutuante. */}
       <Settings
         canvasRef={canvasInstanceRef}
         canvasReady={canvasReady}
@@ -530,6 +582,7 @@ return (
         onEraserSizeChange={handleEraserSizeChange}
         minEraserSize={MIN_ERASER_SIZE}
         maxEraserSize={MAX_ERASER_SIZE}
+        fontsByCategory={fontsByCategory}
       />
 
       <input
