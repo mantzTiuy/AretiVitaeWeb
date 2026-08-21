@@ -25,7 +25,7 @@
   flex-direction: column;
 }
 
-/* ── Window shell ── */
+
 .winWindow {
   display: flex;
   flex-direction: column;
@@ -36,7 +36,7 @@
   flex: 1;
 }
 
-/* ── Sub-header bar ── */
+
 .winHeader {
   display: flex;
   align-items: center;
@@ -103,7 +103,6 @@
 .newBtn:hover  { filter: brightness(1.18); }
 .newBtn:active { transform: scale(0.97); }
 
-/* ── Mensagem de erro ── */
 .errorMsg {
   margin: 10px clamp(16px, 3vw, 40px) 0;
   padding: 10px 14px;
@@ -119,7 +118,7 @@
   flex-shrink: 0;
 }
 
-/* ── Rodapé com botões ── */
+
 .winFooter {
   display: flex;
   justify-content: center;

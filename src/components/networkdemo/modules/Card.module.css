@@ -1,14 +1,11 @@
-/* Card.module.css
-   Internals of a single card: title, list, price, contact, inline CTA.
-   CSS custom properties (--accent, --text, etc.) come from .overlay
-   in ScrollCards.module.css and cascade down through the DOM tree. */
+
 
 @keyframes dotPulse {
   0%, 100% { opacity: 1;   transform: scale(1);   }
   50%       { opacity: 0.4; transform: scale(0.65); }
 }
 
-/* ---------- card shell ---------- */
+
 
 .card {
   position: absolute;
@@ -28,7 +25,6 @@
   box-sizing: border-box;
   overflow: hidden;
 
-  /* mobile default (base) */
   width: 88vw;
   left: 50%;
   transform: translateY(-42%) translateX(-50%);
@@ -60,7 +56,6 @@
   }
 }
 
-/* ---------- decorative lines ---------- */
 
 .shimmer {
   position: absolute;
@@ -92,7 +87,7 @@
 .cardLeft .accentBar { left: 0; }
 .cardRight .accentBar { right: 0; }
 
-/* ---------- content ---------- */
+
 
 .inner {
   position: relative;
@@ -160,7 +155,7 @@
   opacity: 0.75;
 }
 
-/* ---------- list / description ---------- */
+
 
 .list {
   list-style: none;
@@ -217,7 +212,7 @@
   .description { font-size: 16px; }
 }
 
-/* ---------- price ---------- */
+
 
 .priceRow {
   display: flex;
@@ -251,7 +246,7 @@
   .priceSub { font-size: 14px; }
 }
 
-/* ---------- contact ---------- */
+
 
 .contactRow {
   margin-top: 28px;
@@ -291,7 +286,6 @@
   color: var(--accent);
 }
 
-/* ---------- inline CTA (inside the card) ---------- */
 
 .ctaButton {
   display: inline-flex;
@@ -334,7 +328,7 @@
   animation: dotPulse 2.4s ease-in-out infinite;
 }
 
-/* filled variant, used when the CTA carries an href (e.g. "Voltar") */
+
 .ctaButtonFilled {
   margin-top: 20px;
   background: rgba(100, 180, 255, 0.18);

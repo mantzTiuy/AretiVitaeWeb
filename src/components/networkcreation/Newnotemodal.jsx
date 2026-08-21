@@ -17,7 +17,7 @@ export default function NewNoteModal({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Titlebar ── */}
+  
         <div className={styles.titlebar}>
           <span className={styles.titlebarLabel}>Nova nota</span>
           <div className={styles.dots}>

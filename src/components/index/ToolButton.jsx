@@ -17,7 +17,7 @@ export default function ToolButton({
   statusLabel = null,
   indicatorClass = null,
   title,
-  tooltipPosition = "side", // "side" | "top" — use "top" em barras horizontais
+  tooltipPosition = "side",
 }) {
   const [hovered, setHovered] = useState(false);
   const size     = iconSize ?? getIconSize(modelKey);
@@ -52,7 +52,7 @@ export default function ToolButton({
 
       {indicatorClass && <span className={indicatorClass} />}
 
-      {/* Tooltip fica FORA do ofuscamento: sempre legível, mesmo com o ícone trancado */}
+    
       <span className={tooltipClass}>
         {statusLabel ?? label}
       </span>

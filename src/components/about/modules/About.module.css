@@ -1,9 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap');
 
-/* nota: não tenho o mapSpecs.module.css real, então as cores/medidas do
-   "window" abaixo foram estimadas a partir da paleta do CanvasStarBackground
-   (#01172F) e do padrão titlebar/dots usado no MapSpecs.jsx. Ajuste os
-   valores abaixo se não baterem com o restante do app. */
+
 
 .root {
   position: relative;
@@ -121,7 +118,7 @@
   outline-offset: 2px;
 }
 
-/* rótulos que separam as seções (O que é / Propósito / Criadores...) */
+
 .sectionLabel {
   margin: 4px 0 0;
   font-size: 11px;

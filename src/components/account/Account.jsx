@@ -178,10 +178,7 @@ export default function Account() {
     }
   }
 
-  // Fecha o modal de sucesso. Se a senha foi trocada nessa operação, a
-  // sessão atual não faz mais sentido (a senha antiga ficou pra trás), então
-  // já limpa o localStorage e manda direto pro login em vez de só fechar o
-  // modal e continuar na tela de conta.
+
   const handleSuccessClose = () => {
     setSucesso(false);
     if (passwordChanged) {
@@ -213,7 +210,7 @@ export default function Account() {
 
           <div className={styles.grid}>
 
-            {/* Informações passadas com as funções que já estão nesse arquivo */}
+
             <div className={styles.window}>
               <Titlebar label="Informações" />
               <div className={styles.formBody}>

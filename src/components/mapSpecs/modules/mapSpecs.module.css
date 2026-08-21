@@ -249,7 +249,7 @@
   cursor: not-allowed;
 }
 
-/* ── Botão Excluir ── */
+
 .delete {
   flex: 0 0 auto;
   height: clamp(2rem, 4.8vh, 3.1rem);
@@ -282,7 +282,7 @@
   text-transform: uppercase;
 }
 
-/* ── Modal de exclusão ── */
+
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -359,7 +359,6 @@
   box-shadow: 0 0 0 2px rgba(224, 85, 85, 0.15);
 }
 
-/* ── Botões dentro do modal ── */
 .deleteConfirm {
   flex: 1;
   height: clamp(2rem, 4.6vh, 2.8rem);

@@ -53,8 +53,7 @@ export default function CanvasStarBackground() {
       const sin = Math.sin(angleRef.current);
       const scale = W / 1440;
 
-      // multiplicador maior = estrelas espalhadas por uma área bem maior que a tela,
-      // então mesmo girando não ficam concentradas/repetidas perto do centro
+   
       const SPREAD = 2.4;
 
       for (const star of starData) {

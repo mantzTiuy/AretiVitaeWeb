@@ -61,7 +61,7 @@
   background: #9fc1ff;
 }
 
-/* Glow de hover removido a pedido — fica no DOM mas sempre invisível. */
+
 .iconGlow {
   position: absolute;
   inset: -6px;
@@ -80,7 +80,7 @@
   pointer-events: none;
 }
 
-/* Tooltip lateral (toolbox vertical) */
+
 .tooltip {
   position: absolute;
   right: calc(100% + 12px);
@@ -107,10 +107,6 @@
   transform: translateY(-50%) translateX(0);
 }
 
-/* Variante para barras horizontais (bottomToolbar): abre pra cima.
-   Ancorada pela borda direita do próprio botão (right: 0) em vez de
-   centralizada — assim o tooltip cresce pra esquerda e nunca estoura
-   a borda direita da tela, mesmo no botão mais à direita. */
 .tooltipTop {
   right: 0;
   left: auto;
@@ -148,7 +144,7 @@
   50%      { transform: scale(1.5); opacity: 0.55; }
 }
 
-/* Barra inferior: salvar, exportar SVG e configurações, tudo junto no canto */
+
 .bottomToolbar {
   position: fixed;
   bottom: 16px;

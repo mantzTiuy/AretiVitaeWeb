@@ -28,7 +28,7 @@ export default function ConfirmModal({
         onKeyDown={handleKey}
         tabIndex={-1}
       >
-        {/* ── Titlebar ── */}
+  
         <div className={styles.titlebar}>
           <span className={styles.titlebarLabel}>{title}</span>
           <div className={styles.dots}>

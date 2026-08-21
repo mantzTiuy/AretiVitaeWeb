@@ -32,11 +32,7 @@ export const CONTAINER_MAX_HEIGHT = 4000;
 
 export const CONTAINER_LABEL_PAD = 10;
 
-// Tamanho da "pegada" em cada canto (em px, na tela, antes de dividir pelo
-// zoom). Como agora é a ÚNICA área clicável da seção, vale considerar um
-// valor um pouco maior que os 8px originais (que faziam sentido quando a
-// borda inteira era pegável) — algo como 12-16 fica mais confortável de
-// acertar com o mouse. Ajuste esse número à vontade.
+
 export const CONTAINER_BORDER_HIT_MARGIN = 8;
 
 export const API_BASE = "http://localhost:8081/apiAvMap";
@@ -90,12 +86,9 @@ export function containerBorderOnly(rect) {
     const dx = Math.abs(point.x - center.x);
     const dy = Math.abs(point.y - center.y);
 
-    // Fora do retângulo (considerando a margem pra fora) -> nunca pegável.
+   
     if (dx > hw + margin || dy > hh + margin) return false;
 
-    // Só é pegável perto de uma QUINA: precisa estar perto da borda
-    // horizontal E da borda vertical ao mesmo tempo. Trocar esse "&&" por
-    // "||" volta a deixar a borda inteira pegável (comportamento antigo).
     return dx >= hw - margin && dy >= hh - margin;
   };
   return rect;

@@ -105,10 +105,7 @@ export function createCanvasInteractions({
 
   const onMouseUp = (opt) => {
     const e = opt.e;
-    // Só encerra o pan quando nenhum botão do mouse mais está pressionado.
-    // Antes, o mouseup de QUALQUER botão desligava o pan — se você
-    // soltasse o botão esquerdo enquanto ainda segurava o botão do meio
-    // (pan em andamento), o pan parava no meio do gesto sem motivo.
+
     if (!onMouseDown._panActive || e.buttons === 0) {
       onMouseDown._panActive = false;
       cs.selection = true;

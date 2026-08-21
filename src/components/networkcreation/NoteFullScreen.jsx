@@ -9,7 +9,7 @@ export default function NoteFullscreen({ note, onUpdate, onClose }) {
   const [title, setTitle] = useState(note.title ?? "");
   const [text, setText] = useState(note.note ?? "");
 
-  // Se a nota selecionada mudar, ele "segue" os arquivos
+
   useEffect(() => {
     setTitle(note.title ?? "");
     setText(note.note ?? "");

@@ -208,7 +208,7 @@ input[type="password"].input {
   }
 }
 
-/* Tablet Curto*/
+/* Tablet pequeno*/
 @media (max-height: 500px) {
   .brandTitle {
     font-size: clamp(1rem, 3vh, 2rem);

@@ -1,5 +1,5 @@
 
-// cardsData.js
+
 export const CARDS = [
   {
     tag: 'Expansão',

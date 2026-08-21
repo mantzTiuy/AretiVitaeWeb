@@ -24,7 +24,7 @@
   to { opacity: 1; }
 }
 
-/* ---------- janela ---------- */
+
 
 .winWindow {
   width: 100%;
@@ -92,7 +92,6 @@
   box-sizing: border-box;
 }
 
-/* ---------- conteúdo ---------- */
 
 .simboloWrap {
   width: 104px;

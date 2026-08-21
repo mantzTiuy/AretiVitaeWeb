@@ -17,7 +17,7 @@
   --card-border: rgba(138, 176, 255, 0.22);
 }
 
-/* ---------- janela ---------- */
+
 
 .winWindow {
   width: 100%;
@@ -143,7 +143,7 @@
   color: rgba(180, 205, 255, 0.6);
 }
 
-/* Botões lado a lado (Cancelar / Assinar ou Cancelar / Gerar novo QR code) */
+
 .acoesTopo {
   display: flex;
   gap: 10px;
@@ -156,7 +156,7 @@
   margin-bottom: 0;
 }
 
-/* dentro do .acoesTopo o "cancelar" precisa parecer botão, não link */
+
 .acoesTopo .cancelar {
   padding: 14px;
   border: 1px solid rgba(138, 176, 255, 0.35);
@@ -265,7 +265,7 @@
   color: #ff8f7a;
 }
 
-/* Container de sucesso / já-assinante, no mesmo azul usado no resto da tela */
+
 .sucesso {
   margin-top: 8px;
   padding: 20px 18px;
@@ -287,7 +287,7 @@
   margin: 0;
 }
 
-/* Botão "Voltar" dentro do card de já-assinante: borda azul, sem vermelho */
+
 .voltarSucesso {
   width: 100%;
   padding: 12px 16px;

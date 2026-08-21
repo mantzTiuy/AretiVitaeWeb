@@ -1,4 +1,4 @@
-// CardCTA.jsx
+
 import styles from './modules/Card.module.css'
 
 export default function CardCTA({ label, href }) {

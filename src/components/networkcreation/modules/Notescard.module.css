@@ -6,7 +6,6 @@
   overflow: hidden;
   transition: filter 0.18s, transform 0.18s;
 
-  /* tamanho padrão para todos os cards */
   width: 100%;
   height: 160px;
   display: flex;
@@ -20,7 +19,7 @@
   min-height: 160px;
 }
 
-/* ── Titlebar do card ── */
+
 .cardTitlebar {
   display: flex;
   align-items: center;
@@ -195,7 +194,7 @@
 .saveBtn:hover  { filter: brightness(1.25); }
 .saveBtn:active { transform: scale(0.97); }
 
-/* ─── Telas grandes (1920px+) ─────────────────────────── */
+
 @media (min-width: 1920px) {
   .card {
     height: 170px;

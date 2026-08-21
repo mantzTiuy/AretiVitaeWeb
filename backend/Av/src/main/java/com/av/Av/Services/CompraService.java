@@ -22,13 +22,11 @@ import java.util.Optional;
 @Service
 public class CompraService {
 
-    // Significado do campo "ativo": 0 = inativo/vencido | 1 = ativo (pago) | 2 = pendente (aguardando pagamento)
+
     private static final int PENDENTE = 2;
     private static final int ATIVO = 1;
 
-    // Plano 4 = acesso ilimitado do dono da plataforma. Existe na tabela Plano só
-    // porque a foreign key exige, mas gerarQrCode bloqueia ele explicitamente -
-    // só é concedido via /compra/builder/conceder-admin, que exige a Builder-Key.
+    // Plano 4 = acesso ilimitado ao builder
     private static final int PLANO_ADMIN = 4;
 
     @Autowired

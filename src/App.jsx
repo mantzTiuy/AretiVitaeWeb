@@ -45,7 +45,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* rota livre, sem guarda — senão vira loop de redirect */}
+     
         <Route path="/acesso-mobile" element={<AcessoMobile />} />
 
         {/* tudo aqui dentro passa pela checagem de mobile primeiro */}

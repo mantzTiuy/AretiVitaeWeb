@@ -118,7 +118,7 @@ function Model({ path, position, tooltip, route, scale, rotationY, floatSpeed, f
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        {/* hitbox invisível para área de clique maior */}
+      
         <mesh visible={false}>
           <boxGeometry args={[2, 2, 2]} />
           <meshBasicMaterial />

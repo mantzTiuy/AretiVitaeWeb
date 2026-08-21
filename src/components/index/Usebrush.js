@@ -66,16 +66,10 @@ export function createBrush(cs, { salvarMapa } = {}) {
   };
 
   const onEraseMouseDown = (opt) => {
-    // Botão do meio (pan) ou Ctrl+clique (pan) não devem apagar nada —
-    // deixa o evento passar direto pro handler de pan do canvas.
+  
     if (opt.e.button === 1 || opt.e.ctrlKey) return;
 
-    // O clique pegou um objeto de verdade (bloco, texto, seção, mídia...)?
-    // Então a intenção é mover esse objeto, não apagar. `cs.selection = false`
-    // só desativa a seleção em grupo — o Fabric ainda deixa arrastar um
-    // objeto individual clicado diretamente nele. Sem essa checagem, cada
-    // mousemove do arraste chamava eraseAt() na posição do cursor e apagava
-    // qualquer desenho que ficasse escondido atrás do objeto sendo movido.
+   
     if (opt.target) return;
 
     isErasing = true;
@@ -85,8 +79,7 @@ export function createBrush(cs, { salvarMapa } = {}) {
 
   const onEraseMouseMove = (opt) => {
     if (!isErasing) return;
-    // Rede de segurança: se por algum motivo um objeto estiver "ativo"
-    // (sendo arrastado) nesse meio-tempo, não apaga nada até ele ser solto.
+
     if (cs.getActiveObject()) return;
     eraseAt(toCanvasPoint(cs, opt.e.clientX, opt.e.clientY));
   };

@@ -1,15 +1,4 @@
-// ──────────────────────────────────────────────────────────────
-// Personalize aqui quais fontes cada plano libera no seletor de
-// fonte (dentro de Settings.jsx). Toda fonte listada precisa
-// existir em GOOGLE_FONTS (googleFonts.js) — nomes errados são
-// ignorados automaticamente por fontConstants.js, sem quebrar o
-// seletor.
-//
-// Plano 0 (Básico)  -> sempre só Josefin Sans (fixo, não é editável aqui).
-// Plano 1 (Hécate)  -> lista abaixo.
-// Plano 2 (Artemis) -> lista abaixo.
-// Plano 3 (Selene)  -> libera o catálogo inteiro, não precisa editar aqui.
-// ──────────────────────────────────────────────────────────────
+
 
 export const PLAN_FONTS = {
   1: [ // Hécate — 10 fontes

@@ -117,7 +117,7 @@
 .confirmBtn:active:not(:disabled) { transform: scale(0.97); }
 .confirmBtn:disabled { opacity: 0.38; cursor: not-allowed; }
 
-/* Variante para ações destrutivas (ex: excluir) */
+
 .confirmBtnDanger {
   background: rgb(150, 55, 60);
 }

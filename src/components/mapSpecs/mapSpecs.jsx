@@ -15,7 +15,6 @@ export default function MapSpecs() {
   const [erro, setErro] = useState('');
   const [nameTouched, setNameTouched] = useState(false);
 
-  // ── Exclusão (soft delete via ativo) ──
   const [showDeleteModal, setShowDeleteModal]   = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting]                 = useState(false);
@@ -74,7 +73,7 @@ export default function MapSpecs() {
   }
 
   function fecharModalExclusao() {
-    if (deleting) return; // evita fechar no meio de uma requisição
+    if (deleting) return; 
     setShowDeleteModal(false);
     setDeleteConfirmText('');
     setErroDelete('');

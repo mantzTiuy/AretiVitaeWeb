@@ -1,8 +1,4 @@
-/* ScrollCards.module.css
-   Only styles for elements React renders directly in JSX.
-   Card internals use inline styles (DOM-imperative pattern). */
 
-/* ── Overlay ── */
 .overlay {
   position: fixed;
   top: 0;
@@ -13,7 +9,7 @@
   z-index: 10;
 }
 
-/* ── CTA wrapper ── */
+
 .ctaWrapper {
   position: fixed;
   bottom: 44px;
@@ -52,11 +48,7 @@
   -ms-overflow-style: none;
 }
 
-/* ScrollCards.module.css
-   Only styles for elements React renders directly in JSX.
-   Card internals live in Card.module.css. */
 
-/* ── Overlay ── */
 .overlay {
   --accent: #8ab0ff;
   --accent-b: #c4b5fd;
@@ -74,7 +66,7 @@
   z-index: 10;
 }
 
-/* ── CTA wrapper ── */
+
 .ctaWrapper {
   position: fixed;
   bottom: 44px;

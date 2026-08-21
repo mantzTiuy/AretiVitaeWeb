@@ -20,7 +20,7 @@
   align-items: start;
 }
 
-/* ── Add card ── */
+
 .addCard {
   display: flex;
   flex-direction: column;

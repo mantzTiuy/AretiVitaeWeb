@@ -45,6 +45,7 @@ export default function CerberusDisplay() {
   const navigate = useNavigate()
 
   return (
+    //Não tirar do inline se não buga completamente, é bizarro o jeito que essa biblioteca funciona
     <div
       style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}
       onMouseEnter={() => setHovered(true)}

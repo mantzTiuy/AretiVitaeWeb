@@ -41,12 +41,11 @@ import { createCanvasInteractions } from "./useCanvasInteractions";
 import { createClipboard } from "./useClipboard";
 import { exportCanvasAsSVG } from "./useSvgExport";
 
-// Nível mínimo de plano exigido por funcionalidade (0 = sem plano, 4 = Builder).
-// Baseado no que cardsData.js anuncia por módulo.
-const MIN_PLANO_BRUSH           = 1; // Hécate: "Ferramenta de desenho"
-const MIN_PLANO_MEDIA           = 2; // Artemis: "Importar mídia"
-const MIN_PLANO_EXPORT_SVG      = 3; // Selene: "Exportar em SVG"
-const MIN_PLANO_CANVAS_SETTINGS = 1; // Hécate: "Personalização do fundo do canvas"
+
+const MIN_PLANO_BRUSH           = 1;
+const MIN_PLANO_MEDIA           = 2;
+const MIN_PLANO_EXPORT_SVG      = 3; 
+const MIN_PLANO_CANVAS_SETTINGS = 1; 
 
 export default function Index() {
   const { id } = useParams();
@@ -80,12 +79,10 @@ export default function Index() {
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const gridColorsRef = useRef({ bgColor: DEFAULT_GRID_BG_COLOR, lineColor: DEFAULT_GRID_LINE_COLOR });
 
-  // ── Gating por plano ──
+
   const { plano } = useUserPlano();
 
-  // ── Fontes ──
-  // Sem painel dedicado: o catálogo já vem filtrado pelo plano e é usado
-  // diretamente pelo seletor de fonte dentro de Settings.jsx.
+
   const { fontsByCategory } = useFontSelection(plano);
 
   const canUseBrush        = plano >= MIN_PLANO_BRUSH;
@@ -93,8 +90,7 @@ export default function Index() {
   const canExportSvg       = plano >= MIN_PLANO_EXPORT_SVG;
   const canCustomizeCanvas = plano >= MIN_PLANO_CANVAS_SETTINGS;
 
-  // Antes mostrava um aviso em vermelho quando o plano não permitia a ação;
-  // agora só bloqueia o clique, sem exibir mensagem nenhuma.
+
   const requirePlano = (allowed) => allowed;
 
   useEffect(() => {
@@ -223,15 +219,7 @@ export default function Index() {
     const onKeyDown = (e) => interactions.onKeyDown(e, canvasInstanceRef);
     const disableCtrlZoom = (e) => { if (e.ctrlKey) e.preventDefault(); };
 
-    // Impede que o pincel comece um traço quando o pan é ativado pelo
-    // botão do meio (ou Ctrl+clique). O Fabric processa o mousedown do
-    // modo de desenho internamente ANTES de disparar o evento sintético
-    // "mouse:down" que os handlers de pan escutam — por isso a
-    // interceptação precisa acontecer na fase de captura, num
-    // ancestral do canvas, antes do listener interno do Fabric (que
-    // fica no upperCanvasEl) rodar. A borracha é tratada à parte, em
-    // useBrush.js, pois já roda via evento sintético e não precisa
-    // dessa interceptação em fase de captura.
+  
     const wrapperEl = canvasRef.current.parentElement;
     let suspendedDrawMode = false;
     const isPanTrigger = (e) => e.button === 1 || e.ctrlKey;
@@ -239,12 +227,7 @@ export default function Index() {
     const onWrapperMouseDown = (e) => {
       if (!isPanTrigger(e)) return;
       if (cs.isDrawingMode) {
-        // Se já havia um traço em andamento (botão esquerdo pressionado
-        // antes do botão do meio), finaliza esse traço agora do jeito
-        // que o próprio Fabric faria num mouseup normal. Sem isso,
-        // `_isCurrentlyDrawing` fica preso em `true` e o próximo
-        // mousemove retoma o traço antigo do ponto onde ele parou,
-        // gerando aquele "salto"/rabisco estranho quando o pan termina.
+     
         if (cs._isCurrentlyDrawing) {
           cs._onMouseUpInDrawingMode(e);
         }
@@ -253,12 +236,7 @@ export default function Index() {
       }
     };
 
-    // Só restaura o modo de desenho quando TODOS os botões do mouse
-    // foram soltos (e.buttons === 0). Antes, isso disparava no primeiro
-    // "mouseup" que chegasse — se um dos dois botões (esquerdo/meio)
-    // fosse solto antes do outro, o isDrawingMode voltava no meio do
-    // pan ou do desenho, e os dois modos passavam a competir pelos
-    // mesmos eventos de mousemove.
+ 
     const onWindowMouseUpRestoreDraw = (e) => {
       if (suspendedDrawMode && e.buttons === 0) {
         suspendedDrawMode = false;
@@ -521,9 +499,7 @@ return (
         </div>
       </div>
 
-      {/* Barra inferior: salvar, exportar SVG e configurações, tudo junto no canto.
-          tooltipPosition="top" faz o tooltip abrir pra cima, já que aqui os botões
-          ficam lado a lado e um tooltip pro lado tamparia o botão vizinho. */}
+    
       <div className={stylestoolbox.bottomToolbar}>
         <ToolButton
           path={MODEL_PATHS.save}
@@ -552,8 +528,7 @@ return (
         />
       </div>
 
-      {/* Modal centralizado na tela — não depende de onde o botão está,
-          então nunca fica cortado nas bordas. */}
+   
       <CanvasSettingsPanel
         open={showCanvasSettings}
         onClose={() => setShowCanvasSettings(false)}
@@ -564,11 +539,7 @@ return (
         onReset={handleResetGridColors}
       />
 
-      {/* Fora da .toolbox de propósito: .toolbox tem `transform`, o que faria
-          um filho com position:fixed se posicionar relativo a ela, e não à tela.
-          Fica sempre visível no topo — controles de pincel e borracha (numéricos,
-          1 a 100) e o seletor de fonte (quando um texto está selecionado)
-          ficam aqui, sem abrir nenhum painel flutuante. */}
+      
       <Settings
         canvasRef={canvasInstanceRef}
         canvasReady={canvasReady}

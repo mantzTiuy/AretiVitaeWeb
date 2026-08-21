@@ -1,10 +1,6 @@
 import { useState } from "react";
 import stylestoolbox from "./modules/toolbox.module.css";
 
-// Reaproveita as mesmas classes CSS do ToolButton.jsx, mas mostra "Aa" no lugar
-// de um ModelIcon — assim não é preciso cadastrar um novo ícone em models.js.
-// Se você já tiver (ou quiser criar) um ícone próprio pra "Fontes", troque o
-// conteúdo do <span className={stylestoolbox.iconStage}> por <ModelIcon .../>.
 export default function FontToolButton({
   active = false,
   onClick,

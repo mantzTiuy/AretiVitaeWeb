@@ -5,7 +5,7 @@ export const TOOLBOX_GAP      = 6;
 export const TOOLBOX_PADDING_X = 6;
 export const TOOLBOX_BORDER    = 1;
 
-// Largura total da toolbox
+
 export const TOOLBOX_WIDTH =
   TOOLBOX_BTN_SIZE + TOOLBOX_PADDING_X * 2 + TOOLBOX_BORDER * 2;
 
@@ -52,8 +52,8 @@ export function getIconRotation(modelKey) {
   return deg.map((d) => (d * Math.PI) / 180);
 }
 
-// Painel de W/H — agora fixo no topo, largura suficiente pra não estourar
+
 export const SETTINGS_PANEL_WIDTH  = 150;
 export const SETTINGS_PANEL_RADIUS = 6;
 export const SETTINGS_PANEL_GAP    = 6;
-export const SETTINGS_PANEL_OFFSET = TOOLBOX_WIDTH; // mantido por compatibilidade, não é mais usado no posicionamento
+export const SETTINGS_PANEL_OFFSET = TOOLBOX_WIDTH; 

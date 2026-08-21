@@ -17,7 +17,7 @@
   background: transparent !important;
 }
 
-/* O canvas lower do Fabric também recebe background inline */
+
 .canvaWrapper canvas {
   background: transparent !important;
 }
