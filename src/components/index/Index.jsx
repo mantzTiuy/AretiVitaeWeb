@@ -293,7 +293,20 @@ export default function Index() {
     };
   }, [id]);
 
+  // Arrastar texto selecionado dentro de um bloco em edição (Textbox do
+  // fabric) dispara os mesmos eventos nativos de drag do HTML usados para
+  // soltar arquivos vindos do sistema operacional. Só um drag de arquivo
+  // real traz o tipo "Files" em dataTransfer.types — uma seleção de texto
+  // arrastada não traz. Usamos isso para não mostrar o overlay de
+  // "Solte aqui o PDF ou imagem" enquanto o usuário só está selecionando
+  // texto com o mouse.
+  const isFileDrag = (e) => {
+    const types = e.dataTransfer?.types;
+    return !!types && Array.from(types).includes("Files");
+  };
+
   const handleDragOver = (e) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     setIsDragOver(true);
   };
@@ -304,6 +317,7 @@ export default function Index() {
   };
 
   const handleDrop = (e) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     setIsDragOver(false);
     if (!requirePlano(canImportMedia)) return;

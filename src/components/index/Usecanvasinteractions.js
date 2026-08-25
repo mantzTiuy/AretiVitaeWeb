@@ -78,6 +78,26 @@ export function createCanvasInteractions({
       onMouseDown._panActive = true;
       onMouseDown._lastX = e.clientX;
       onMouseDown._lastY = e.clientY;
+      return;
+    }
+
+    // A rubber-band selection is about to start (mousedown on empty
+    // canvas). Fabric scans every object with selectable !== false and
+    // whose bounds intersect the drag rectangle, and connection lines sit
+    // spatially between the blocks they connect — so a rubber-band very
+    // often clips one. Once a line becomes a member of an ActiveSelection,
+    // even removing it afterwards leaves it in a broken state (it keeps
+    // its correct coordinates but stops being rendered and stops
+    // receiving clicks/Delete, i.e. becomes a "ghost"). The safe fix is
+    // to make lines temporarily unselectable so they're excluded from the
+    // scan itself, then restore them right after on mouse:up.
+    if (!target && cs.selection) {
+      const lines = cs.getObjects().filter((o) => o.isLine);
+      lines.forEach((l) => {
+        l._prevSelectable = l.selectable;
+        l.selectable = false;
+      });
+      onMouseDown._suppressedLines = lines;
     }
   };
 
@@ -109,6 +129,17 @@ export function createCanvasInteractions({
     if (!onMouseDown._panActive || e.buttons === 0) {
       onMouseDown._panActive = false;
       cs.selection = true;
+    }
+
+    // Fabric has already finalized the ActiveSelection by the time our
+    // mouse:up listener runs, so it's now safe to give lines back their
+    // normal click/delete interactivity.
+    if (onMouseDown._suppressedLines) {
+      onMouseDown._suppressedLines.forEach((l) => {
+        l.selectable = l._prevSelectable !== undefined ? l._prevSelectable : true;
+        delete l._prevSelectable;
+      });
+      onMouseDown._suppressedLines = null;
     }
 
     if (!isDraggingPort.current) return;
