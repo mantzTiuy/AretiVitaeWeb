@@ -6,6 +6,7 @@ import {
   DEFAULT_BRUSH_SIZE,
   DEFAULT_ERASER_SIZE,
 } from "./constants";
+import { makeAddAction, makeRemoveAction, combineActions } from "./useHistory";
 
 function circleIntersectsRect(cx, cy, r, rect) {
   const closestX = Math.max(rect.left, Math.min(cx, rect.left + rect.width));
@@ -15,16 +16,13 @@ function circleIntersectsRect(cx, cy, r, rect) {
   return dx * dx + dy * dy <= r * r;
 }
 
-export function createBrush(cs, { salvarMapa } = {}) {
+export function createBrush(cs, { salvarMapa, history } = {}) {
   if (!cs) return null;
 
   let mode = null;
   let eraserSize = DEFAULT_ERASER_SIZE;
   let isErasing = false;
   let eraseBatch = null;
-
-  let undoStack = [];
-  let redoStack = [];
 
   const ensureBrush = () => {
     if (!(cs.freeDrawingBrush instanceof fabric.PencilBrush)) {
@@ -42,8 +40,7 @@ export function createBrush(cs, { salvarMapa } = {}) {
     if (!path) return;
     tagDrawing(path);
     cs.sendObjectToBack(path);
-    undoStack.push({ type: "add", objects: [path] });
-    redoStack = [];
+    history?.push(makeAddAction(cs, path, { toBack: true }));
     cs.requestRenderAll();
     salvarMapa?.();
   };
@@ -66,10 +63,7 @@ export function createBrush(cs, { salvarMapa } = {}) {
   };
 
   const onEraseMouseDown = (opt) => {
-  
     if (opt.e.button === 1 || opt.e.ctrlKey) return;
-
-   
     if (opt.target) return;
 
     isErasing = true;
@@ -79,7 +73,6 @@ export function createBrush(cs, { salvarMapa } = {}) {
 
   const onEraseMouseMove = (opt) => {
     if (!isErasing) return;
-
     if (cs.getActiveObject()) return;
     eraseAt(toCanvasPoint(cs, opt.e.clientX, opt.e.clientY));
   };
@@ -87,8 +80,11 @@ export function createBrush(cs, { salvarMapa } = {}) {
   const onEraseMouseUp = () => {
     isErasing = false;
     if (eraseBatch?.length) {
-      undoStack.push({ type: "erase", objects: eraseBatch });
-      redoStack = [];
+      history?.push(
+        combineActions(
+          eraseBatch.map((obj) => makeRemoveAction(cs, obj, { toBack: true }))
+        )
+      );
       salvarMapa?.();
     }
     eraseBatch = null;
@@ -141,46 +137,9 @@ export function createBrush(cs, { salvarMapa } = {}) {
 
   const getMode = () => mode;
 
-  const undo = () => {
-    const action = undoStack.pop();
-    if (!action) return;
-    if (action.type === "add") {
-      action.objects.forEach((obj) => cs.remove(obj));
-    } else {
-      action.objects.forEach((obj) => {
-        cs.add(obj);
-        cs.sendObjectToBack(obj);
-      });
-    }
-    redoStack.push(action);
-    cs.requestRenderAll();
-    salvarMapa?.();
-  };
-
-  const redo = () => {
-    const action = redoStack.pop();
-    if (!action) return;
-    if (action.type === "add") {
-      action.objects.forEach((obj) => {
-        cs.add(obj);
-        cs.sendObjectToBack(obj);
-      });
-    } else {
-      action.objects.forEach((obj) => cs.remove(obj));
-    }
-    undoStack.push(action);
-    cs.requestRenderAll();
-    salvarMapa?.();
-  };
-
-  const hasUndo = () => undoStack.length > 0;
-  const hasRedo = () => redoStack.length > 0;
-
   const destroy = () => {
     disable();
     cs.off("path:created", onPathCreated);
-    undoStack = [];
-    redoStack = [];
   };
 
   return {
@@ -191,10 +150,6 @@ export function createBrush(cs, { salvarMapa } = {}) {
     setColor,
     setSize,
     setEraserSize,
-    undo,
-    redo,
-    hasUndo,
-    hasRedo,
     destroy,
   };
 }

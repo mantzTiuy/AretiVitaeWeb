@@ -16,6 +16,7 @@ import { MODEL_PATHS } from "./models";
 import { TOOLBOX_BTN_SIZE, TOOLBOX_RADIUS, TOOLBOX_GAP, TOOLBOX_PADDING_X } from "./toolboxConfig";
 import { useUserPlano } from "./useUserPlano";
 import { useFontSelection } from "./useFontSelection";
+import { createHistory } from "./useHistory";
 
 import {
   generateId,
@@ -50,6 +51,8 @@ const MIN_PLANO_CANVAS_SETTINGS = 1;
 export default function Index() {
   const { id } = useParams();
 
+
+  const historyRef = useRef(null);
   const canvasRef         = useRef(null);
   const gridRef           = useRef(null);
   const canvasInstanceRef = useRef(null);
@@ -57,6 +60,7 @@ export default function Index() {
   const mediaImporterRef  = useRef(null);
   const brushRef          = useRef(null);
   const fileInputRef      = useRef(null);
+  const cancelledRef      = useRef(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const tempLineRef       = useRef(null);
   const isDraggingPort    = useRef(false);
@@ -113,6 +117,8 @@ export default function Index() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    cancelledRef.current = false;
 
     setGridBgColor(DEFAULT_GRID_BG_COLOR);
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
@@ -182,26 +188,26 @@ export default function Index() {
 
     canvasInstanceRef.current.salvarMapa = salvarMapa;
 
-    const clipboard = createClipboard({ cs, salvarMapa });
+    historyRef.current = createHistory({ cs, salvarMapa });
+    const history = historyRef.current;
 
-    mediaImporterRef.current = createMediaImporter({ cs, salvarMapa });
+    const clipboard = createClipboard({ cs, salvarMapa, history });
 
-    brushRef.current = createBrush(cs, { salvarMapa });
+mediaImporterRef.current = createMediaImporter({ cs, salvarMapa, history }); // ver nota abaixo
 
-    const cancelledRef = { current: false };
-    carregarMapa(cs, cancelledRef);
+brushRef.current = createBrush(cs, { salvarMapa, history });
 
-    const interactions = createCanvasInteractions({
-      cs,
-      sourceBlockRef,
-      tempLineRef,
-      isDraggingPort,
-      checkAlignmentRef,
-      ports,
-      salvarMapa,
-      clipboard,
-      brush: brushRef.current,
-    });
+const interactions = createCanvasInteractions({
+  cs,
+  sourceBlockRef,
+  tempLineRef,
+  isDraggingPort,
+  checkAlignmentRef,
+  ports,
+  salvarMapa,
+  clipboard,
+  history, // note que `brush` saiu daqui, não é mais usado nesse hook
+});
 
     const onMediaMouseUp = (opt) => {
       const clickedBtn = opt.subTargets?.some((o) => o._isDownloadBtn);
@@ -416,8 +422,8 @@ export default function Index() {
     brushRef.current?.setEraserSize(value);
   };
 
-  const handleUndo = () => brushRef.current?.undo();
-  const handleRedo = () => brushRef.current?.redo();
+  const handleUndo = () => historyRef.current?.undo();
+const handleRedo = () => historyRef.current?.redo();
 
   useEffect(() => {
     const onEsc = (e) => {
@@ -427,14 +433,64 @@ export default function Index() {
     return () => window.removeEventListener("keydown", onEsc);
   }, [drawMode]);
 
-  const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current); };
-  const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current); };
-  const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current); };
+  const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
+const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
+const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
   const openFilePicker = () => {
     if (!requirePlano(canImportMedia)) return;
     stopDrawing();
     fileInputRef.current?.click();
   };
+
+  // Atalhos de teclado da toolbox (Shift+letra). Sem array de dependências
+  // de propósito: assim o efeito é re-registrado a cada render e os
+  // closures (drawMode, plano, etc.) nunca ficam desatualizados, sem
+  // precisar listar cada função/estado usado aqui dentro.
+  useEffect(() => {
+    const isTypingTarget = (e) => {
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return true;
+      const active = canvasInstanceRef.current?.getActiveObject?.();
+      return !!active?.isEditing;
+    };
+
+    const onShortcutKeyDown = (e) => {
+      if (!e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (isTypingTarget(e)) return;
+
+      switch (e.key.toLowerCase()) {
+        case "b":
+          e.preventDefault();
+          addBox();
+          break;
+        case "t":
+          e.preventDefault();
+          addText();
+          break;
+        case "s":
+          e.preventDefault();
+          addContainer();
+          break;
+        case "m":
+          e.preventDefault();
+          openFilePicker();
+          break;
+        case "p":
+          e.preventDefault();
+          toggleDraw();
+          break;
+        case "e":
+          e.preventDefault();
+          toggleErase();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", onShortcutKeyDown);
+    return () => window.removeEventListener("keydown", onShortcutKeyDown);
+  });
 
   const handleFileInputChange = (e) => {
     if (e.target.files?.length) {
@@ -466,9 +522,9 @@ return (
         }}
       >
         <div className={stylestoolbox.group}>
-          <ToolButton path={MODEL_PATHS.addBox}       modelKey="addBox"       label="Adicionar bloco" onClick={addBox} />
-          <ToolButton path={MODEL_PATHS.addText}      modelKey="addText"      label="Adicionar texto" onClick={addText} />
-          <ToolButton path={MODEL_PATHS.addContainer} modelKey="addContainer" label="Adicionar seção" onClick={addContainer} />
+          <ToolButton path={MODEL_PATHS.addBox}       modelKey="addBox"       label="Adicionar bloco (Shift+B)" onClick={addBox} />
+          <ToolButton path={MODEL_PATHS.addText}      modelKey="addText"      label="Adicionar texto (Shift+T)" onClick={addText} />
+          <ToolButton path={MODEL_PATHS.addContainer} modelKey="addContainer" label="Adicionar seção (Shift+S)" onClick={addContainer} />
         </div>
 
         <div className={stylestoolbox.divider} />
@@ -478,7 +534,7 @@ return (
           <ToolButton
             path={MODEL_PATHS.media}
             modelKey="media"
-            label="Importar mídia"
+            label="Importar mídia (Shift+M)"
             locked={!canImportMedia}
             onClick={openFilePicker}
           />
@@ -490,7 +546,7 @@ return (
           <ToolButton
             path={MODEL_PATHS.brush}
             modelKey="brush"
-            label="Pincel (Esc para sair)"
+            label="Pincel (Shift+P • Esc para sair)"
             active={drawMode === "draw"}
             locked={!canUseBrush}
             onClick={toggleDraw}
@@ -498,7 +554,7 @@ return (
           <ToolButton
             path={MODEL_PATHS.eraser}
             modelKey="eraser"
-            label="Borracha (Esc para sair)"
+            label="Borracha (Shift+E • Esc para sair)"
             active={drawMode === "erase"}
             locked={!canUseBrush}
             onClick={toggleErase}

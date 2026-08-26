@@ -5,8 +5,9 @@ import {
   CONTAINER_LABEL_PAD,
   containerBorderOnly,
 } from "./constants";
+import { makeAddAction, combineActions } from "./useHistory";
 
-export function addBox(cs) {
+export function addBox(cs, { history } = {}) {
   if (!cs) return;
   const vpt = cs.viewportTransform;
   const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
@@ -27,6 +28,7 @@ export function addBox(cs) {
   });
   noRotate(box);
   cs.add(box);
+  history?.push(makeAddAction(cs, box));
   cs.setActiveObject(box);
   cs.requestRenderAll();
 }
@@ -48,7 +50,7 @@ export function attachTextAutosize(text, cs) {
   return fitToContent;
 }
 
-export function addText(cs) {
+export function addText(cs, { history } = {}) {
   if (!cs) return;
   const vpt = cs.viewportTransform;
   const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
@@ -73,6 +75,7 @@ export function addText(cs) {
   attachTextAutosize(text, cs);
 
   cs.add(text);
+  history?.push(makeAddAction(cs, text));
   cs.bringObjectToFront(text);
   cs.setActiveObject(text);
   text.enterEditing();
@@ -85,7 +88,7 @@ const CONTAINER_DEFAULT_HEIGHT = 350;
 const CONTAINER_DEFAULT_COLOR  = "#5083ef";
 const CONTAINER_DEFAULT_NAME   = "Seção";
 
-export function addContainer(cs) {
+export function addContainer(cs, { history } = {}) {
   if (!cs) return;
   const vpt = cs.viewportTransform;
   const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
@@ -133,6 +136,12 @@ export function addContainer(cs) {
 
   cs.add(rect);
   cs.add(label);
+  history?.push(
+    combineActions([
+      makeAddAction(cs, rect, { toBack: true }),
+      makeAddAction(cs, label),
+    ])
+  );
   cs.sendObjectToBack(rect);
   cs.setActiveObject(rect);
   cs.requestRenderAll();

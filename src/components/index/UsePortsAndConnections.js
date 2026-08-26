@@ -3,15 +3,42 @@ import { PORT_RADIUS_BASE, PORT_FILL, PORT_STROKE, SELECTION_STYLE, repositionCo
 import { getAbsoluteCenter, getAbsoluteEdge } from "./geometry";
 
 
+// +10% sobre o valor anterior (4.25 -> 4.675)
 export const DEFAULT_CONNECTION_COLOR = "#ffffff";
-export const DEFAULT_CONNECTION_WIDTH = 4.25;
+export const DEFAULT_CONNECTION_WIDTH = 4.675;
 
 
 const OUTLINE_COLOR      = "rgba(20, 24, 34, 0.35)";
 export const OUTLINE_EXTRA_WIDTH = 0.15;
 
+// Tolerância extra (em unidades de mundo do canvas, mesma unidade do
+// strokeWidth) somada à metade da espessura da linha para decidir se um
+// clique "acertou" a conexão. Ajuste aqui se quiser a área clicável mais
+// generosa ou mais precisa.
+const CONNECTION_CLICK_TOLERANCE = 6;
+
 
 const PORT_SIDES = ["left", "right", "top", "bottom"];
+
+// Distância do ponto (px, py) até o segmento de reta (x1,y1)-(x2,y2).
+// Funciona igual para segmentos retos ou diagonais — é pura geometria,
+// não depende de bounding box nem de renderização em canvas auxiliar.
+function distanceToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSq = dx * dx + dy * dy;
+
+  if (lengthSq === 0) {
+    return Math.hypot(px - x1, py - y1);
+  }
+
+  let t = ((px - x1) * dx + (py - y1) * dy) / lengthSq;
+  t = Math.max(0, Math.min(1, t));
+
+  const projX = x1 + t * dx;
+  const projY = y1 + t * dy;
+  return Math.hypot(px - projX, py - projY);
+}
 
 
 export function createPortsAndConnections(cs, activePortsRef) {
@@ -168,11 +195,40 @@ export function createPortsAndConnections(cs, activePortsRef) {
       lockScalingY: true,
       lockRotation: true,
       hoverCursor: "pointer",
-      perPixelTargetFind: true, 
+      // O teste por pixel (perPixelTargetFind) fica pouco confiável em
+      // linhas diagonais longas: o Fabric renderiza o objeto num canvas
+      // auxiliar dimensionado pelo bounding box, e esse canvas é reduzido
+      // internamente quando o bounding box é grande (o que só acontece
+      // quando a linha é diagonal — reta sempre tem uma dimensão ~0).
+      // Substituímos por um teste geométrico manual em containsPoint logo
+      // abaixo, que funciona igual em qualquer ângulo.
+      perPixelTargetFind: false,
       isLine: true,
       originX: "center",
       originY: "center",
     });
+
+    // Hit-test próprio: distância real do ponto clicado até o segmento
+    // (x1,y1)-(x2,y2), com tolerância = metade da espessura + margem extra.
+    //
+    // IMPORTANTE: x1/y1/x2/y2 estão em coordenadas de MUNDO (mesmo espaço
+    // de canvasInstance.left/top), mas o `point` que o Fabric passa pra
+    // containsPoint durante a busca de clique já vem no espaço de
+    // VIEWPORT (com zoom/pan aplicados) — e esse canvas já começa com um
+    // pan aplicado (centralização do grid 5000x5000 em Index.jsx). Por
+    // isso é preciso converter `point` de volta pro espaço de mundo com o
+    // inverso do viewportTransform atual antes de comparar; sem isso o
+    // teste só "acerta" por coincidência, dependendo do zoom/pan do
+    // momento — exatamente o comportamento inconsistente relatado.
+    line.containsPoint = function (point) {
+      const vpt = cs.viewportTransform;
+      const worldPoint = vpt
+        ? fabric.util.transformPoint(point, fabric.util.invertTransform(vpt))
+        : point;
+
+      const tolerance = (this.strokeWidth ?? DEFAULT_CONNECTION_WIDTH) / 2 + CONNECTION_CLICK_TOLERANCE;
+      return distanceToSegment(worldPoint.x, worldPoint.y, this.x1, this.y1, this.x2, this.y2) <= tolerance;
+    };
 
     cs.add(outline);
     cs.add(line);
@@ -247,7 +303,45 @@ export function createPortsAndConnections(cs, activePortsRef) {
     return found;
   };
 
-  return {
+  const captureConnMeta = (conn) => ({
+    sourceBlock: conn.sourceBlock,
+    targetBlock: conn.targetBlock,
+    fromSide: conn.fromSide,
+    toSide: conn.toSide,
+    color: conn.line.stroke,
+    strokeWidth: conn.line.strokeWidth,
+  });
+
+  const makeConnectionAddAction = (conn) => {
+    let current = conn;
+    const meta = captureConnMeta(conn);
+    return {
+      undo: () => deleteConnection(current),
+      redo: () => {
+        current = createConnection(
+          meta.sourceBlock, meta.targetBlock, meta.fromSide, meta.toSide,
+          { color: meta.color, strokeWidth: meta.strokeWidth }
+        );
+      },
+    };
+  };
+
+
+  const makeConnectionRemoveAction = (conn) => {
+    let current = conn;
+    const meta = captureConnMeta(conn);
+    return {
+      undo: () => {
+        current = createConnection(
+          meta.sourceBlock, meta.targetBlock, meta.fromSide, meta.toSide,
+          { color: meta.color, strokeWidth: meta.strokeWidth }
+        );
+      },
+      redo: () => deleteConnection(current),
+    };
+  };
+
+    return {
     getPortRadius,
     clearPorts,
     createPort,
@@ -259,5 +353,7 @@ export function createPortsAndConnections(cs, activePortsRef) {
     createConnection,
     deleteConnection,
     findConnectionByLine,
+    makeConnectionAddAction,
+    makeConnectionRemoveAction,
   };
 }

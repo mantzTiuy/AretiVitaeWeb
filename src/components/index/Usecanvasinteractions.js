@@ -8,6 +8,9 @@ import {
   CONTAINER_MAX_WIDTH,
   CONTAINER_MAX_HEIGHT,
 } from "./constants";
+import { makeRemoveAction, combineActions } from "./useHistory";
+
+const TRANSFORM_EPS = 0.01;
 
 export function createCanvasInteractions({
   cs,
@@ -18,7 +21,7 @@ export function createCanvasInteractions({
   ports,
   salvarMapa,
   clipboard,
-  brush,
+  history,
 }) {
   const {
     showPorts,
@@ -28,7 +31,38 @@ export function createCanvasInteractions({
     createConnection,
     deleteConnection,
     findConnectionByLine,
+    makeConnectionAddAction,
+    makeConnectionRemoveAction,
   } = ports;
+
+  // --- snapshot de transformação (move/resize) para undo/redo ---------
+  let pendingTransformSnapshot = null;
+
+  const snapshotAbsolute = (obj) => {
+    const { angle, scaleX, scaleY, translateX, translateY } =
+      fabric.util.qrDecompose(obj.calcTransformMatrix());
+    return { obj, left: translateX, top: translateY, scaleX, scaleY, angle };
+  };
+
+  // Inclui o próprio alvo (ou os membros da activeSelection) + qualquer
+  // label/background vinculado, já que mover um dos dois pode mexer no
+  // outro (container <-> label, texto <-> background).
+  const collectTransformGroup = (target) => {
+    const base = target.type === "activeselection" ? target.getObjects() : [target];
+    const set = new Set();
+    base.forEach((obj) => {
+      set.add(obj);
+      if (obj._linkedBg) set.add(obj._linkedBg);
+      if (obj._linkedLabel) set.add(obj._linkedLabel);
+    });
+    return [...set];
+  };
+
+  const captureTransformSnapshot = (target) => {
+    pendingTransformSnapshot = collectTransformGroup(target).map(snapshotAbsolute);
+  };
+
+  const differs = (a, b) => Math.abs(a - b) > TRANSFORM_EPS;
 
   const startTempLine = (x, y) => {
     const line = new fabric.Line([x, y, x, y], {
@@ -81,16 +115,12 @@ export function createCanvasInteractions({
       return;
     }
 
-    // A rubber-band selection is about to start (mousedown on empty
-    // canvas). Fabric scans every object with selectable !== false and
-    // whose bounds intersect the drag rectangle, and connection lines sit
-    // spatially between the blocks they connect — so a rubber-band very
-    // often clips one. Once a line becomes a member of an ActiveSelection,
-    // even removing it afterwards leaves it in a broken state (it keeps
-    // its correct coordinates but stops being rendered and stops
-    // receiving clicks/Delete, i.e. becomes a "ghost"). The safe fix is
-    // to make lines temporarily unselectable so they're excluded from the
-    // scan itself, then restore them right after on mouse:up.
+    if (target && !target.isLine) {
+      captureTransformSnapshot(target);
+    }
+
+    // Ver comentário original: suprime seleção de linhas de conexão
+    // durante rubber-band pra evitar "linhas fantasmas".
     if (!target && cs.selection) {
       const lines = cs.getObjects().filter((o) => o.isLine);
       lines.forEach((l) => {
@@ -131,9 +161,6 @@ export function createCanvasInteractions({
       cs.selection = true;
     }
 
-    // Fabric has already finalized the ActiveSelection by the time our
-    // mouse:up listener runs, so it's now safe to give lines back their
-    // normal click/delete interactivity.
     if (onMouseDown._suppressedLines) {
       onMouseDown._suppressedLines.forEach((l) => {
         l.selectable = l._prevSelectable !== undefined ? l._prevSelectable : true;
@@ -169,7 +196,8 @@ export function createCanvasInteractions({
         ? (dx < 0 ? "left" : "right")
         : (dy < 0 ? "top" : "bottom");
 
-    createConnection(source, target, fromSide ?? "right", toSide);
+    const conn = createConnection(source, target, fromSide ?? "right", toSide);
+    if (conn) history?.push(makeConnectionAddAction(conn));
     salvarMapa();
   };
 
@@ -250,6 +278,38 @@ export function createCanvasInteractions({
       refreshActiveSelection(target);
     } else {
       refreshBlock(target);
+    }
+
+    if (pendingTransformSnapshot) {
+      const before = pendingTransformSnapshot;
+      pendingTransformSnapshot = null;
+      const after = before.map(({ obj }) => snapshotAbsolute(obj));
+
+      const changed = before.some((b, i) => {
+        const a = after[i];
+        return (
+          differs(b.left, a.left) ||
+          differs(b.top, a.top) ||
+          differs(b.scaleX, a.scaleX) ||
+          differs(b.scaleY, a.scaleY) ||
+          differs(b.angle, a.angle)
+        );
+      });
+
+      if (changed) {
+        const applyState = (states) => {
+          states.forEach(({ obj, left, top, scaleX, scaleY, angle }) => {
+            obj.set({ left, top, scaleX, scaleY, angle });
+            obj.setCoords();
+            refreshBlock(obj);
+          });
+          cs.requestRenderAll();
+        };
+        history?.push({
+          undo: () => applyState(before),
+          redo: () => applyState(after),
+        });
+      }
     }
   };
 
@@ -334,9 +394,9 @@ export function createCanvasInteractions({
 
       e.preventDefault();
       if (isUndo) {
-        brush?.undo();
+        history?.undo();
       } else {
-        brush?.redo();
+        history?.redo();
       }
       return;
     }
@@ -348,11 +408,15 @@ export function createCanvasInteractions({
 
     if (active.isLine) {
       const conn = findConnectionByLine(active);
+      const actions = [];
       if (conn) {
+        actions.push(makeConnectionRemoveAction(conn));
         deleteConnection(conn);
       } else {
+        actions.push(makeRemoveAction(currentCs, active));
         currentCs.remove(active);
       }
+      history?.push(combineActions(actions));
       currentCs.discardActiveObject();
       currentCs.requestRenderAll();
       salvarMapa();
@@ -363,40 +427,64 @@ export function createCanvasInteractions({
       const objects = [...active.getObjects()];
       currentCs.discardActiveObject();
       currentCs.requestRenderAll();
+      const actions = [];
       objects.forEach((obj) => {
         if (obj.isLine) {
           const conn = findConnectionByLine(obj);
           if (conn) {
+            actions.push(makeConnectionRemoveAction(conn));
             deleteConnection(conn);
           } else {
+            actions.push(makeRemoveAction(currentCs, obj));
             currentCs.remove(obj);
           }
           return;
         }
         if (obj.connections?.length) {
-          [...obj.connections].forEach((conn) => deleteConnection(conn));
+          [...obj.connections].forEach((conn) => {
+            actions.push(makeConnectionRemoveAction(conn));
+            deleteConnection(conn);
+          });
         }
-
-        if (obj._isLabel && obj._linkedBg) currentCs.remove(obj._linkedBg);
-        if (obj._isBackground && obj._linkedLabel) currentCs.remove(obj._linkedLabel);
+        if (obj._isLabel && obj._linkedBg) {
+          actions.push(makeRemoveAction(currentCs, obj._linkedBg));
+          currentCs.remove(obj._linkedBg);
+        }
+        if (obj._isBackground && obj._linkedLabel) {
+          actions.push(makeRemoveAction(currentCs, obj._linkedLabel));
+          currentCs.remove(obj._linkedLabel);
+        }
+        actions.push(makeRemoveAction(currentCs, obj));
         currentCs.remove(obj);
       });
       clearPorts();
       currentCs.requestRenderAll();
+      history?.push(combineActions(actions));
       salvarMapa();
       return;
     }
 
+    const actions = [];
     if (active.connections?.length) {
-      [...active.connections].forEach((conn) => deleteConnection(conn));
+      [...active.connections].forEach((conn) => {
+        actions.push(makeConnectionRemoveAction(conn));
+        deleteConnection(conn);
+      });
     }
     clearPorts();
-    if (active._isLabel && active._linkedBg) currentCs.remove(active._linkedBg);
-
-    if (active._isBackground && active._linkedLabel) currentCs.remove(active._linkedLabel);
+    if (active._isLabel && active._linkedBg) {
+      actions.push(makeRemoveAction(currentCs, active._linkedBg));
+      currentCs.remove(active._linkedBg);
+    }
+    if (active._isBackground && active._linkedLabel) {
+      actions.push(makeRemoveAction(currentCs, active._linkedLabel));
+      currentCs.remove(active._linkedLabel);
+    }
+    actions.push(makeRemoveAction(currentCs, active));
     currentCs.remove(active);
     currentCs.discardActiveObject();
     currentCs.requestRenderAll();
+    history?.push(combineActions(actions));
     salvarMapa();
   };
 

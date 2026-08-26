@@ -1,12 +1,12 @@
 import * as fabric from "fabric";
 import { generateId, SELECTION_STYLE, noRotate, containerBorderOnly } from "./constants";
+import { makeAddAction, combineActions } from "./useHistory";
 
 const PASTE_STEP = 24;
 
-
-export function createClipboard({ cs, salvarMapa }) {
-  let clipboard = [];  
-  let pasteOffset = 0; 
+export function createClipboard({ cs, salvarMapa, history }) {
+  let clipboard = [];
+  let pasteOffset = 0;
 
   const retagMediaChildren = (group) => {
     const children = group.getObjects();
@@ -20,22 +20,16 @@ export function createClipboard({ cs, salvarMapa }) {
     const active = cs.getActiveObject();
     if (!active) return;
 
-  
     let sources = active.type === "activeselection" ? active.getObjects() : [active];
-
-  
     sources = sources.filter((o) => !o._isPort && !o.isLine && !o._isDrawing);
     if (!sources.length) return;
 
     const items = [];
     for (const obj of sources) {
       const clone = await obj.clone();
-
- 
       clone._blockType = obj._blockType;
       clone._isLabel   = obj._isLabel;
 
-    
       let bgClone = null;
       if (obj._blockType === "group" && obj._isLabel && obj._linkedBg) {
         bgClone = await obj._linkedBg.clone();
@@ -53,7 +47,7 @@ export function createClipboard({ cs, salvarMapa }) {
     }
 
     clipboard = items;
-    pasteOffset = 0; 
+    pasteOffset = 0;
   }
 
   async function pasteClipboard() {
@@ -61,9 +55,9 @@ export function createClipboard({ cs, salvarMapa }) {
     pasteOffset += PASTE_STEP;
 
     const pasted = [];
+    const actions = [];
 
     for (const { clone, bgClone } of clipboard) {
-
       const objCopy = await clone.clone();
       objCopy.set({
         ...SELECTION_STYLE,
@@ -75,21 +69,22 @@ export function createClipboard({ cs, salvarMapa }) {
       objCopy._blockType = clone._blockType;
       objCopy._isLabel    = clone._isLabel;
       noRotate(objCopy);
-    
+
       if (clone._blockType === "container") containerBorderOnly(objCopy);
 
       if (clone._blockType === "media") {
         objCopy._isPdf      = clone._isPdf;
         objCopy._sourceName = clone._sourceName;
         objCopy._pdfDataUrl = clone._pdfDataUrl;
-        objCopy.subTargetCheck = true; 
+        objCopy.subTargetCheck = true;
         retagMediaChildren(objCopy);
       }
 
       cs.add(objCopy);
-      if (objCopy._blockType === "container") cs.sendObjectToBack(objCopy); 
+      const isContainer = objCopy._blockType === "container";
+      if (isContainer) cs.sendObjectToBack(objCopy);
+      actions.push(makeAddAction(cs, objCopy, { toBack: isContainer }));
 
-   
       if (clone._blockType === "group" && clone._isLabel && bgClone) {
         const bgCopy = await bgClone.clone();
         bgCopy.set({
@@ -106,9 +101,9 @@ export function createClipboard({ cs, salvarMapa }) {
 
         cs.add(bgCopy);
         cs.sendObjectToBack(bgCopy);
+        actions.push(makeAddAction(cs, bgCopy, { toBack: true }));
       }
 
-    
       if (clone._blockType === "container" && bgClone) {
         const labelCopy = await bgClone.clone();
         labelCopy.set({
@@ -126,12 +121,14 @@ export function createClipboard({ cs, salvarMapa }) {
         objCopy._isBackground       = true;
 
         cs.add(labelCopy);
+        actions.push(makeAddAction(cs, labelCopy));
       }
 
       pasted.push(objCopy);
     }
 
-   
+    history?.push(combineActions(actions));
+
     cs.discardActiveObject();
     if (pasted.length === 1) {
       cs.setActiveObject(pasted[0]);
@@ -141,7 +138,7 @@ export function createClipboard({ cs, salvarMapa }) {
     }
 
     cs.requestRenderAll();
-    salvarMapa?.(); 
+    salvarMapa?.();
   }
 
   return { copySelection, pasteClipboard };
