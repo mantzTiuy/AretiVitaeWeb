@@ -28,6 +28,8 @@ export function createPersistence({
   async function salvarMapa() {
     const cs = canvasInstanceRef.current;
     if (!cs) return;
+   
+    if (isLoadingFromJsonRef.current) return;
     setSaveStatus('saving');
     try {
      

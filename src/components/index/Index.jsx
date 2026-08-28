@@ -60,7 +60,6 @@ export default function Index() {
   const mediaImporterRef  = useRef(null);
   const brushRef          = useRef(null);
   const fileInputRef      = useRef(null);
-  const cancelledRef      = useRef(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const tempLineRef       = useRef(null);
   const isDraggingPort    = useRef(false);
@@ -118,7 +117,17 @@ export default function Index() {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    cancelledRef.current = false;
+    // FIX: precisa ser um objeto NOVO a cada execução do efeito (não um
+    // useRef de componente). Em React 18 Strict Mode (dev) o efeito roda
+    // "monta -> limpa -> monta de novo" de forma síncrona; se essa flag
+    // fosse compartilhada entre as duas execuções, a segunda resetaria
+    // `.current` para false antes da requisição da PRIMEIRA terminar,
+    // fazendo o carregarMapa antigo (com um `cs` já destruído pelo
+    // cleanup) continuar tentando rodar e quebrar com erros de canvas
+    // (ex: "Cannot read properties of undefined (reading 'clearRect')").
+    // O mesmo aconteceria em produção se o usuário trocasse de mapa (id)
+    // rápido o suficiente para sobrepor dois carregamentos.
+    const cancelledRef = { current: false };
 
     setGridBgColor(DEFAULT_GRID_BG_COLOR);
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
@@ -208,6 +217,11 @@ const interactions = createCanvasInteractions({
   clipboard,
   history, // note que `brush` saiu daqui, não é mais usado nesse hook
 });
+
+// FIX: essa chamada estava faltando — sem ela o canvas nunca busca o
+// mapa salvo no backend e sempre abre em branco, mesmo quando o
+// registro no banco tem conteúdo.
+carregarMapa(cs, cancelledRef);
 
     const onMediaMouseUp = (opt) => {
       const clickedBtn = opt.subTargets?.some((o) => o._isDownloadBtn);
