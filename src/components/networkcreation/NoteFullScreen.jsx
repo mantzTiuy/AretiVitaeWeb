@@ -48,7 +48,6 @@ export default function NoteFullscreen({ note, onUpdate, onClose }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Título da nota"
-              autoFocus
             />
             {note.date && <p className={styles.date}>{note.date}</p>}
 
@@ -57,6 +56,7 @@ export default function NoteFullscreen({ note, onUpdate, onClose }) {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Escreva sua nota aqui…"
+              autoFocus
             />
             <p className={styles.charCount}>
               {text.length}/{TEXT_LIMIT}

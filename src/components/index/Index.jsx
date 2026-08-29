@@ -31,6 +31,7 @@ import {
   MAX_ERASER_SIZE,
   DEFAULT_GRID_BG_COLOR,
   DEFAULT_GRID_LINE_COLOR,
+  DEFAULT_TOOLBOX_BG_COLOR,
 } from "./constants";
 import { createPortsAndConnections } from "./usePortsAndConnections";
 import { createPersistence } from "./usePersistence";
@@ -85,8 +86,15 @@ export default function Index() {
 
   const [gridBgColor, setGridBgColor]     = useState(DEFAULT_GRID_BG_COLOR);
   const [gridLineColor, setGridLineColor] = useState(DEFAULT_GRID_LINE_COLOR);
+  // Cor de fundo da toolbox (barra vertical + barra inferior), editável no
+  // mesmo painel de configurações do canvas.
+  const [toolboxBgColor, setToolboxBgColor] = useState(DEFAULT_TOOLBOX_BG_COLOR);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
-  const gridColorsRef = useRef({ bgColor: DEFAULT_GRID_BG_COLOR, lineColor: DEFAULT_GRID_LINE_COLOR });
+  const gridColorsRef = useRef({
+    bgColor: DEFAULT_GRID_BG_COLOR,
+    lineColor: DEFAULT_GRID_LINE_COLOR,
+    toolboxBgColor: DEFAULT_TOOLBOX_BG_COLOR,
+  });
 
   // Menu de contexto (botão direito) com as opções de camada, no estilo Canva.
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, target: null });
@@ -110,8 +118,8 @@ export default function Index() {
   const requirePlano = (allowed) => allowed;
 
   useEffect(() => {
-    gridColorsRef.current = { bgColor: gridBgColor, lineColor: gridLineColor };
-  }, [gridBgColor, gridLineColor]);
+    gridColorsRef.current = { bgColor: gridBgColor, lineColor: gridLineColor, toolboxBgColor };
+  }, [gridBgColor, gridLineColor, toolboxBgColor]);
 
   const handleAxisReady = useCallback((fn) => {
     checkAlignmentRef.current = fn;
@@ -144,6 +152,7 @@ export default function Index() {
 
     setGridBgColor(DEFAULT_GRID_BG_COLOR);
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
+    setToolboxBgColor(DEFAULT_TOOLBOX_BG_COLOR);
 
     const cs = new fabric.Canvas(canvasRef.current, {
       width:  window.innerWidth,
@@ -202,9 +211,10 @@ export default function Index() {
       createConnection: ports.createConnection,
       SELECTION_STYLE,
       gridColorsRef,
-      setGridColors: ({ bgColor, lineColor }) => {
+      setGridColors: ({ bgColor, lineColor, toolboxBgColor: savedToolboxBgColor }) => {
         setGridBgColor(bgColor);
         setGridLineColor(lineColor);
+        setToolboxBgColor(savedToolboxBgColor ?? DEFAULT_TOOLBOX_BG_COLOR);
       },
     });
     const { salvarMapa, carregarMapa } = persistence;
@@ -444,9 +454,16 @@ carregarMapa(cs, cancelledRef);
     scheduleGridColorSave();
   };
 
+  // Mesmo padrão de bg/line color do grid, só que aplicado à toolbox.
+  const handleToolboxBgColorChange = (value) => {
+    setToolboxBgColor(value);
+    scheduleGridColorSave();
+  };
+
   const handleResetGridColors = () => {
     setGridBgColor(DEFAULT_GRID_BG_COLOR);
     setGridLineColor(DEFAULT_GRID_LINE_COLOR);
+    setToolboxBgColor(DEFAULT_TOOLBOX_BG_COLOR);
     scheduleGridColorSave();
   };
 
@@ -654,6 +671,7 @@ return (
           "--toolbox-radius": `${TOOLBOX_RADIUS}px`,
           "--toolbox-gap": `${TOOLBOX_GAP}px`,
           "--toolbox-padding-x": `${TOOLBOX_PADDING_X}px`,
+          backgroundColor: toolboxBgColor,
         }}
       >
         <div className={stylestoolbox.group}>
@@ -705,7 +723,7 @@ return (
       </div>
 
     
-      <div className={stylestoolbox.bottomToolbar}>
+      <div className={stylestoolbox.bottomToolbar} style={{ backgroundColor: toolboxBgColor }}>
         <ToolButton
           path={MODEL_PATHS.save}
           modelKey="save"
@@ -739,8 +757,10 @@ return (
         onClose={() => setShowCanvasSettings(false)}
         bgColor={gridBgColor}
         lineColor={gridLineColor}
+        toolboxBgColor={toolboxBgColor}
         onBgColorChange={handleGridBgColorChange}
         onLineColorChange={handleGridLineColorChange}
+        onToolboxBgColorChange={handleToolboxBgColorChange}
         onReset={handleResetGridColors}
       />
 
@@ -748,6 +768,7 @@ return (
       <Settings
         canvasRef={canvasInstanceRef}
         canvasReady={canvasReady}
+        bgColor={toolboxBgColor}
         brushColor={brushColor}
         brushSize={brushSize}
         onBrushColorChange={handleBrushColorChange}

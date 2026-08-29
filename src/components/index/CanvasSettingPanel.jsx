@@ -5,8 +5,10 @@ export default function CanvasSettingsPanel({
   onClose,
   bgColor,
   lineColor,
+  toolboxBgColor,
   onBgColorChange,
   onLineColorChange,
+  onToolboxBgColorChange,
   onReset,
 }) {
   if (!open) return null;
@@ -52,6 +54,16 @@ export default function CanvasSettingsPanel({
               type="color"
               value={lineColor}
               onChange={(e) => onLineColorChange(e.target.value)}
+              className={styles.colorInput}
+            />
+          </div>
+
+          <div className={styles.row}>
+            <span className={styles.label}>Cor da toolbox</span>
+            <input
+              type="color"
+              value={toolboxBgColor}
+              onChange={(e) => onToolboxBgColorChange(e.target.value)}
               className={styles.colorInput}
             />
           </div>

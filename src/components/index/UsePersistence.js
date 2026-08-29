@@ -7,6 +7,7 @@ import {
   tagDrawing,
   DEFAULT_GRID_BG_COLOR,
   DEFAULT_GRID_LINE_COLOR,
+  DEFAULT_TOOLBOX_BG_COLOR,
 } from "./constants";
 import { loadGoogleFont } from "./loadGoogleFont";
 
@@ -146,8 +147,9 @@ export function createPersistence({
 
         if (gridColors) {
           setGridColors?.({
-            bgColor:   gridColors.bgColor   ?? DEFAULT_GRID_BG_COLOR,
-            lineColor: gridColors.lineColor ?? DEFAULT_GRID_LINE_COLOR,
+            bgColor:        gridColors.bgColor        ?? DEFAULT_GRID_BG_COLOR,
+            lineColor:      gridColors.lineColor       ?? DEFAULT_GRID_LINE_COLOR,
+            toolboxBgColor: gridColors.toolboxBgColor  ?? DEFAULT_TOOLBOX_BG_COLOR,
           });
         }
 

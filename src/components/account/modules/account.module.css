@@ -264,22 +264,21 @@
 /* ── Logout button ── */
 .logoutBtn {
   width: 100%;
-  height: clamp(2rem, 4.8vh, 3.1rem);
+  height: clamp(1.6rem, 3.84vh, 2.48rem);
   margin-top: 4px;
-  background: rgb(35, 50, 105);
-  border: 1px solid rgba(255, 255, 255, 0.20);
+  background: rgb(30, 44, 95);
+  border: 1px solid rgb(70, 90, 160);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.80);
+  color: #ffffff;
   font-family: 'Josefin Sans', sans-serif;
-  font-size: clamp(0.78rem, 1.4vh, 1rem);
+  font-size: clamp(0.62rem, 1.12vh, 0.8rem);
   font-weight: 600;
   letter-spacing: 0.10em;
   cursor: pointer;
   transition: background 0.18s, color 0.18s, transform 0.1s;
 }
 .logoutBtn:hover {
-  background: rgb(45, 62, 125);
-  color: #fff;
+  background: rgb(20, 32, 75);
 }
 .logoutBtn:active { transform: scale(0.98); }
 
@@ -292,10 +291,10 @@
 .save {
   flex: 1;
   height: 40px;
-  background: rgb(50, 68, 140);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgb(45, 62, 135);
+  border: 1px solid rgb(85, 105, 185);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.90);
+  color: #ffffff;
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(11px, 1.1vw, 12px);
   font-weight: 600;
@@ -303,25 +302,25 @@
   cursor: pointer;
   transition: background 0.18s, transform 0.12s;
 }
-.save:hover  { background: rgb(62, 82, 158); }
+.save:hover  { background: rgb(35, 50, 115); }
 .save:active { transform: scale(0.98); }
 .save:disabled { opacity: 0.45; cursor: default; }
 
 .discard {
   flex: 1;
   height: 40px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.30);
+  background: rgb(60, 78, 150);
+  border: 1px solid rgb(100, 120, 200);
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.62);
+  color: #ffffff;
   font-family: 'Josefin Sans', sans-serif;
   font-size: clamp(11px, 1.1vw, 12px);
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
-  transition: color 0.18s, border-color 0.18s, transform 0.12s;
+  transition: background 0.18s, transform 0.12s;
 }
-.discard:hover  { color: rgba(255, 255, 255, 0.88); border-color: rgba(255, 255, 255, 0.48); }
+.discard:hover  { background: rgb(48, 64, 130); }
 .discard:active { transform: scale(0.98); }
 
 /* ── Pop-up assinatura ── */
@@ -417,7 +416,7 @@
   cursor: pointer;
   transition: background 0.18s, transform 0.1s;
 }
-.logoutConfirm:hover  { background: rgb(62, 82, 158); }
+.logoutConfirm:hover  { background: rgb(38, 52, 108); }
 .logoutConfirm:active { transform: scale(0.98); }
 
 .logoutCancel {

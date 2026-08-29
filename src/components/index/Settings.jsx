@@ -28,6 +28,7 @@ function Settings({
   minEraserSize = 1,
   maxEraserSize = 100,
   fontsByCategory,
+  bgColor,
 }) {
   const [width, setWidth]             = useState("");
   const [height, setHeight]           = useState("");
@@ -279,7 +280,7 @@ function Settings({
   };
 
   return (
-    <div className={styles.div}>
+    <div className={styles.div} style={bgColor ? { background: bgColor } : undefined}>
       {isLine ? (
         <div className={styles.fieldGroup}>
           <span className={styles.label}>Espessura</span>
