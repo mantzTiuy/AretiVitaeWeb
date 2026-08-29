@@ -17,6 +17,7 @@ import { TOOLBOX_BTN_SIZE, TOOLBOX_RADIUS, TOOLBOX_GAP, TOOLBOX_PADDING_X } from
 import { useUserPlano } from "./useUserPlano";
 import { useFontSelection } from "./useFontSelection";
 import { createHistory } from "./useHistory";
+import { toCanvasPoint } from "./geometry";
 
 import {
   generateId,
@@ -41,6 +42,7 @@ import {
 import { createCanvasInteractions } from "./useCanvasInteractions";
 import { createClipboard } from "./useClipboard";
 import { exportCanvasAsSVG } from "./useSvgExport";
+import ObjectContextMenu from "./ObjectContextMenu";
 
 
 const MIN_PLANO_BRUSH           = 1;
@@ -71,6 +73,10 @@ export default function Index() {
   const [saveStatus, setSaveStatus]   = useState('IDLE');
   const saveTimeoutRef       = useRef(null);
   const isLoadingFromJsonRef = useRef(false);
+  // Última posição conhecida do mouse na tela (clientX/clientY), usada
+  // pelos atalhos de teclado pra criar o objeto onde o mouse está, em vez
+  // de sempre no centro do viewport (comportamento dos botões da toolbox).
+  const mousePosRef = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
   const [drawMode, setDrawMode]     = useState(null);
   const [brushColor, setBrushColor] = useState(DEFAULT_BRUSH_COLOR);
@@ -81,6 +87,13 @@ export default function Index() {
   const [gridLineColor, setGridLineColor] = useState(DEFAULT_GRID_LINE_COLOR);
   const [showCanvasSettings, setShowCanvasSettings] = useState(false);
   const gridColorsRef = useRef({ bgColor: DEFAULT_GRID_BG_COLOR, lineColor: DEFAULT_GRID_LINE_COLOR });
+
+  // Menu de contexto (botão direito) com as opções de camada, no estilo Canva.
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, target: null });
+  const contextMenuRef = useRef(null);
+  const closeContextMenu = useCallback(() => {
+    setContextMenu((prev) => (prev.visible ? { visible: false, x: 0, y: 0, target: null } : prev));
+  }, []);
 
 
   const { plano } = useUserPlano();
@@ -136,6 +149,7 @@ export default function Index() {
       width:  window.innerWidth,
       height: window.innerHeight,
       backgroundColor: "transparent",
+      stopContextMenu: true, // sem isso o menu nativo do navegador abriria junto com o nosso
     });
 
     const drawGrid = () => {
@@ -236,6 +250,34 @@ carregarMapa(cs, cancelledRef);
       }
     };
 
+    // Botão direito num objeto: replica o "clique direito -> opções de
+    // camada" do Canva. O evento "contextmenu" do fabric já resolve pra
+    // gente qual objeto está sob o cursor (opt.target).
+    const onObjectContextMenu = (opt) => {
+      const { target, e: nativeEvent } = opt;
+      const isReorderable =
+        target && !target._isPort && !target.isLine &&
+        String(target.type).toLowerCase() !== "activeselection";
+
+      if (!isReorderable) {
+        closeContextMenu();
+        return;
+      }
+
+      if (cs.getActiveObject() !== target) {
+        cs.discardActiveObject();
+        cs.setActiveObject(target);
+        cs.requestRenderAll();
+      }
+
+      setContextMenu({
+        visible: true,
+        x: nativeEvent.clientX,
+        y: nativeEvent.clientY,
+        target,
+      });
+    };
+
     const onKeyDown = (e) => interactions.onKeyDown(e, canvasInstanceRef);
     const disableCtrlZoom = (e) => { if (e.ctrlKey) e.preventDefault(); };
 
@@ -279,6 +321,7 @@ carregarMapa(cs, cancelledRef);
     cs.on("object:moving",     interactions.onMoving);
     cs.on("object:scaling",    interactions.onScaling);
     cs.on("object:modified",   interactions.onModified);
+    cs.on("contextmenu",       onObjectContextMenu);
     wrapperEl?.addEventListener("mousedown", onWrapperMouseDown, true);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("wheel",   disableCtrlZoom, { passive: false });
@@ -300,6 +343,7 @@ carregarMapa(cs, cancelledRef);
       cs.off("object:moving",     interactions.onMoving);
       cs.off("object:scaling",    interactions.onScaling);
       cs.off("object:modified",   interactions.onModified);
+      cs.off("contextmenu",       onObjectContextMenu);
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       wrapperEl?.removeEventListener("mousedown", onWrapperMouseDown, true);
       window.removeEventListener("keydown", onKeyDown);
@@ -310,6 +354,7 @@ carregarMapa(cs, cancelledRef);
       brushRef.current = null;
       canvasInstanceRef.current = null;
       cs.dispose();
+      closeContextMenu();
     };
   }, [id]);
 
@@ -354,6 +399,32 @@ carregarMapa(cs, cancelledRef);
   const handleExportSVG = () => {
     if (!requirePlano(canExportSvg)) return;
     exportCanvasAsSVG(canvasInstanceRef.current, "mapa.svg");
+  };
+
+  // Ações do menu de camadas (botão direito): pulam pro topo ou pra base
+  // da pilha de objetos.
+  const handleLayerAction = (action) => {
+    const cs = canvasInstanceRef.current;
+    const target = contextMenu.target;
+    closeContextMenu();
+    if (!cs || !target) return;
+
+    switch (action) {
+      case "front":
+        cs.bringObjectToFront(target);
+        break;
+      case "back":
+        cs.sendObjectToBack(target);
+        break;
+      default:
+        return;
+    }
+
+    cs.requestRenderAll();
+    // Reaproveita o mesmo pipeline de "object:modified" (histórico +
+    // salvamento automático) já usado ao mover/redimensionar blocos —
+    // mudar a ordem de camadas não dispara esse evento sozinho.
+    cs.fire("object:modified", { target });
   };
 
   const scheduleGridColorSave = () => {
@@ -447,9 +518,59 @@ const handleRedo = () => historyRef.current?.redo();
     return () => window.removeEventListener("keydown", onEsc);
   }, [drawMode]);
 
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, []);
+
+  // Fecha o menu de camadas ao clicar fora, apertar Esc, redimensionar a
+  // janela ou dar scroll/zoom no canvas (senão ele fica flutuando numa
+  // posição que não corresponde mais a nada).
+  useEffect(() => {
+    if (!contextMenu.visible) return;
+
+    const handlePointerDown = (e) => {
+      if (contextMenuRef.current?.contains(e.target)) return;
+      closeContextMenu();
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") closeContextMenu();
+    };
+
+    window.addEventListener("mousedown", handlePointerDown, true);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", closeContextMenu);
+    window.addEventListener("wheel", closeContextMenu, { passive: true });
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown, true);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", closeContextMenu);
+      window.removeEventListener("wheel", closeContextMenu);
+    };
+  }, [contextMenu.visible, closeContextMenu]);
+
+  // Converte a última posição conhecida do mouse (tela) pra coordenada de
+  // mundo do canvas, no mesmo espaço que left/top dos objetos do fabric.
+  const getMouseCanvasPoint = () => {
+    const cs = canvasInstanceRef.current;
+    if (!cs) return null;
+    const { x, y } = mousePosRef.current;
+    return toCanvasPoint(cs, x, y);
+  };
+
   const addBox       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
 const addText      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
 const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current, { history: historyRef.current }); };
+
+// Variantes usadas pelos atalhos de teclado (Shift+B/T/S): criam o objeto
+// na posição do mouse, em vez do centro do viewport que os botões usam.
+const addBoxAtMouse       = () => { stopDrawing(); addBoxToCanvas(canvasInstanceRef.current, { history: historyRef.current, position: getMouseCanvasPoint() }); };
+const addTextAtMouse      = () => { stopDrawing(); addTextToCanvas(canvasInstanceRef.current, { history: historyRef.current, position: getMouseCanvasPoint() }); };
+const addContainerAtMouse = () => { stopDrawing(); addContainerToCanvas(canvasInstanceRef.current, { history: historyRef.current, position: getMouseCanvasPoint() }); };
   const openFilePicker = () => {
     if (!requirePlano(canImportMedia)) return;
     stopDrawing();
@@ -475,15 +596,15 @@ const addContainer = () => { stopDrawing(); addContainerToCanvas(canvasInstanceR
       switch (e.key.toLowerCase()) {
         case "b":
           e.preventDefault();
-          addBox();
+          addBoxAtMouse();
           break;
         case "t":
           e.preventDefault();
-          addText();
+          addTextAtMouse();
           break;
         case "s":
           e.preventDefault();
-          addContainer();
+          addContainerAtMouse();
           break;
         case "m":
           e.preventDefault();
@@ -669,6 +790,15 @@ return (
           </div>
         )}
       </div>
+
+      {contextMenu.visible && (
+        <ObjectContextMenu
+          ref={contextMenuRef}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onAction={handleLayerAction}
+        />
+      )}
 
       <Navbar />
     </div>

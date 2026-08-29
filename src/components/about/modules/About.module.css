@@ -1,12 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Josefin+Sans:wght@300;400;600&family=Rock+Salt&display=swap');
 
-
-
+/* ─── Root ────────────────────────────────────────────── */
 .root {
   position: relative;
   min-height: 100vh;
   width: 100%;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Josefin Sans', sans-serif;
 }
 
 .bodyWrapper {
@@ -20,59 +19,79 @@
   padding: 48px 24px;
 }
 
+/* ─── Win window ─────────────────────────────────────── */
 .window {
   width: 100%;
   max-width: 640px;
-  background: #01172F;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px 10px 8px 8px;
   overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
 .titlebar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 16px;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    rgba(160, 180, 245, 0.95) 0%,
+    rgba(110, 135, 215, 0.95) 100%
+  );
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
 }
 
 .titlebarLabel {
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #fff;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  user-select: none;
 }
 
 .dots {
   display: flex;
   gap: 7px;
+  align-items: center;
 }
 
 .dot {
-  width: 11px;
-  height: 11px;
+  display: block;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.15s;
 }
 
 .dotGray {
-  background: #5b6472;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .dotYellow {
-  background: #d4a24c;
+  background: rgba(255, 205, 120, 0.6);
 }
 
 .dotRed {
-  background: #c0524a;
+  background: rgba(255, 90, 90, 0.7);
 }
 
+/* ─── Body ────────────────────────────────────────────── */
 .formBody {
-  padding: 32px 40px 40px;
+  padding: clamp(24px, 4vw, 44px) clamp(24px, 5vw, 52px);
+  background: rgba(80, 105, 190, 0.55);
+  backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .brandBlock {
@@ -85,25 +104,30 @@
 
 .brandTitle {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
+  font-family: 'Rock Salt', cursive;
+  font-weight: bold;
+  font-size: 42px;
   color: #fff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 
 .brandSub {
   margin: 0;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.28em;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
 }
 
 .contactLink {
   margin-top: 4px;
+  font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
@@ -118,22 +142,68 @@
   outline-offset: 2px;
 }
 
+/* ─── Manual link ─────────────────────────────────────── */
+.manualLink {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 2px;
+  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
 
+.manualLink:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.manualLink:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+/* ─── Section label (com divisor, como no philoWindow) ──── */
 .sectionLabel {
-  margin: 4px 0 0;
+  position: relative;
+  margin: 6px 0 0;
+  padding-top: 12px;
+  font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.24em;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
 }
 
+.sectionLabel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
 .paragraph {
   margin: 0;
-  font-size: 13.5px;
-  font-weight: 400;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 300;
   line-height: 1.75;
+  letter-spacing: 0.015em;
   color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
 }
 
 .paragraph strong {
@@ -154,6 +224,7 @@
 }
 
 .creatorName {
+  font-family: 'Montserrat', sans-serif;
   font-size: 12.5px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.85);
@@ -165,9 +236,10 @@
 
 .creatorsNote {
   margin: 2px 0 0;
-  font-size: 11.5px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.45);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .btnRow {
@@ -177,19 +249,22 @@
 }
 
 .discard {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   font-family: 'Montserrat', sans-serif;
   font-size: 12.5px;
   font-weight: 500;
-  padding: 8px 18px;
+  letter-spacing: 0.04em;
+  padding: 9px 20px;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
 
 .discard:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
@@ -198,16 +273,14 @@
   outline-offset: 2px;
 }
 
+/* ─── Responsive ─────────────────────────────────────── */
 @media (max-width: 640px) {
-  .formBody {
-    padding: 24px 24px 32px;
-  }
-
   .titlebar {
-    padding: 10px 14px;
+    padding: 0 14px;
+    height: 36px;
   }
 
   .brandTitle {
-    font-size: 24px;
+    font-size: 34px;
   }
 }

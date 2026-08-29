@@ -56,7 +56,7 @@ export default function About() {
 
             <p className={styles.paragraph}>
               O <em>Areti Vitae</em> é acessível a indivíduo com ideias
-              criativas e inovadoras, sendo restrita ao uso de pessoas acima de 13 anos, e tem
+              criativas e inovadoras, e tem
               funcionalidades aos assinantes da versão <strong>"Moon-Modules"</strong>, com mais recursos
               para desenvolvimento e planejamento em maior escala.
             </p>
@@ -85,6 +85,17 @@ export default function About() {
               conceitualizada de forma mais concreta.
             </p>
 
+            <SectionLabel>Manual</SectionLabel>
+
+            <p className={styles.paragraph}>
+              Consulte o manual completo com instruções de uso da plataforma, vale bastante a pena, aproveite a experiência AretiVitae com eficiência e criatividade
+            </p>
+
+            
+             <a href="https://docs.google.com/document/d/18J8i2EB9dpWXFPvm7DPEWENrL9lkbkpleayD-Zem51s/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className={styles.manualLink}>
+              Abrir manual do usuário
+            </a>
+
             <SectionLabel>Criadores</SectionLabel>
 
             <div className={styles.creatorsRow}>
@@ -98,7 +109,7 @@ export default function About() {
 
             <div className={styles.btnRow}>
               <button className={styles.discard} onClick={() => navigate('/home')}>
-                Voltar
+                Voltar e imergir
               </button>
             </div>
 

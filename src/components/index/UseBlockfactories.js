@@ -7,11 +7,21 @@ import {
 } from "./constants";
 import { makeAddAction, combineActions } from "./useHistory";
 
-export function addBox(cs, { history } = {}) {
-  if (!cs) return;
+// Ponto central onde o objeto vai ser criado: usa `position` (coordenada de
+// mundo do canvas, ex: vinda do mouse) quando fornecida; senão cai no
+// comportamento antigo de centralizar no meio do viewport atual.
+function resolveCenter(cs, position) {
+  if (position) return { x: position.x, y: position.y };
   const vpt = cs.viewportTransform;
-  const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
-  const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
+  return {
+    x: (window.innerWidth  / 2 - vpt[4]) / vpt[0],
+    y: (window.innerHeight / 2 - vpt[5]) / vpt[3],
+  };
+}
+
+export function addBox(cs, { history, position } = {}) {
+  if (!cs) return;
+  const { x: centerX, y: centerY } = resolveCenter(cs, position);
   const box = new fabric.Rect({
     ...SELECTION_STYLE,
     width: 180,
@@ -50,11 +60,9 @@ export function attachTextAutosize(text, cs) {
   return fitToContent;
 }
 
-export function addText(cs, { history } = {}) {
+export function addText(cs, { history, position } = {}) {
   if (!cs) return;
-  const vpt = cs.viewportTransform;
-  const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
-  const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
+  const { x: centerX, y: centerY } = resolveCenter(cs, position);
 
   const text = new fabric.Textbox("Texto", {
     ...SELECTION_STYLE,
@@ -88,11 +96,9 @@ const CONTAINER_DEFAULT_HEIGHT = 350;
 const CONTAINER_DEFAULT_COLOR  = "#5083ef";
 const CONTAINER_DEFAULT_NAME   = "Seção";
 
-export function addContainer(cs, { history } = {}) {
+export function addContainer(cs, { history, position } = {}) {
   if (!cs) return;
-  const vpt = cs.viewportTransform;
-  const centerX = (window.innerWidth / 2 - vpt[4]) / vpt[0];
-  const centerY = (window.innerHeight / 2 - vpt[5]) / vpt[3];
+  const { x: centerX, y: centerY } = resolveCenter(cs, position);
 
   const rect = new fabric.Rect({
     ...SELECTION_STYLE,
