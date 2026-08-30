@@ -273,7 +273,6 @@
   outline-offset: 2px;
 }
 
-/* ─── Responsive ─────────────────────────────────────── */
 @media (max-width: 640px) {
   .titlebar {
     padding: 0 14px;

@@ -35,7 +35,7 @@ export function createCanvasInteractions({
     makeConnectionRemoveAction,
   } = ports;
 
-  // --- snapshot de transformação (move/resize) para undo/redo ---------
+
   let pendingTransformSnapshot = null;
 
   const snapshotAbsolute = (obj) => {
@@ -44,9 +44,7 @@ export function createCanvasInteractions({
     return { obj, left: translateX, top: translateY, scaleX, scaleY, angle };
   };
 
-  // Inclui o próprio alvo (ou os membros da activeSelection) + qualquer
-  // label/background vinculado, já que mover um dos dois pode mexer no
-  // outro (container <-> label, texto <-> background).
+
   const collectTransformGroup = (target) => {
     const base = target.type === "activeselection" ? target.getObjects() : [target];
     const set = new Set();

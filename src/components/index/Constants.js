@@ -39,11 +39,6 @@ export const API_BASE = "http://localhost:8081/apiAvMap";
 
 export const DEFAULT_GRID_BG_COLOR   = "#cce6fe";
 export const DEFAULT_GRID_LINE_COLOR = "#89bce8";
-
-// Cor de fundo padrão da toolbox (barra vertical, barra inferior e a
-// barra de configurações do topo). Esse é o valor que já estava fixo em
-// toolbox.module.css (.toolbox e .bottomToolbar) — mantendo o mesmo aqui
-// garante que ninguém veja a cor mudar sozinha ao abrir o app.
 export const DEFAULT_TOOLBOX_BG_COLOR = "rgb(100, 122, 200)";
 
 export const DEFAULT_BRUSH_COLOR = "#222222";
