@@ -64,10 +64,12 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  justify-content: center; /* centraliza o card verticalmente quando sobra espaço em telas grandes */
 }
 
 .window {
   flex: 1;
+  max-height: min(700px, 85vh); /* trava o crescimento excessivo em telas grandes/altas */
   border-radius: var(--radius);/*Var nas primeiras linhas*/
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
