@@ -5,7 +5,7 @@ import stylestoolbox from "./modules/toolbox.module.css";
 import stylescanva from "./modules/canva.module.css";
 import Navbar from "./Navbar";
 import Settings from "./Settings";
-import GridCanvas from "./GridCanvas";
+import GridCanvas from "./Gridcanvas";
 import Axis from "./Axis";
 import BackButton from './BackButton';
 import CanvasSettingsPanel from "./CanvasSettingPanel";
