@@ -1,10 +1,9 @@
-# ARETI VITAE - 0.9.7 - GENERAL FIX
+# ARETI VITAE - 0.9.9 - THE ARETI VITAE
 
- O "Areti Vitae: Ilustrador de ideias" é uma plataforma digital e inovadora que visa auxiliar criadores na conceitualização e no desenvolvimento de projetos e ideias por meio de um mapeamento visual intuitivo. Ele se destaca pelo canvas interativo e estética inovadora, buscando evoluir ideias promissoras, especialmente aquelas de menor escala, e incentivando o pensamento criativo juntamente da organização adequada
-O projeto tem como premissa fundamental promover a criação e o desenvolvimento de ideias inovadoras, empregando métodos intuitivos e ferramentas de suporte, além de se garantir de uma estética voltada para o método criativo.
-O ‘Areti Vitae’ é acessível para todos os indivíduos, principalmente aqueles com ideias criativas e inovadoras, sendo restrita ao uso de pessoas acima de 13 anos, e terá funcionalidades aos assinantes da versão "Módulo Lunar", com mais recursos para desenvolvimento e planejamento em maior escala.
-/--------------------------------------------------------------------------------------------------------/
-"Areti Vitae: Idea Illustrator" is an innovative digital platform that aims to assist creators in conceptualizing and developing projects and ideas through intuitive visual mapping. It stands out for its interactive canvas and innovative aesthetics, seeking to evolve promising ideas, especially those on a smaller scale, and encouraging creative thinking along with appropriate organization The project's fundamental premise is to promote the creation and development of innovative ideas, employing intuitive methods and support tools, in addition to ensuring an aesthetic focused on the creative method. The ‘Areti Vitae’ is accessible to all individuals, especially those with creative and innovative ideas, and is restricted to use by people over 13 years of age, and will have features for subscribers of the "Lunar Module" version, with more resources for development and planning on a larger scale.
+"Areti Vitae: Idea Illustrator" is an innovative digital platform that aims to assist creators in conceptualizing and developing projects and ideas through intuitive visual mapping. It stands out for its interactive canvas and innovative aesthetics, seeking to evolve promising ideas, especially those on a smaller scale, and encouraging creative thinking along with appropriate organization The project's fundamental premise is to promote the creation and development of innovative ideas, employing intuitive methods and support tools, in addition to ensuring an aesthetic focused on the creative method. The ‘Areti Vitae’ is accessible to all individuals, especially those with creative and innovative ideas, and will have features for subscribers of the "Lunar Module" version, with more resources for development and planning on a larger scale.
+
+Do npm run dev and start the spring aplication
+Database from Unicamp University
 
 # Contato:
 aretivitae@gmail.com
