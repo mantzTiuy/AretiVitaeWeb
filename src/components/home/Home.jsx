@@ -1,6 +1,6 @@
 import BackDisplay     from './BackDisplay'
-import UserBlock       from './UserBlock'
-import ProjectTitle    from './ProjectTitle'
+import UserBlock       from './Userblock'
+import ProjectTitle    from './Projecttitle'
 
 import PhiloWindow     from './PhiloWindow'
 import styles from './modules/home.module.css'
