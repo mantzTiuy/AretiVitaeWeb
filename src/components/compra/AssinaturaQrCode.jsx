@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { gerarQrCode, consultarStatus } from "./compraApi";
+import { gerarQrCode, consultarStatus } from "./Compraapi";
 import PlanSymbol from "../networkdemo/PlanSymbol";
 import ConfirmarCompraModal from "./ConfirmarCompraModal";
 import StarsBackdrop from "./StarBackdrop";
