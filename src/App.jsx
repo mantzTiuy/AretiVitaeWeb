@@ -4,7 +4,7 @@ import Index from "./components/index/Index";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/login/LoginAV";
 import React, { useEffect } from "react";
-import NetworkDemo from "./components/networkdemo/NetworkDemo.jsx"
+import NetworkDemo from "./components/networkdemo/Networkdemo.jsx"
 import Account from "./components/account/Account";
 import About from "./components/about/About";
 import NetConfig from "./components/networkcreation/Notespage.jsx"
